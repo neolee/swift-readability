@@ -167,6 +167,26 @@ Use `#expect()` for assertions, not `XCTAssert*`.
 
 ## Implementation Notes
 
+### Current Implementation Status
+
+**MVP Phase**: Basic scoring and extraction working. See **PLAN.md** for detailed roadmap.
+
+Completed:
+- Basic document preparation (script/style removal)
+- Simple BR tag handling
+- Title extraction from `<title>` and `<h1>`
+- Basic content scoring (tag weights, text length, link density)
+- Simple article extraction
+- Basic attribute cleanup
+
+Pending (in priority order):
+- JSON-LD metadata extraction
+- Open Graph / Twitter Cards metadata
+- Advanced content scoring (ancestor propagation)
+- Conditional content cleaning
+- Lazy image fixing
+- Multi-attempt fallback mechanism
+
 ### Algorithm Structure (Readability.swift)
 
 The main parsing follows Mozilla's Readability.js algorithm:
@@ -218,8 +238,37 @@ These are separate - building one doesn't build the other.
 
 - **INIT.md** - Original project planning document (Chinese)
 - **README.md** - User-facing documentation
+- **PLAN.md** - Step-by-step porting roadmap (read this next)
 - **Mozilla Readability**: https://github.com/mozilla/readability
 - **SwiftSoup**: https://github.com/scinfu/SwiftSoup
+
+## Development Workflow
+
+### Before Starting Work
+
+1. Check **PLAN.md** for current phase and priorities
+2. Run existing tests to establish baseline: `cd Readability && swift test`
+3. Test CLI with real URLs: `cd ReadabilityCLI && swift run ReadabilityCLI <url> --text-only`
+
+### During Development
+
+1. **Make incremental changes** - one feature/method at a time
+2. **Test frequently** - run `swift test` after each change
+3. **Use CLI for real-world testing**:
+   ```bash
+   cd ReadabilityCLI
+   swift run ReadabilityCLI https://example.com/article --text-only
+   ```
+4. **Add test cases** for new functionality
+
+### Verifying Changes
+
+```bash
+# Full verification script
+cd Readability && swift build && swift test && \
+cd ../ReadabilityCLI && swift build && \
+echo "Build and tests passed!"
+```
 
 ## Adding New Features
 
@@ -228,6 +277,42 @@ These are separate - building one doesn't build the other.
 3. **Tests**: Add to `Readability/Tests/ReadabilityTests/` using Swift Testing
 4. **Build and test** from respective package directories
 5. **Update README.md** if adding user-facing features
+
+## Project Evolution
+
+### File Structure Changes
+
+As we implement more features from the roadmap, the source structure will evolve:
+
+**Current (MVP)**:
+```
+Sources/Readability/
+├── Readability.swift
+└── ReadabilityResult.swift
+```
+
+**Target (Full Implementation)**:
+```
+Sources/Readability/
+├── Readability.swift              # Main entry (simplified)
+├── ReadabilityOptions.swift       # Configuration
+├── ReadabilityResult.swift        # Result struct
+├── ReadabilityError.swift         # Error types
+└── Internal/
+    ├── Configuration.swift        # Constants, regex patterns
+    ├── DOMHelpers.swift           # DOM utilities
+    ├── DocumentPreparer.swift     # prepDocument logic
+    ├── ArticleGrabber.swift       # grabArticle core
+    ├── ContentScorer.swift        # Scoring algorithm
+    ├── ContentCleaner.swift       # Cleanup logic
+    └── MetadataExtractor.swift    # Metadata extraction
+```
+
+When moving code to new files, ensure:
+1. Imports are preserved
+2. Access modifiers are correct (internal vs public)
+3. Tests still pass
+4. No duplicate symbols
 
 ## Common Tasks
 
