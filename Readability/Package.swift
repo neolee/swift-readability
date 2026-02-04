@@ -4,6 +4,10 @@ import PackageDescription
 
 let package = Package(
     name: "Readability",
+    platforms: [
+        .macOS(.v13),
+        .iOS(.v16)
+    ],
     products: [
         .library(
             name: "Readability",
@@ -15,7 +19,8 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "Readability"
+            name: "Readability",
+            dependencies: ["SwiftSoup"]
         ),
         .testTarget(
             name: "ReadabilityTests",

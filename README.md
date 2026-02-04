@@ -79,13 +79,13 @@ Existing Swift Readability implementations often wrap JavaScript execution in `W
 - **Deadlocks** — JavaScript execution that never returns can hang `TaskGroup` indefinitely
 - **Unreliable timeouts** — No way to force-terminate stuck WebView operations
 
-This implementation solves all these issues by porting the algorithm natively to Swift.
+This implementation solves all these issues by porting the algorithm to native Swift.
 
 ## Algorithm Overview
 
 Based on Mozilla's Readability.js (~2,500 LOC), the extraction process:
 
-1. **Preprocess** — Remove scripts, styles, and normalize document structure
+1. **Pre-process** — Remove scripts, styles, and normalize document structure
 2. **Score Nodes** — Calculate content scores based on text density, link ratio, and semantic hints
 3. **Select Best** — Choose top candidate and merge related siblings
 4. **Clean Up** — Remove clutter (ads, navigation, social widgets)
