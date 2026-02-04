@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:readability}/Readability",
+            "name": "Debug readability-cli (Readability)",
+            "target": "readability-cli",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug readability-cli (Readability)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:readability}/Readability",
+            "name": "Release readability-cli (Readability)",
+            "target": "readability-cli",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release readability-cli (Readability)"
+        }
+    ]
+}
