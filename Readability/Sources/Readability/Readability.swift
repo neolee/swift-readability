@@ -148,11 +148,20 @@ public struct Readability {
         let elementsToRemove = try doc.select("script, style, noscript, iframe, object, embed, template")
         try elementsToRemove.remove()
 
+        // Remove aria-hidden elements (accessibility - visually hidden content)
+        try removeAriaHiddenElements()
+
         // Convert BR tags to paragraphs
         try replaceBrs()
 
         // Replace font tags with spans
         try replaceFontTags()
+    }
+
+    /// Remove elements with aria-hidden="true" attribute
+    private func removeAriaHiddenElements() throws {
+        let ariaHiddenElements = try doc.select("[aria-hidden=true]")
+        try ariaHiddenElements.remove()
     }
 
     private func replaceBrs() throws {

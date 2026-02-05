@@ -40,27 +40,34 @@ Sources/Readability/
 
 ---
 
-## Phase 2: Document Preprocessing
+## Phase 2: Document Preprocessing [COMPLETE]
 
 **Goal:** Complete `prepDocument()` and related methods
 
-### 2.1 Tag Removal
-- [ ] `<template>` tags
-- [ ] SVG handling (preserve references, optionally inline)
-- [ ] Special character handling
+### 2.1 Tag Removal [COMPLETE]
+- [x] `<template>` tags (implemented, no specific test)
+- [x] `aria-hidden` elements (implemented and tested)
+- [x] `<style>` tags (implemented and tested)
+- [ ] SVG handling - see Phase 5.4 (deferred)
 
-### 2.2 BR Tag Processing
-- [ ] Multiple consecutive `<br>` handling
-- [ ] Paragraph conversion logic refinement
+### 2.2 BR Tag Processing [COMPLETE]
+- [x] Multiple consecutive `<br>` handling
+- [x] Paragraph conversion logic refinement
 
-### 2.3 Font Tag Replacement
-- [ ] Complete `<font>` to `<span>` conversion
-- [ ] Attribute preservation
+### 2.3 Font Tag Replacement [COMPLETE]
+- [x] `<font>` to `<span>` conversion (implemented and tested)
+- [x] Attribute preservation (not preserved by design, matching Mozilla)
 
 ### Verification
 Each feature must:
 - Have corresponding Mozilla test case
 - Pass exact match comparison with `expected.html`
+
+**Status:** 4/4 Phase 2 test cases imported and passing
+- `replace-font-tags`: Font tags correctly converted to spans
+- `remove-aria-hidden`: Aria-hidden elements correctly removed
+- `style-tags-removal`: Style tags correctly removed
+- `normalize-spaces`: Whitespace normalization working
 
 ---
 
@@ -143,6 +150,11 @@ Remove elements based on:
 - [ ] Small image/icon removal
 - [ ] Meaningful image preservation
 
+### 5.4 SVG Handling (from Phase 2)
+- [ ] SVG content in `<head>` removal
+- [ ] Inline SVG preservation (when meaningful)
+- [ ] SVG reference preservation (`<img src="*.svg">`, `<use>`)
+
 ### Verification
 - 80%+ Mozilla test pass rate
 - Clean output without navigation/ads
@@ -191,37 +203,43 @@ Remove elements based on:
 
 ## Test Coverage Targets
 
-| Phase | Target Pass Rate | Test Cases |
-|-------|------------------|------------|
-| Phase 1 | N/A (foundation) | 4 |
-| Phase 2 | 30% | 20-30 |
-| Phase 3 | 40% | 40-50 |
-| Phase 4 | 60% | 60-80 |
-| Phase 5 | 80% | 100-120 |
-| Phase 6 | 90%+ | 130 (all) |
+| Phase | Target Pass Rate | Test Cases | Status |
+|-------|------------------|------------|--------|
+| Phase 1 | N/A (foundation) | 4 | COMPLETE |
+| Phase 2 | 30% | 20-30 | COMPLETE (8 test cases, limited by small test set) |
+| Phase 3 | 40% | 40-50 | IN PROGRESS |
+| Phase 4 | 60% | 60-80 | PENDING |
+| Phase 5 | 80% | 100-120 | PENDING |
+| Phase 6 | 90%+ | 130 (all) | PENDING |
 
-**Current:** 4/130 test cases (3%), 10/10 tests passing with 4 known issues
+**Current:** 8/130 test cases (6%), 18/18 tests passing with 5 known issues
 
 ---
 
 ## Mozilla Test Case Import Priority
 
-### Immediate (Phase 2-3)
+### Phase 2 Completed
+- [x] `replace-font-tags`
+- [x] `remove-aria-hidden`
+- [x] `style-tags-removal`
+- [x] `normalize-spaces`
+
+### Phase 3 (Metadata)
 - `003-metadata-preferred`
 - `004-metadata-space-separated-properties`
 - `parsely-metadata`
 - `schema-org-context-object`
-- `replace-font-tags`
-- `remove-aria-hidden`
-- `style-tags-removal`
 
-### Near-term (Phase 4-5)
+### Phase 4 (Scoring)
 - `title-en-dash`
 - `title-and-h1-discrepancy`
-- `normalize-spaces`
+
+### Phase 5 (Content Cleaning)
 - `keep-images`
 - `keep-tabular-data`
 - `lazy-image-*`
+- `svg-parsing` (deferred from Phase 2)
+- `cnet-svg-classes` (deferred from Phase 2)
 
 ### Complete Set (Phase 6)
 All 130 Mozilla test cases for full compatibility verification

@@ -66,7 +66,16 @@ enum TestLoader {
 
     /// Load all available test cases
     static func loadAllTestCases() -> [TestCase] {
-        let testNames = ["001", "basic-tags-cleaning", "remove-script-tags", "replace-brs"]
+        let testNames = [
+            "001",
+            "basic-tags-cleaning",
+            "remove-script-tags",
+            "replace-brs",
+            "replace-font-tags",
+            "remove-aria-hidden",
+            "style-tags-removal",
+            "normalize-spaces"
+        ]
         return testNames.compactMap { loadTestCase(named: $0) }
     }
 
