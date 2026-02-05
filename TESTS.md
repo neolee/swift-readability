@@ -2,8 +2,8 @@
 
 This document tracks testing progress, strategy, and known issues for the Swift Readability port.
 
-**Last Updated:** Phase 3 Complete
-**Current Status:** 27/27 tests passing, 8 known issues
+**Last Updated:** Phase 4 Complete (Core Scoring Algorithm with A-H sub-phases)  
+**Current Status:** 32/32 tests, 28 passing, 4 failing (1 known byline issue)
 
 ---
 
@@ -13,253 +13,118 @@ This document tracks testing progress, strategy, and known issues for the Swift 
 
 | File | Count | Purpose |
 |------|-------|---------|
-| `MozillaCompatibilityTests.swift` | 27 | Strict compatibility tests with Mozilla test cases |
+| `MozillaCompatibilityTests.swift` | 32 | Strict compatibility tests with Mozilla test cases |
 
 ### Test Results Summary
 
 | Test Category | Passed | Known Issues | Failed |
 |--------------|--------|--------------|--------|
-| Title extraction | 18 | 0 | 0 |
-| Content structure | 9 | 4 | 0 |
-| Metadata (byline/excerpt) | 11 | 1 | 0 |
-| **Total** | **38** | **5** | **0** |
+| Title extraction | 14 | 0 | 0 |
+| Content extraction | 10 | 0 | 3 |
+| Metadata (byline/excerpt) | 10 | 1 | 0 |
+| Other | 2 | 0 | 0 |
+| **Total** | **28** | **1** | **3** |
 
-**Note:** 32 tests total, 6 with known issues (all Phase 5 content cleaning)
+**Note:** 32 tests total. 1 byline extraction is a known limitation (metadata only, no HTML content parsing). 3 content tests have text similarity issues (89-98%) due to text node ordering differences.
 
-**Phase 2 New Tests:** 8 new tests added, all passing (4 with known issues for `<h1>` retention)
+---
 
-**Phase 3 New Tests:** 9 new tests added, all passing (3 with known issues for byline extraction from HTML content)
-
-**Phase 4 New Tests:** 5 new tests added, all passing:
-- `title-en-dash`: En-dash separator handling
-- `title-and-h1-discrepancy`: Title vs H1 discrepancy handling  
-- `keep-images`: Image preservation in content
-- `keep-tabular-data`: Table data preservation
-
-### Mozilla Test Cases Imported
+## Mozilla Test Cases Imported
 
 | Test Case | Imported | Status | Notes |
 |-----------|----------|--------|-------|
-| `001` | [x] | Passing (content text matches, DOM differs) | Real article, title/excerpt match |
-| `basic-tags-cleaning` | [x] | Passing (content differs) | `<h1>` text retained in output |
-| `remove-script-tags` | [x] | Passing (content differs) | `<h1>` text retained in output |
-| `replace-brs` | [x] | Passing (content differs) | `<h1>` text retained in output |
-| `replace-font-tags` | [x] | Passing (content differs) | Font tags converted to spans, `<h1>` issue |
+| `001` | [x] | Content (89% similarity) | Real article, title/excerpt match, text node ordering differs |
+| `basic-tags-cleaning` | [x] | Passing | DOM structure matches expected |
+| `remove-script-tags` | [x] | Passing | DOM structure matches expected |
+| `replace-brs` | [x] | Content (92% similarity) | BR handling differs slightly |
+| `replace-font-tags` | [x] | Content (98% similarity) | Minor text content differences |
 | `remove-aria-hidden` | [x] | Passing | `aria-hidden` elements correctly removed |
 | `style-tags-removal` | [x] | Passing | `<style>` tags correctly removed |
 | `normalize-spaces` | [x] | Passing | Whitespace normalization working |
 | `003-metadata-preferred` | [x] | Passing | Dublin Core metadata priority working |
 | `004-metadata-space-separated-properties` | [x] | Passing | Space-separated meta properties working |
 | `parsely-metadata` | [x] | Passing | Parsely metadata extraction working |
-| `schema-org-context-object` | [x] | Passing (title), Known issues (byline/excerpt) | JSON-LD parsing working, HTML byline extraction pending |
+| `schema-org-context-object` | [x] | Passing | JSON-LD parsing working |
+| `title-en-dash` | [x] | Passing | En-dash separator handling working |
+| `title-and-h1-discrepancy` | [x] | Passing | Title vs H1 discrepancy handling working |
+| `keep-images` | [x] | Passing | Image preservation working |
+| `keep-tabular-data` | [x] | Passing | Table data preservation working |
 
-**Coverage:** 12/130 test cases (9%)
+**Coverage:** 16/130 test cases (12%)
 
 ---
 
 ## Known Issues
 
-### 1. Content Structure Differences
+### 1. Text Node Ordering in Content Extraction (3 tests)
 
-**Previous incorrect description:** "Whitespace normalization differences"
-**Correct description:** "Content selection and filtering differences"
-
-**Tests affected:** `001`, `basic-tags-cleaning`, `remove-script-tags`, `replace-brs`, `replace-font-tags`
-
-#### Issue Analysis
-
-The differences are **NOT** caused by `SwiftSoup` vs `JSDOM` whitespace handling. Instead, they stem from our content extraction algorithm selecting different containers than Mozilla's implementation.
-
-#### Specific Problems
-
-**A. `<h1>` Content Retained (basic-tags-cleaning, remove-script-tags, replace-brs)**
-
-**Example (basic-tags-cleaning):**
-```
-Expected: "Lorem ipsum dolor sit amet..."
-Actual:   "Lorem Lorem ipsum dolor sit amet..."
-                 ^^^^^^
-                 Extra h1 content
-```
-
-**Source HTML:**
-```html
-<article>
-    <h1>Lorem</h1>           <!-- This should be filtered out -->
-    <div>
-        <p>Lorem ipsum...</p> <!-- This should be the start -->
-    </div>
-</article>
-```
-
-**Expected output (Mozilla):**
-```html
-<div>
-    <p>Lorem ipsum...</p>  <!-- h1 content not included -->
-</div>
-```
-
-**Our actual output:**
-```html
-<div>
-    Lorem                    <!-- h1 text retained -->
-    <p>Lorem ipsum...</p>
-</div>
-```
-
-**Impact:** Minor - adds article title at start of content, doesn't affect readability.
-
----
-
-**B. DOM Structure Differences (001)**
-
-**Text content:** 100% identical (3981 chars both sides)
-**DOM structure:** Different
-
-**Likely causes:**
-- Different element selection (we select a parent that includes more elements)
-- Attribute handling differences
-- `id` and `class` preservation differences
-
-**Impact:** Low - semantic content identical, presentation differs.
-
-#### Root Cause
-
-Our `grabArticle()` implementation selects the best candidate element but does not:
-1. Filter out heading elements (`<h1>`, `<h2>`) that should not be in article content
-2. Match Mozilla's exact element selection algorithm
-3. Handle nested containers the same way
-
-#### Resolution Plan
-
-**Phase:** Content Cleaning (Phase 5)
-**Specific tasks:**
-- [ ] Implement `_prepArticle()` to filter heading elements from content
-- [ ] Review `_cleanConditionally()` for heading handling
-- [ ] Match Mozilla's element filtering logic exactly
-
-**Tracking:** Marked with `withKnownIssue()` in tests, referenced to `PLAN.md` Phase 5.
-
----
-
-## Phase 3 Test Fidelity Confirmation
-
-### Test Data Integrity
-
-All Phase 3 test cases are **faithful reproductions** of the original Mozilla Readability test suite:
-
-| Test Case | Source HTML | Expected Metadata | Status |
-|-----------|-------------|-------------------|--------|
-| `003-metadata-preferred` | ✓ Identical | ✓ Identical | Passing |
-| `004-metadata-space-separated-properties` | ✓ Identical | ✓ Identical | Passing |
-| `parsely-metadata` | ✓ Identical | ✓ Identical | Known issue (byline) |
-| `schema-org-context-object` | ✓ Identical | ✓ Identical | Known issues (byline/excerpt) |
-
-**Verification method:** Direct file comparison with `ref/mozilla-readability/test/test-pages/`
-
-### Test Logic Fidelity
-
-| Aspect | Mozilla Implementation | Our Implementation | Match |
-|--------|------------------------|-------------------|-------|
-| Title extraction | `article.title` from metadata priority | Same priority chain | ✓ |
-| Byline extraction | Metadata + HTML content | Metadata only (Phase 3) | Partial |
-| Excerpt extraction | Metadata priority + content fallback | Same priority chain | ✓ |
-| Result validation | Exact string comparison | Exact string comparison (`#expect ==`) | ✓ |
-
-### Known Issues Are Real Implementation Gaps
-
-The known issues are **not** test artifacts or data mismatches. They represent actual implementation gaps:
-
-1. **4 content structure issues:** Our content cleaning is incomplete (Phase 5)
-2. **1 byline issue:** Missing HTML content byline detection (Phase 5)
-3. **2 JSON-LD priority issues:** byline and excerpt priority need fixing (Phase 3 follow-up)
-
----
-
-## Known Issues Detailed Analysis
-
-### Issue Categories
-
-| # | Issue | Tests Affected | Phase Fix |
-|---|-------|----------------|-----------|
-| 1 | Content selection includes `<h1>` elements | 4 tests | Phase 5 |
-| 2 | Byline extraction from HTML (no metadata) | 1 test (`001`) | Phase 5 |
-
-**Phase 3 Complete:** JSON-LD byline/excerpt priority issues fixed ✓
-
----
-
-### 1. Content Selection Includes `<h1>` Elements (5 tests)
-
-**Tests Affected:** `basic-tags-cleaning`, `remove-script-tags`, `replace-brs`, `replace-font-tags` (4 tests)
+**Tests Affected:** `001`, `replace-brs`, `replace-font-tags`
 
 #### Problem Description
 
-Our `grabArticle()` selects parent containers that include `<h1>` elements, while Mozilla's implementation filters these out during content cleaning.
+During DOM manipulation in `SiblingMerger` and `ArticleCleaner`, text nodes and inline elements can be reordered compared to the original document. This affects the semantic flow of text content.
 
-**Example (basic-tags-cleaning):**
+**Example (001 test case):**
 ```
-Expected text: "Lorem ipsum dolor sit amet..."
-Actual text:   "Lorem Lorem ipsum dolor sit amet..."
-          ^^^^^^
-          Extra h1 content
+Expected: "So finally you're <a>testing your frontend</a>? Great!"
+Actual:   "<a>testing your frontend</a><a>code coverage</a>So finally you're ? Great!"
 ```
 
-**Source HTML:**
-```html
-<article>
-    <h1>Lorem</h1>           <!-- Mozilla filters this out -->
-    <div>
-        <p>Lorem ipsum...</p> <!-- We include the h1's parent -->
-    </div>
-</article>
-```
+**Similarity Scores:**
+| Test | Similarity | Issue |
+|------|------------|-------|
+| 001 | 89% | First paragraph links/text reordered |
+| replace-brs | 92% | BR to paragraph conversion differences |
+| replace-font-tags | 98% | Minor text node ordering |
 
 #### Root Cause
 
-Our implementation:
-1. Selects the best candidate element based on scoring
-2. Returns that element (including all its children)
-3. Does NOT filter heading elements from content
+1. **SiblingMerging**: When collecting siblings into article content, the cloning process doesn't preserve exact text node interleaving with inline elements.
 
-Mozilla's implementation:
-1. Selects the best candidate element
-2. Runs `_prepArticle()` which:
-   - Removes `<h1>` elements that match the article title
-   - Cleans conditionally based on content type
-   - Handles nested headings appropriately
+2. **Element Cloning**: `cloneElement()` recursively clones children, but text nodes are appended after all element children, disrupting original order.
+
+3. **DOM Traversal**: Node iteration order during cleaning can differ from original document order.
 
 #### Technical Details
 
-- **Similarity scores:** 92-98% (text content is mostly correct)
-- **Character difference:** ~8-10 chars (the extra heading text)
-- **Impact:** Low - adds article title at start, doesn't affect readability
+```swift
+// Current implementation in ArticleCleaner.cloneElement():
+for child in element.children() {
+    let childClone = try cloneElement(child, in: doc)
+    try clone.appendChild(childClone)  // Elements first
+}
+for textNode in element.textNodes() {
+    try clone.appendText(textNode.text())  // Text after all elements
+}
+// This breaks: "text <b>bold</b> text" -> "<b>bold</b> text text"
+```
 
 #### Resolution Plan
 
-**Phase:** 5 (Content Cleaning)
-**Implementation needed:**
-- [ ] `_prepArticle()` method
-- [ ] `_cleanConditionally()` refinement
-- [ ] Heading element filtering logic
-- [ ] Title matching for h1 removal
+**Phase:** Content Cleaning (Phase 5)  
+**Specific tasks:**
+- [ ] Implement mixed node list preservation (elements + text nodes in original order)
+- [ ] Use `childNodes()` instead of separate `children()` and `textNodes()` loops
+- [ ] Test with complex inline element nesting
+
+**Priority:** Medium - content is still readable, just reordered.
 
 ---
 
-### 2. Byline Extraction Issue (1 test)
+### 2. Byline Extraction from HTML Content (1 test)
 
 **Test:** `001 - Byline`
 
-**Expected:** "Nicolas Perriault"
+**Expected:** "Nicolas Perriault"  
 **Actual:** `nil`
 
 **Analysis:**
 - Source HTML contains NO metadata author tags
 - Author name appears only in:
   - `<title>` tag: "Get your Frontend JavaScript Code Covered | Code | Nicolas Perriault"
-  - HTML content: "Hi, I'm Nicolas." in header
+  - HTML content header: "Hi, I'm Nicolas."
 
-**Status:** ✓ **Metadata-based byline extraction WORKING** (parsely-metadata, 003-metadata-preferred, schema-org all pass)
+**Status:** Metadata-based byline extraction WORKING (parsely-metadata, 003-metadata-preferred, schema-org all pass)
 
 **Resolution:** Phase 5 will implement HTML content byline detection for cases without metadata
 
@@ -285,15 +150,44 @@ Previously had accommodating tests like:
 // Title: Exact match required
 #expect(result.title == expectedTitle)
 
-// Content: Semantic similarity with threshold
-let matchRatio = calculateSimilarity(actual, expected)
-#expect(matchRatio > 0.90, "Only \(Int(matchRatio*100))% match")
-
-// Known limitations: Explicitly marked
-withKnownIssue("<h1> content retained - fix in Phase 5") {
-    #expect(normalizedResult == normalizedExpected)
-}
+// Content: Exact DOM comparison
+let comparison = compareDOM(result.content, expectedHTML)
+#expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
 ```
+
+---
+
+## Phase 4 (A-H) Implementation Summary
+
+Phase 4 was implemented via 8 sub-phases (A-H) as documented in `CORE.md`:
+
+- **Phase A:** DOM traversal and scoring infrastructure
+- **Phase B:** Node cleaner (unlikely candidate removal)
+- **Phase C:** Candidate selection (Top N candidates)
+- **Phase D:** Sibling merging (content merging)
+- **Phase E:** Multi-attempt fallback (robustness)
+- **Phase F:** DIV to P conversion (phrasing content)
+- **Phase G:** Article cleaning (conditional cleaning)
+- **Phase H:** Integration & polish (module wiring, DOM context fixes)
+
+### Completed Work
+
+1. **DOM Context Fixes** (Phase H)
+   - Fixed "Object must not be null" SwiftSoup errors
+   - Changed all `Element(Tag, "")` to `doc.createElement()`
+   - Added document-aware element cloning throughout
+
+2. **Content Wrapper** (Phase H)
+   - Added `id="readability-page-1" class="page"` wrapper to match Mozilla output format
+   - Preserved readability attributes during cleaning
+
+3. **Test Suite Cleanup** (Phase H)
+   - Removed incorrect `withKnownIssue()` wrappers from passing tests
+   - 5 tests previously marked with known issues are now passing
+
+### Remaining Issues
+
+3 content tests with text similarity 89-98% - text node ordering during DOM manipulation.
 
 ---
 
@@ -323,58 +217,37 @@ Custom DOM traversal comparing:
 - Node types (element, text)
 - Tag names
 - Text content (normalized whitespace)
-- Attributes (when implemented)
+- Full text similarity ratio for reporting
 
 ---
 
 ## Import Queue
 
-### Phase 2 (Document Preprocessing) [COMPLETE]
+### Phase 4 (Core Scoring) [COMPLETE]
 
-Test cases imported:
-- [x] `replace-font-tags` - Font tag to span conversion working
-- [x] `remove-aria-hidden` - Aria-hidden element removal working
-- [x] `style-tags-removal` - Style tag removal working
-- [x] `normalize-spaces` - Whitespace normalization working
-
-**Implemented Features:**
-- [x] `<template>` tag removal (not tested but implemented)
-- [x] `aria-hidden` element removal
-- [x] `<style>` tag removal (head and body)
-- [x] `<font>` to `<span>` conversion
-- [x] BR tag processing
-- [ ] SVG handling (deferred to later phase)
-
-### Phase 3 (Metadata) [COMPLETE]
-
-Test cases imported:
-- [x] `003-metadata-preferred` - Dublin Core metadata priority working
-- [x] `004-metadata-space-separated-properties` - Space-separated properties working
-- [x] `parsely-metadata` - Parsely metadata extraction working
-- [x] `schema-org-context-object` - JSON-LD parsing working
+Test cases imported (via CORE.md Phases A-H):
+- [x] `title-en-dash` - En-dash separator handling
+- [x] `title-and-h1-discrepancy` - Title vs H1 discrepancy handling
+- [x] `keep-images` - Image preservation
+- [x] `keep-tabular-data` - Table data preservation
 
 **Implemented Features:**
-- [x] JSON-LD parsing for `application/ld+json` scripts
-- [x] Multi-object JSON-LD handling (selects NewsArticle > Article > WebPage)
-- [x] JSON-LD field extraction: headline, author, description, datePublished, publisher
-- [x] Meta tag metadata priority: dc: > og: > twitter: > parsely:
-- [x] Space-separated property handling (e.g., `property="dc:title og:title"`)
-- [x] Author array support (multiple authors joined with ", ")
+- [x] ContentExtractor with multi-attempt fallback
+- [x] ArticleCleaner post-processing
+- [x] DOM context safety fixes
+- [x] Page wrapper with readability attributes
+- [x] Top N candidate selection
+- [x] Sibling content merging
 
-### Phase 4 (Core Scoring)
+### Phase 5 (Content Cleaning) [IN PROGRESS]
 
-- `title-en-dash`
-- `title-and-h1-discrepancy`
-- `keep-images`
-- `keep-tabular-data`
+**Goal:** Fix text node ordering and complete content cleaning
 
-### Phase 5 (Content Cleaning)
-
-**These tests will validate fixes for current known issues:**
-- `basic-tags-cleaning` (verify `<h1>` removal)
-- `remove-script-tags` (verify `<h1>` removal)
-- `replace-brs` (verify `<h1>` removal)
-- `lazy-image-1`, `lazy-image-2`, `lazy-image-3`
+Test cases to validate fixes:
+- `001` (text node ordering)
+- `replace-brs` (text node ordering)
+- `replace-font-tags` (text node ordering)
+- `lazy-image-*`
 - Other content cleaning tests
 
 ### Phase 6 (Complete)
@@ -422,13 +295,13 @@ When a test fails:
 | Milestone | Target | Date | Status |
 |-----------|--------|------|--------|
 | Phase 1 end | Foundation | - | COMPLETE |
-| Phase 2 end | 30% pass rate | - | COMPLETE (6% coverage, 8 tests) |
-| Phase 3 end | Metadata extraction | - | COMPLETE (9% coverage, 12 tests) |
-| Phase 4 end | Core scoring | TBD | IN PROGRESS |
-| Phase 5 end | Content cleaning | TBD |
-| Phase 6 end | 90%+ pass rate | TBD |
+| Phase 2 end | 30% pass rate | - | COMPLETE |
+| Phase 3 end | Metadata extraction | - | COMPLETE |
+| Phase 4 end | Core scoring | - | COMPLETE |
+| Phase 5 end | Content cleaning | TBD | IN PROGRESS |
+| Phase 6 end | 90%+ pass rate | TBD | PENDING |
 
-**Note:** Current "80% similarity" issues should become "100% match" after Phase 5 fixes.
+**Current:** 28/32 tests passing (87.5%), 3 text similarity issues to resolve.
 
 ### Infrastructure Improvements
 
@@ -442,5 +315,5 @@ When a test fails:
 ## See Also
 
 - `AGENTS.md` - Core testing principles
-- `PLAN.md` - Implementation phases and roadmap (see Phase 5 for content cleaning)
+- `PLAN.md` - Implementation phases and roadmap
 - `ref/mozilla-readability/test/` - Original Mozilla test suite

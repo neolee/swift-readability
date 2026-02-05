@@ -2,7 +2,7 @@
 
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
-**Current Status:** Phase 4 Complete  
+**Current Status:** Phase 4 Complete (Core Scoring Algorithm with A-H sub-phases)  
 **See TESTS.md for detailed testing progress.**
 
 ---
@@ -35,8 +35,7 @@ Sources/Readability/
 
 ### Phase 1 Deliverables
 - 4 Mozilla test cases imported
-- 10 tests passing (6 with known issues for content structure)
-- All basic functionality working
+- Basic functionality working
 
 ---
 
@@ -142,53 +141,103 @@ Implemented Mozilla's exact priority order:
 
 ## Phase 4: Core Scoring Algorithm [COMPLETE]
 
-**Goal:** Complete `_grabArticle` and `_initializeNode` logic
+**Goal:** Complete `_grabArticle` and related algorithms with full Mozilla compatibility
 
-### 4.1 Node Scoring Implementation [COMPLETE]
-Our implementation includes:
-- ✓ Tag-based base scoring (`div`, `article`, `section`, `pre`, `td`, `blockquote`, `p`)
-- ✓ Ancestor score propagation (parent level)
-- ✓ Link density calculation and penalization
-- ✓ Text length scoring with comma density bonus
-- ✓ Class/id pattern matching for positive/negative indicators
+**See `CORE.md` for detailed difference analysis and sub-phase breakdown (Phases A-H).**
 
-### 4.2 Candidate Selection [COMPLETE]
-- ✓ Score aggregation across all candidate elements
-- ✓ Best candidate selection based on total score
-- ✓ Fallback to body element when no good candidate found
+### 4.1 Infrastructure [COMPLETE - Phase A]
+- [x] DOM traversal utilities (`getNextNode`, `getNodeAncestors`)
+- [x] Node scoring storage (`NodeScoringManager` with `ObjectIdentifier`)
+- [x] All Mozilla regex patterns
 
-### 4.3 Key Differences from Mozilla
-Our simplified approach:
-- Uses single best candidate instead of Top N
-- Ancestor scoring limited to parent level (vs 5 levels)
-- No sibling node merging (works well without it)
-- No multi-attempt fallback (single pass extraction)
+### 4.2 Node Cleaning [COMPLETE - Phase B]
+- [x] Unlikely candidate removal with regex patterns
+- [x] Visibility and role checks
+- [x] Byline extraction from content
 
-**Result:** Despite simplifications, all Phase 4 tests pass.
+### 4.3 Candidate Selection [COMPLETE - Phase C]
+- [x] Top N candidates tracking (default 5)
+- [x] Alternative ancestor analysis
+- [x] Parent score traversal
+
+### 4.4 Sibling Merging [COMPLETE - Phase D]
+- [x] Sibling score threshold calculation
+- [x] Classname matching bonus
+- [x] P tag special handling with link density
+- [x] `ALTER_TO_DIV_EXCEPTIONS` handling
+
+### 4.5 Multi-attempt Fallback [COMPLETE - Phase E]
+- [x] FLAG system (STRIP_UNLIKELYS, WEIGHT_CLASSES, CLEAN_CONDITIONALLY)
+- [x] Attempt tracking with best fallback
+- [x] Page HTML caching and restore
+
+### 4.6 DIV to P Conversion [COMPLETE - Phase F]
+- [x] `isPhrasingContent` check
+- [x] `hasSingleTagInsideElement` check
+- [x] `hasChildBlockElement` check
+- [x] Full DIV to P conversion pipeline
+
+### 4.7 Article Cleaning [COMPLETE - Phase G]
+- [x] `_cleanConditionally` implementation
+- [x] Data table preservation
+- [x] Header cleaning
+- [x] Single-cell table flattening
+
+### 4.8 Integration & Polish [COMPLETE - Phase H]
+- [x] All modules integrated into `Readability.swift`
+- [x] DOM context safety fixes (no more "Object must not be null")
+- [x] Content wrapper with `id="readability-page-1" class="page"`
+- [x] 87.5% test pass rate (28/32 tests)
+
+### Key Implementation Details
+
+**Architecture:**
+```
+Sources/Readability/Internal/
+├── DOMTraversal.swift       # Depth-first traversal
+├── NodeScoring.swift        # Score storage and initialization
+├── NodeCleaner.swift        # Unlikely candidate removal
+├── CandidateSelector.swift  # Top N candidate selection
+├── SiblingMerger.swift      # Sibling content merging
+├── ContentExtractor.swift   # Main grabArticle logic
+└── ArticleCleaner.swift     # Post-extraction cleaning
+```
+
+**Swift-Specific Solutions:**
+- Score storage: `[ObjectIdentifier: NodeScore]` dictionary (SwiftSoup nodes don't support custom properties)
+- DOM context: Always use `doc.createElement()` instead of `Element(Tag, "")`
+- Element cloning: Document-aware recursive cloning to maintain proper ownership
 
 ### Verification
-- [x] 5/5 Phase 4 tests passing
-- [x] 32 total tests passing
-- [x] Real article pages extract correctly (verified with 001, keep-images, etc.)
+- [x] `title-en-dash`: En-dash separator handling
+- [x] `title-and-h1-discrepancy`: Title vs H1 discrepancy handling
+- [x] `keep-images`: Image preservation in content
+- [x] `keep-tabular-data`: Table data preservation
+- [x] 28/32 tests passing (87.5%)
 
 ---
 
 ## Phase 5: Content Cleaning
 
-**Goal:** Full `_prepArticle` and `_cleanConditionally` implementation
+**Goal:** Fix remaining content quality issues and complete cleaning
 
-### 5.1 Conditional Cleaning
+### 5.1 Text Node Ordering Fix [IN PROGRESS]
+**Priority:** High  
+**Issue:** DOM manipulation reorders text nodes and inline elements
+
+- [ ] Implement mixed node list preservation
+- [ ] Use `childNodes()` for original order iteration
+- [ ] Fix `cloneElement()` to preserve text node interleaving
+
+**Tests affected:** `001`, `replace-brs`, `replace-font-tags`
+
+### 5.2 Conditional Cleaning
 Remove elements based on:
 - [ ] Image-to-paragraph ratio
 - [ ] Input element count
 - [ ] Link density thresholds
 - [ ] Content length checks
 - [ ] Ad/navigation pattern detection
-
-### 5.2 Tag Transformation
-- [ ] `<div>` to `<p>` conversion (when appropriate)
-- [ ] Attribute cleanup (respecting `keepClasses`)
-- [ ] Empty container removal
 
 ### 5.3 Image Handling
 - [ ] Lazy load image fixing (`data-src` to `src`)
@@ -200,9 +249,15 @@ Remove elements based on:
 - [ ] Inline SVG preservation (when meaningful)
 - [ ] SVG reference preservation (`<img src="*.svg">`, `<use>`)
 
+### 5.5 Byline from HTML Content
+- [ ] Parse author from article body
+- [ ] Pattern matching for byline detection
+- [ ] "By Author Name" format recognition
+
 ### Verification
 - 80%+ Mozilla test pass rate
 - Clean output without navigation/ads
+- Text content ordering matches expected
 
 ---
 
@@ -251,43 +306,71 @@ Remove elements based on:
 | Phase | Target Pass Rate | Test Cases | Status |
 |-------|------------------|------------|--------|
 | Phase 1 | N/A (foundation) | 4 | COMPLETE |
-| Phase 2 | 30% | 20-30 | COMPLETE (8 test cases, limited by small test set) |
-| Phase 3 | 40% | 40-50 | IN PROGRESS |
-| Phase 4 | 60% | 60-80 | PENDING |
-| Phase 5 | 80% | 100-120 | PENDING |
+| Phase 2 | 30% | 8 | COMPLETE |
+| Phase 3 | Metadata extraction | 12 | COMPLETE |
+| Phase 4 | Core scoring | 16 | COMPLETE |
+| Phase 5 | 80% | 100-120 | IN PROGRESS |
 | Phase 6 | 90%+ | 130 (all) | PENDING |
 
-**Current:** 8/130 test cases (6%), 18/18 tests passing with 5 known issues
+**Current:** 16/130 test cases (12%), 28/32 tests passing (87.5%)
 
 ---
 
 ## Mozilla Test Case Import Priority
 
-### Phase 2 Completed
-- [x] `replace-font-tags`
-- [x] `remove-aria-hidden`
-- [x] `style-tags-removal`
-- [x] `normalize-spaces`
-
-### Phase 3 (Metadata)
-- `003-metadata-preferred`
-- `004-metadata-space-separated-properties`
-- `parsely-metadata`
-- `schema-org-context-object`
-
-### Phase 4 (Scoring)
-- `title-en-dash`
-- `title-and-h1-discrepancy`
+### Phase 4 Completed (via CORE.md Phases A-H)
+- [x] `title-en-dash`
+- [x] `title-and-h1-discrepancy`
+- [x] `keep-images`
+- [x] `keep-tabular-data`
 
 ### Phase 5 (Content Cleaning)
-- `keep-images`
-- `keep-tabular-data`
+
+**Text Node Ordering:**
+- `001`
+- `replace-brs`
+- `replace-font-tags`
+
+**Content Cleaning:**
 - `lazy-image-*`
 - `svg-parsing` (deferred from Phase 2)
 - `cnet-svg-classes` (deferred from Phase 2)
+- And other content cleaning tests
 
 ### Complete Set (Phase 6)
 All 130 Mozilla test cases for full compatibility verification
+
+---
+
+## Summary
+
+### Completed Phases (1-4)
+
+All foundation, preprocessing, metadata extraction, and core scoring work is complete. The implementation successfully extracts readable content from web pages without crashes.
+
+**Phase 4 Implementation:** See `CORE.md` for detailed breakdown of Phases A-H which cover:
+- A: Foundation (DOM traversal, scoring infrastructure)
+- B: Node Cleaner (unlikely candidate removal)
+- C: Candidate Selection (Top N candidates)
+- D: Sibling Merging (content merging)
+- E: Multi-attempt Fallback (robustness)
+- F: DIV to P Conversion (phrasing content)
+- G: Article Cleaning (conditional cleaning)
+- H: Integration & Polish (module wiring, DOM context fixes)
+
+### Current Blockers for 100% Test Pass Rate
+
+1. **Text Node Ordering** (3 tests): DOM manipulation reorders text nodes and inline elements
+2. **Byline from HTML** (1 test): Need to parse author from article body content
+
+These are known limitations documented in TESTS.md with detailed technical analysis.
+
+### Next Steps
+
+1. **Phase 5**: Fix text node ordering in DOM manipulation
+2. **Phase 5**: Implement HTML content byline detection
+3. **Phase 5**: Complete content cleaning features
+4. **Phase 6**: Import remaining test cases for 90%+ pass rate
 
 ---
 
@@ -295,4 +378,5 @@ All 130 Mozilla test cases for full compatibility verification
 
 - `AGENTS.md` - Core principles and coding standards
 - `TESTS.md` - Detailed testing strategy and current progress
+- `CORE.md` - Phase 4 detailed implementation plan (Phases A-H)
 - `INIT.md` - Original project planning (Chinese)
