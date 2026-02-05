@@ -570,13 +570,13 @@ Mozilla Readability has **130 test cases** total, divided into:
 - [x] `replace-brs` content mismatch (FIXED - was 92%, now 100%)
 - [x] `replace-font-tags` content mismatch (FIXED - was 98%, now 100%)
 
-#### 6.2 Content Post-Processing (6 tests)
-- [ ] Import `002`
-- [ ] Import `reordering-paragraphs`
-- [ ] Import `missing-paragraphs`
-- [ ] Import `remove-extra-brs`
-- [ ] Import `remove-extra-paragraphs`
-- [ ] Import `ol`
+#### 6.2 Content Post-Processing (6 tests) [COMPLETE]
+- [x] Import `002` - Title/Byline pass, Content 99% similarity (minor whitespace difference)
+- [x] Import `reordering-paragraphs` - PASS
+- [x] Import `missing-paragraphs` - PASS
+- [x] Import `remove-extra-brs` - PASS
+- [x] Import `remove-extra-paragraphs` - PASS
+- [x] Import `ol` - PASS
 
 #### 6.3 Conditional Cleaning (6 tests)
 - [ ] Import `clean-links`

@@ -36,6 +36,7 @@ public struct Readability {
         // Post-process with ArticleCleaner
         let cleaner = ArticleCleaner(options: options)
         try cleaner.prepArticle(articleContent)
+        try cleaner.postProcessArticle(articleContent)
 
         // Get text content
         let textContent = try articleContent.text()

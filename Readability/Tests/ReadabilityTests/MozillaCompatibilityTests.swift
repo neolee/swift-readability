@@ -24,7 +24,7 @@ struct MozillaCompatibilityTests {
     }
 
     /// Compare two DOM structures and return detailed diff
-    private func compareDOM(_ actualHTML: String, _ expectedHTML: String) -> (isEqual: Bool, diff: String) {
+    private func compareDOM(_ actualHTML: String, _ expectedHTML: String, similarityThreshold: Double = 1.0) -> (isEqual: Bool, diff: String) {
         do {
             let actualDoc = try SwiftSoup.parse(actualHTML)
             let expectedDoc = try SwiftSoup.parse(expectedHTML)
@@ -36,13 +36,14 @@ struct MozillaCompatibilityTests {
             let actualNormalized = htmlTransform(actualText).trimmingCharacters(in: .whitespaces)
             let expectedNormalized = htmlTransform(expectedText).trimmingCharacters(in: .whitespaces)
 
-            if actualNormalized != expectedNormalized {
-                // Calculate similarity ratio for reporting
-                let similarity = calculateSimilarity(actualNormalized, expectedNormalized)
+            // Calculate similarity ratio
+            let similarity = calculateSimilarity(actualNormalized, expectedNormalized)
+
+            if similarity < similarityThreshold {
                 return (false, "Text content differs (similarity: \(Int(similarity * 100))%). Expected \(expectedNormalized.count) chars, got \(actualNormalized.count) chars.")
             }
 
-            return (true, "DOM structures match")
+            return (true, "DOM structures match (similarity: \(Int(similarity * 100))%)")
         } catch {
             return (false, "DOM comparison error: \(error)")
         }
@@ -127,6 +128,128 @@ struct MozillaCompatibilityTests {
 
         #expect(result.excerpt == expectedExcerpt,
                 "Excerpt mismatch. Expected: '\(expectedExcerpt ?? "nil")', Actual: '\(result.excerpt ?? "nil")'")
+    }
+
+    // MARK: - 002 Test Case
+
+    @Test("002 - Title matches expected")
+    func test002Title() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "002") else {
+            Issue.record("Failed to load test case 002")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedTitle = testCase.expectedMetadata.title ?? ""
+        #expect(result.title == expectedTitle,
+                "Title mismatch. Expected: '\(expectedTitle)', Actual: '\(result.title)'")
+    }
+
+    @Test("002 - Byline matches expected")
+    func test002Byline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "002") else {
+            Issue.record("Failed to load test case 002")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedByline = testCase.expectedMetadata.byline
+        #expect(result.byline == expectedByline,
+                "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
+    }
+
+    @Test("002 - Content extraction produces expected text")
+    func test002Content() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "002") else {
+            Issue.record("Failed to load test case 002")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let comparison = compareDOM(result.content, testCase.expectedHTML)
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
+    }
+
+    // MARK: - Phase 6.2: Content Post-Processing Tests
+
+    @Test("remove-extra-brs - Content matches expected")
+    func testRemoveExtraBrs() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "remove-extra-brs") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let comparison = compareDOM(result.content, testCase.expectedHTML)
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
+    }
+
+    @Test("remove-extra-paragraphs - Content matches expected")
+    func testRemoveExtraParagraphs() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "remove-extra-paragraphs") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let comparison = compareDOM(result.content, testCase.expectedHTML)
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
+    }
+
+    @Test("reordering-paragraphs - Content matches expected")
+    func testReorderingParagraphs() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "reordering-paragraphs") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let comparison = compareDOM(result.content, testCase.expectedHTML)
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
+    }
+
+    @Test("missing-paragraphs - Content matches expected")
+    func testMissingParagraphs() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "missing-paragraphs") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let comparison = compareDOM(result.content, testCase.expectedHTML)
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
+    }
+
+    @Test("ol - Content matches expected")
+    func testOl() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "ol") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        // Use lower threshold for this short content test
+        var options = defaultOptions
+        options.charThreshold = 50
+
+        let readability = try Readability(html: testCase.sourceHTML, options: options)
+        let result = try readability.parse()
+
+        let comparison = compareDOM(result.content, testCase.expectedHTML)
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
     // MARK: - Basic Tags Cleaning Tests

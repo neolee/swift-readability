@@ -389,4 +389,97 @@ final class ArticleCleaner {
             try table.replaceWith(newElement)
         }
     }
+
+    // MARK: - Post-Processing (_prepArticle functionality)
+
+    /// Post-process article content (equivalent to Mozilla's _prepArticle)
+    /// This should be called after the main content extraction is complete
+    func postProcessArticle(_ articleContent: Element) throws {
+        // Note: removeExtraBRs is disabled because replaceBrs in Readability.swift
+        // already handles BR conversion properly. Additional BR removal here
+        // was causing issues with the replace-brs test case.
+
+        // Remove empty paragraphs
+        try removeEmptyParagraphs(articleContent)
+
+        // Replace H1 with H2 (H1 should only be the article title)
+        try replaceH1WithH2(articleContent)
+
+        // Flatten single-cell tables
+        try handleSingleCellTables(articleContent)
+    }
+
+    /// Remove BR tags that appear before P tags or at the end of containers
+    private func removeExtraBRs(_ element: Element) throws {
+        let brs = try element.select("br")
+
+        for br in brs {
+            // Check if next sibling is a paragraph
+            if let next = try br.nextElementSibling(),
+               next.tagName().lowercased() == "p" {
+                try br.remove()
+                continue
+            }
+
+            // Check if this BR is at the end of its parent (before closing)
+            // by checking if all following siblings are BRs or whitespace text nodes
+            var shouldRemove = false
+            var nextNode = br.nextSibling()
+
+            // If no next sibling, we're at the end
+            if nextNode == nil {
+                shouldRemove = true
+            } else {
+                // Check if all remaining siblings are BRs or whitespace
+                var allWhitespaceOrBR = true
+                while let node = nextNode {
+                    if let el = node as? Element {
+                        if el.tagName().lowercased() != "br" {
+                            allWhitespaceOrBR = false
+                            break
+                        }
+                    } else if let text = node as? TextNode {
+                        if !text.text().trimmingCharacters(in: .whitespaces).isEmpty {
+                            allWhitespaceOrBR = false
+                            break
+                        }
+                    }
+                    nextNode = node.nextSibling()
+                }
+                if allWhitespaceOrBR && nextNode == nil {
+                    shouldRemove = true
+                }
+            }
+
+            if shouldRemove {
+                try br.remove()
+            }
+        }
+    }
+
+    /// Remove empty paragraph elements
+    private func removeEmptyParagraphs(_ element: Element) throws {
+        let paragraphs = try element.select("p")
+
+        for p in paragraphs {
+            // Check if paragraph has no meaningful content
+            let text = try p.text().trimmingCharacters(in: .whitespaces)
+
+            // Check if it has no content elements (img, embed, object, iframe)
+            let contentElements = try p.select("img, embed, object, iframe, video, audio").count
+
+            if text.isEmpty && contentElements == 0 {
+                try p.remove()
+            }
+        }
+    }
+
+    /// Replace H1 elements with H2 (H1 should be reserved for article title)
+    private func replaceH1WithH2(_ element: Element) throws {
+        let h1s = try element.select("h1")
+
+        for h1 in h1s {
+            _ = try setNodeTag(h1, newTag: "h2")
+        }
+    }
 }
