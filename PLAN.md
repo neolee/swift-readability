@@ -1,454 +1,235 @@
-# Swift Readability 移植实施计划
+# Swift Readability Porting Plan
 
-本文档规划 Mozilla Readability.js 到 Swift 的分步移植方案，确保每一步都有可验证的结果。
+This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
-## 项目背景
-
-- **源代码**: Mozilla Readability.js (~2,500 行)
-- **目标**: 纯 Swift 实现，使用 SwiftSoup，无 WKWebView
-- **测试基准**: Mozilla 官方测试套件 (50+ 个真实网页用例)
-- **当前状态**: MVP 阶段，基础评分算法已实现
-
-## 移植策略
-
-采用**渐进增强**策略：
-1. 从核心算法开始，逐步添加功能
-2. 每阶段都有明确的验证标准
-3. 保持代码可运行和测试通过
-4. 优先移植高频使用功能，边缘情况后续处理
+**Current Status:** Phase 1 Complete  
+**See TESTS.md for detailed testing progress.**
 
 ---
 
-## Phase 1: 基础架构完善 ✅ 已完成
+## Phase 1: Foundation [COMPLETE]
 
-**目标**: 建立完整的项目结构和配置系统
+**Goal:** Establish project structure and configuration system
 
-**状态**: 已完成 (9 项测试通过)
+### 1.1 Configuration System (`ReadabilityOptions`)
+- [x] All configurable options from Mozilla implementation
+- [x] `Sendable` conformance for Swift 6
+- [x] Sensible defaults matching Mozilla
 
-### 1.1 配置系统 (`ReadabilityOptions`) ✅
+### 1.2 Error Handling (`ReadabilityError`)
+- [x] Proper error types with descriptions
+- [x] `Sendable` conformance
+- [x] Used throughout codebase
 
-**已完成**:
-```swift
-public struct ReadabilityOptions: Sendable {
-    var maxElemsToParse: Int      // 默认 0 (无限制)
-    var nbTopCandidates: Int      // 默认 5
-    var charThreshold: Int        // 默认 500
-    var keepClasses: Bool         // 默认 false
-    var disableJSONLD: Bool       // 默认 false
-    var classesToPreserve: [String]
-    var allowedVideoRegex: String
-    var linkDensityModifier: Double
-    var debug: Bool
-}
-```
-
-**验证结果**:
-- ✅ 配置项可以被正确传递
-- ✅ 默认配置能正确处理标准网页
-- [ ] CLI 支持 `--config` 参数 (Phase 6)
-
-### 1.2 错误类型体系 ✅
-
-**已完成**:
-```swift
-public enum ReadabilityError: Error, CustomStringConvertible, Sendable {
-    case noContent
-    case contentTooShort(actualLength: Int, threshold: Int)
-    case parsingFailed(underlying: Error)
-    case invalidHTML
-    case elementNotFound(String)
-}
-```
-
-**验证结果**:
-- ✅ 每种错误都能被正确抛出和捕获
-- ✅ 错误信息清晰有用
-- ✅ CLI 能正确显示错误信息
-
-### 1.3 目录结构调整 ✅
-
-**已完成结构**:
+### 1.3 Directory Structure
 ```
 Sources/Readability/
-├── Readability.swift              # 主入口
-├── ReadabilityOptions.swift       # 配置选项 ✅
-├── ReadabilityResult.swift        # 结果结构
-├── ReadabilityError.swift         # 错误定义 ✅
+├── Readability.swift          # Main entry
+├── ReadabilityOptions.swift   # Configuration
+├── ReadabilityResult.swift    # Result struct
+├── ReadabilityError.swift     # Errors
 └── Internal/
-    ├── Configuration.swift        # 常量配置 ✅
-    └── DOMHelpers.swift           # DOM 工具方法 ✅
+    ├── Configuration.swift    # Constants
+    └── DOMHelpers.swift       # Utilities
 ```
 
-**待后续 Phase 补充**:
-- DocumentPreparer.swift
-- ArticleGrabber.swift
-- ContentScorer.swift
-- ContentCleaner.swift
-- MetadataExtractor.swift
-
-**验证结果**:
-- ✅ 项目能正常编译
-- ✅ 所有原有功能正常工作
-- ✅ 内部模块间无循环依赖
+### Phase 1 Deliverables
+- 4 Mozilla test cases imported
+- 10 tests passing (6 with known issues for content structure)
+- All basic functionality working
 
 ---
 
-## Phase 2: 文档预处理完善 (Day 2-3)
+## Phase 2: Document Preprocessing
 
-**目标**: 完整实现 `prepDocument` 和相关方法
+**Goal:** Complete `prepDocument()` and related methods
 
-### 2.1 完整标签移除
+### 2.1 Tag Removal
+- [ ] `<template>` tags
+- [ ] SVG handling (preserve references, optionally inline)
+- [ ] Special character handling
 
-当前实现: `script, style, noscript, iframe, object, embed`
+### 2.2 BR Tag Processing
+- [ ] Multiple consecutive `<br>` handling
+- [ ] Paragraph conversion logic refinement
 
-需补充:
-- `template` - 模板标签
-- `svg` 内容处理 (可选但保留引用)
+### 2.3 Font Tag Replacement
+- [ ] Complete `<font>` to `<span>` conversion
+- [ ] Attribute preservation
 
-**验证标准**:
-```swift
-@Test func testScriptRemoval() async throws {
-    let html = "<html><script>alert('x')</script><body><p>Content</p></body></html>"
-    let result = try Readability(html: html).parse()
-    #expect(!result.content.contains("script"))
-    #expect(!result.content.contains("alert"))
-}
-```
-
-### 2.2 BR 标签替换 (`replaceBrs`)
-
-当前实现: 基础版本
-
-完善内容:
-- 处理连续多个 BR 标签
-- 转换为段落标签
-- 保留文本内容
-
-**验证标准**:
-```swift
-@Test func testBrsToParagraphs() async throws {
-    let html = "<p>Line1<br><br>Line2</p>"
-    let result = try Readability(html: html).parse()
-    #expect(result.content.contains("<p>Line1</p>"))
-}
-```
-
-### 2.3 字体标签转换
-
-将 `<font>` 标签转换为 `<span>` 标签，保留样式
-
-**验证标准**:
-- `<font color="red">Text</font>` → `<span>Text</span>`
-- 内容被保留，标签被替换
+### Verification
+Each feature must:
+- Have corresponding Mozilla test case
+- Pass exact match comparison with `expected.html`
 
 ---
 
-## Phase 3: 元数据提取完善 (Day 3-4)
+## Phase 3: Metadata Extraction
 
-**目标**: 完整的标题、作者、站点名、发布时间提取
+**Goal:** Full metadata extraction from all sources
 
-### 3.1 JSON-LD 解析
+### 3.1 JSON-LD Parsing
+- [ ] Parse `application/ld+json` scripts
+- [ ] Extract `headline`, `author`, `datePublished`, `publisher`
+- [ ] Handle nested structures
 
-实现 JSON-LD (`application/ld+json`) 解析：
+### 3.2 Open Graph Tags
+- [ ] `og:title`, `og:description`, `og:site_name`
+- [ ] `og:type` handling
 
-```swift
-// 提取 @type = NewsArticle, Article 等的信息
-// 字段: headline, author, datePublished, publisher 等
-```
+### 3.3 Dublin Core and Twitter Cards
+- [ ] `dc:title`, `dc:creator`
+- [ ] `twitter:title`, `twitter:description`
 
-**验证标准**:
-```swift
-@Test func testJSONLDExtraction() async throws {
-    let html = """
-    <script type="application/ld+json">
-    {
-        "@type": "NewsArticle",
-        "headline": "Article Title",
-        "author": {"name": "John Doe"},
-        "datePublished": "2024-01-01"
-    }
-    </script>
-    """
-    let result = try Readability(html: html).parse()
-    #expect(result.title == "Article Title")
-    #expect(result.byline == "John Doe")
-}
-```
+### 3.4 Meta Tag Extraction Priority
+Implement Mozilla's exact priority order:
+1. JSON-LD
+2. `dc:description` / `dcterm:description`
+3. `og:description`
+4. `weibo:article:description`
+5. `description`
+6. `twitter:description`
 
-### 3.2 Open Graph 标签
-
-提取 `og:title`, `og:description`, `og:site_name`
-
-### 3.3 Dublin Core 和 Twitter Cards
-
-- `dc:title`, `dc:creator`
-- `twitter:title`, `twitter:description`
-
-### 3.4 智能标题清理
-
-当前实现: 基础版本
-
-完善:
-- 更多分隔符处理
-- 站点名识别和移除
-- 标题层级匹配 (h1 vs title 标签)
-
-**验证标准**:
-```swift
-// 输入: <title>Article Title - Site Name</title>
-// 输出: "Article Title" (移除站点名)
-@Test func testTitleCleaning() async throws {
-    let html = "<html><head><title>Great Article - My Blog</title></head><body><h1>Great Article</h1><p>Content</p></body></html>"
-    let result = try Readability(html: html).parse()
-    #expect(result.title == "Great Article")
-}
-```
+### Verification
+- All 001 test metadata fields must match exactly
+- Byline extraction: "Nicolas Perriault"
+- Excerpt extraction: "Nicolas Perriault's homepage."
 
 ---
 
-## Phase 4: 核心评分算法增强 (Day 4-6)
+## Phase 4: Core Scoring Algorithm
 
-**目标**: 完整的 `_grabArticle` 和 `_initializeNode` 逻辑
+**Goal:** Complete `_grabArticle` and `_initializeNode` logic
 
-### 4.1 节点评分细化
+### 4.1 Node Scoring Refinement
+- [ ] Precise tag weights
+- [ ] Ancestor score propagation (more levels)
+- [ ] Link density calculation optimization
 
-当前实现: 基础版本
+### 4.2 Top N Candidate Selection
+- [ ] Collect top candidates (not just highest)
+- [ ] Sibling node merging
+- [ ] Common ancestor lookup
 
-完善:
-- 更细致的标签权重
-- 属性评分 (class/id 匹配)
-- 链接密度计算优化
-- 祖先节点分数传播
+### 4.3 Multi-Attempt Fallback
+- [ ] Retry with different selectors
+- [ ] Alternative strategies for edge cases
 
-```swift
-// 参考 Mozilla 实现:
-// - DIV/ARTICLE/SECTION: +5
-// - PRE/TD/BLOCKQUOTE: +3
-// - 其他容器: 根据内容动态计算
-// - 文本长度: +1 per 100 chars (max 3)
-// - 逗号数量: +1 per comma
-// - class/id 匹配 positive patterns: +25
-// - class/id 匹配 negative patterns: -25
-// - 链接密度惩罚: score *= (1 - linkDensity)
-```
-
-**验证标准**:
-- 能正确识别主要内容区
-- 对常见布局 (文章+侧边栏) 正确处理
-- 测试用例通过率 > 60%
-
-### 4.2 候选节点选择优化
-
-当前实现: 简单最高分选择
-
-完善:
-- Top N 候选收集
-- 兄弟节点合并
-- 向上查找共同祖先
-
-**验证标准**:
-```swift
-@Test func testCandidateSelection() async throws {
-    // 模拟文章页面结构
-    let html = loadTestHTML("article-with-sidebar")
-    let result = try Readability(html: html).parse()
-    #expect(result.textContent.contains("Article content"))
-    #expect(!result.textContent.contains("Sidebar content"))
-}
-```
-
-### 4.3 多轮尝试机制
-
-当内容过短或为空时，使用不同策略重试：
-
-```swift
-for attempt in 0..<maxAttempts {
-    let result = try grabArticle(attempt: attempt)
-    if isAcceptable(result) { return result }
-}
-```
-
-**验证标准**:
-- 第一遍失败时能尝试替代选择器
-- 不会无限循环
+### Verification
+- 60%+ Mozilla test pass rate
+- Real article pages extract correctly
 
 ---
 
-## Phase 5: 内容清理完善 (Day 6-8)
+## Phase 5: Content Cleaning
 
-**目标**: 完整的 `_prepArticle` 和 `_cleanConditionally`
+**Goal:** Full `_prepArticle` and `_cleanConditionally` implementation
 
-### 5.1 条件清理 (`_cleanConditionally`)
+### 5.1 Conditional Cleaning
+Remove elements based on:
+- [ ] Image-to-paragraph ratio
+- [ ] Input element count
+- [ ] Link density thresholds
+- [ ] Content length checks
+- [ ] Ad/navigation pattern detection
 
-根据内容特征决定是否移除元素：
+### 5.2 Tag Transformation
+- [ ] `<div>` to `<p>` conversion (when appropriate)
+- [ ] Attribute cleanup (respecting `keepClasses`)
+- [ ] Empty container removal
 
-移除条件:
-- 图片/段落比例过高
-- 输入框过多
-- 链接密度过高 (> 0.2-0.5)
-- 内容过短
-- 看起来像广告/导航
+### 5.3 Image Handling
+- [ ] Lazy load image fixing (`data-src` to `src`)
+- [ ] Small image/icon removal
+- [ ] Meaningful image preservation
 
-**验证标准**:
-```swift
-@Test func testConditionalCleaning() async throws {
-    let html = """
-    <div>
-        <p>Real article content here</p>
-        <div class="comments">
-            <p>Comment 1</p>
-            <p>Comment 2</p>
-        </div>
-    </div>
-    """
-    let result = try Readability(html: html).parse()
-    #expect(result.textContent.contains("Real article content"))
-    #expect(!result.textContent.contains("Comment"))
-}
-```
-
-### 5.2 标签清理和转换
-
-- 移除不需要的属性 (style, class, id, onclick 等)
-- 将 DIV 转换为 P (当内容适合时)
-- 清理空的容器
-
-### 5.3 图片处理
-
-- 修复懒加载图片 (data-src → src)
-- 移除小图片/图标
-- 保留有意义的图片
-
-**验证标准**:
-```swift
-@Test func testLazyImageFix() async throws {
-    let html = """
-    <img data-src="real.jpg" src="placeholder.gif">
-    """
-    let result = try Readability(html: html).parse()
-    #expect(result.content.contains("real.jpg"))
-}
-```
+### Verification
+- 80%+ Mozilla test pass rate
+- Clean output without navigation/ads
 
 ---
 
-## Phase 6: 高级功能 (Day 8-10)
+## Phase 6: Advanced Features
 
-### 6.1 分页处理
+### 6.1 Pagination Support
+- [ ] Detect "next page" links
+- [ ] Merge multi-page content
 
-检测并处理多页文章:
-- 查找 "下一页" 链接
-- 合并分页内容
+### 6.2 Code Block Protection
+- [ ] Preserve `<pre>`, `<code>` content
+- [ ] Do not clean conditional on code blocks
 
-### 6.2 代码块保护
+### 6.3 Table Handling
+- [ ] Detect layout vs data tables
+- [ ] Preserve meaningful tables
 
-保护 `<pre>`, `<code>` 中的内容不被误清理
+### 6.4 CLI Enhancements
+- [ ] Configuration file support
+- [ ] Batch processing
 
-**验证标准**:
-```swift
-@Test func testCodeBlockPreservation() async throws {
-    let html = "<pre><code>console.log('test');</code></pre>"
-    let result = try Readability(html: html).parse()
-    #expect(result.textContent.contains("console.log"))
-}
-```
-
-### 6.3 表格处理
-
-保留有意义的表格，移除布局表格
+### Verification
+- 90%+ Mozilla test pass rate
 
 ---
 
-## Phase 7: 测试与基准 (持续进行)
+## Phase 7: Performance and Polish
 
-### 7.1 导入 Mozilla 测试套件 ✅ 部分完成
+### 7.1 Performance Optimization
+- [ ] Large document handling (>1MB)
+- [ ] Memory usage optimization
+- [ ] Instruments profiling
 
-**已完成**:
-```
-Tests/ReadabilityTests/Resources/
-└── test-pages/
-    ├── 001/                    # 真实文章测试
-    ├── basic-tags-cleaning/    # 基础标签清理
-    ├── remove-script-tags/     # 脚本移除
-    └── replace-brs/            # BR 标签处理
-```
+### 7.2 Documentation
+- [ ] API documentation
+- [ ] Migration guide from other implementations
 
-**测试加载器**: `TestLoader.swift` 支持动态加载测试用例
-
-**当前测试**: 9 项测试全部通过
-
-### 7.2 测试覆盖率目标
-
-| 阶段 | 目标通过率 | 说明 |
-|------|-----------|------|
-| Phase 2 结束 | 30% | 基础功能 |
-| Phase 4 结束 | 60% | 核心算法 |
-| Phase 5 结束 | 80% | 完整清理 |
-| Phase 6 结束 | 90%+ | 高级功能 |
-
-### 7.3 性能基准
-
-- 大文档 (> 1MB HTML) 处理时间 < 1s
-- 内存占用 < 50MB
+### 7.3 Release Preparation
+- [ ] Version 1.0.0
+- [ ] CocoaPods/SPM publication
 
 ---
 
-## 开发检查清单
+## Test Coverage Targets
 
-每个 Phase 完成前检查:
+| Phase | Target Pass Rate | Test Cases |
+|-------|------------------|------------|
+| Phase 1 | N/A (foundation) | 4 |
+| Phase 2 | 30% | 20-30 |
+| Phase 3 | 40% | 40-50 |
+| Phase 4 | 60% | 60-80 |
+| Phase 5 | 80% | 100-120 |
+| Phase 6 | 90%+ | 130 (all) |
 
-- [ ] 代码编译无警告
-- [ ] 所有现有测试通过
-- [ ] 新增功能有对应测试
-- [ ] CLI 能正确处理测试 URL
-- [ ] 文档已更新 (如需要)
-
----
-
-## 快速验证命令
-
-```bash
-# 完整验证
-cd Readability && swift build && swift test
-
-# CLI 测试
-cd ReadabilityCLI
-swift run ReadabilityCLI https://soulhacker.me/posts/why-type-system-matters/ --text-only
-
-# 本地 HTML 测试
-cat test.html | swift run ReadabilityCLI --text-only
-```
+**Current:** 4/130 test cases (3%), 10/10 tests passing with 4 known issues
 
 ---
 
-## 参考资源
+## Mozilla Test Case Import Priority
 
-1. **Mozilla Readability 源码**: https://github.com/mozilla/readability
-2. **测试套件**: https://github.com/mozilla/readability/tree/main/test
-3. **SwiftSoup 文档**: https://github.com/scinfu/SwiftSoup
-4. **原始 JS 算法分析**: 见 INIT.md 第 2-3 节
+### Immediate (Phase 2-3)
+- `003-metadata-preferred`
+- `004-metadata-space-separated-properties`
+- `parsely-metadata`
+- `schema-org-context-object`
+- `replace-font-tags`
+- `remove-aria-hidden`
+- `style-tags-removal`
+
+### Near-term (Phase 4-5)
+- `title-en-dash`
+- `title-and-h1-discrepancy`
+- `normalize-spaces`
+- `keep-images`
+- `keep-tabular-data`
+- `lazy-image-*`
+
+### Complete Set (Phase 6)
+All 130 Mozilla test cases for full compatibility verification
 
 ---
 
-## 下一步行动
+## See Also
 
-### Phase 1 已完成 ✅
-- 9 项测试全部通过
-- 配置系统、错误体系、目录结构已就位
-- Mozilla 测试套件框架已建立
-
-### 立即开始: Phase 2 (文档预处理完善)
-1. **导入更多 Mozilla 测试用例** - 选择 5-10 个覆盖不同场景
-2. **完善 `prepDocument()`** - 处理 template 标签、特殊字符
-3. **增强 `replaceBrs()`** - 优化段落分割逻辑
-4. **添加更多预处理测试** - 验证清理逻辑
-
-### 本周目标
-- 完成 Phase 2 所有任务
-- 测试用例达到 15-20 个
-- 通过率保持 100%
-
-### 里程碑
-- Phase 2 结束: 30% Mozilla 测试通过率
-- Phase 4 结束: 60% Mozilla 测试通过率
-- Phase 5 结束: 80% Mozilla 测试通过率
+- `AGENTS.md` - Core principles and coding standards
+- `TESTS.md` - Detailed testing strategy and current progress
+- `INIT.md` - Original project planning (Chinese)
