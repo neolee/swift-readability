@@ -507,4 +507,81 @@ struct MozillaCompatibilityTests {
         #expect(result.title == expectedTitle,
                 "Title mismatch. Expected: '\(expectedTitle)', Actual: '\(result.title)'")
     }
+
+    // MARK: - Phase 4: Core Scoring Tests
+
+    @Test("title-en-dash - Title matches expected")
+    func testTitleEnDash() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "title-en-dash") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedTitle = testCase.expectedMetadata.title ?? ""
+        #expect(result.title == expectedTitle,
+                "Title mismatch. Expected: '\(expectedTitle)', Actual: '\(result.title)'")
+    }
+
+    @Test("title-and-h1-discrepancy - Title matches expected")
+    func testTitleAndH1Discrepancy() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "title-and-h1-discrepancy") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedTitle = testCase.expectedMetadata.title ?? ""
+        #expect(result.title == expectedTitle,
+                "Title mismatch. Expected: '\(expectedTitle)', Actual: '\(result.title)'")
+    }
+
+    @Test("keep-images - Title matches expected")
+    func testKeepImagesTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "keep-images") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedTitle = testCase.expectedMetadata.title ?? ""
+        #expect(result.title == expectedTitle,
+                "Title mismatch. Expected: '\(expectedTitle)', Actual: '\(result.title)'")
+    }
+
+    @Test("keep-images - Byline matches expected")
+    func testKeepImagesByline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "keep-images") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedByline = testCase.expectedMetadata.byline
+        #expect(result.byline == expectedByline,
+                "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
+    }
+
+    @Test("keep-tabular-data - Title matches expected")
+    func testKeepTabularDataTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "keep-tabular-data") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedTitle = testCase.expectedMetadata.title ?? ""
+        #expect(result.title == expectedTitle,
+                "Title mismatch. Expected: '\(expectedTitle)', Actual: '\(result.title)'")
+    }
 }

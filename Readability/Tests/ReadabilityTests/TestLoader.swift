@@ -79,7 +79,12 @@ enum TestLoader {
             "003-metadata-preferred",
             "004-metadata-space-separated-properties",
             "parsely-metadata",
-            "schema-org-context-object"
+            "schema-org-context-object",
+            // Phase 4: Core scoring
+            "title-en-dash",
+            "title-and-h1-discrepancy",
+            "keep-images",
+            "keep-tabular-data"
         ]
         return testNames.compactMap { loadTestCase(named: $0) }
     }

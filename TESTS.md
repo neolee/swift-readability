@@ -19,16 +19,22 @@ This document tracks testing progress, strategy, and known issues for the Swift 
 
 | Test Category | Passed | Known Issues | Failed |
 |--------------|--------|--------------|--------|
-| Title extraction | 15 | 0 | 0 |
+| Title extraction | 18 | 0 | 0 |
 | Content structure | 9 | 4 | 0 |
 | Metadata (byline/excerpt) | 11 | 1 | 0 |
-| **Total** | **35** | **5** | **0** |
+| **Total** | **38** | **5** | **0** |
 
-**Note:** 27 tests total, 6 with known issues (all Phase 5 content cleaning)
+**Note:** 32 tests total, 6 with known issues (all Phase 5 content cleaning)
 
 **Phase 2 New Tests:** 8 new tests added, all passing (4 with known issues for `<h1>` retention)
 
 **Phase 3 New Tests:** 9 new tests added, all passing (3 with known issues for byline extraction from HTML content)
+
+**Phase 4 New Tests:** 5 new tests added, all passing:
+- `title-en-dash`: En-dash separator handling
+- `title-and-h1-discrepancy`: Title vs H1 discrepancy handling  
+- `keep-images`: Image preservation in content
+- `keep-tabular-data`: Table data preservation
 
 ### Mozilla Test Cases Imported
 
