@@ -145,10 +145,7 @@ struct MozillaCompatibilityTests {
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
-
-        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
-            #expect(comparison.isEqual)
-        }
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
     @Test("basic-tags-cleaning - Title matches expected")
@@ -179,10 +176,7 @@ struct MozillaCompatibilityTests {
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
-
-        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
-            #expect(comparison.isEqual)
-        }
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
     @Test("remove-script-tags - Title matches expected")
@@ -213,10 +207,7 @@ struct MozillaCompatibilityTests {
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
-
-        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
-            #expect(comparison.isEqual)
-        }
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
     @Test("replace-brs - Title matches expected")
@@ -247,10 +238,7 @@ struct MozillaCompatibilityTests {
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
-
-        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
-            #expect(comparison.isEqual)
-        }
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
     @Test("replace-font-tags - Title matches expected")
@@ -283,10 +271,7 @@ struct MozillaCompatibilityTests {
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
-
-        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
-            #expect(comparison.isEqual)
-        }
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
     @Test("remove-aria-hidden - Title matches expected")

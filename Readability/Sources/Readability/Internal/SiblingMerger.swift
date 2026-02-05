@@ -29,10 +29,9 @@ final class SiblingMerger {
 
         // Get parent and siblings
         guard let parentOfTopCandidate = topCandidate.parent() else {
-            // If no parent, just append the top candidate
-            if let clone = topCandidate.copy() as? Element {
-                try articleContent.appendChild(clone)
-            }
+            // If no parent, clone the top candidate into document context
+            let clone = try cloneElement(topCandidate, in: doc)
+            try articleContent.appendChild(clone)
             return articleContent
         }
 
@@ -51,7 +50,7 @@ final class SiblingMerger {
 
             if shouldAppend {
                 // Alter tag if needed (convert to DIV unless in exceptions)
-                let alteredSibling = try alterToDivIfNeeded(sibling)
+                let alteredSibling = try alterToDivIfNeeded(sibling, in: doc)
                 try articleContent.appendChild(alteredSibling)
             }
         }
@@ -125,19 +124,17 @@ final class SiblingMerger {
 
     /// Alter sibling to DIV if needed
     /// Elements in ALTER_TO_DIV_EXCEPTIONS are kept as-is
-    private func alterToDivIfNeeded(_ element: Element) throws -> Element {
+    private func alterToDivIfNeeded(_ element: Element, in doc: Document) throws -> Element {
         let tagName = element.tagName().uppercased()
 
         // Check if element is in exception list
         if Configuration.alterToDIVExceptions.contains(tagName) {
-            if let clone = element.copy() as? Element {
-                return clone
-            }
-            return element
+            // Clone into document context to ensure proper ownership
+            return try cloneElement(element, in: doc)
         }
 
-        // Create new DIV and move children
-        let div = Element(Tag("div"), "")
+        // Create new DIV and move children using document context
+        let div = try doc.createElement("div")
 
         // Copy attributes
         if let attributes = element.getAttributes() {
@@ -146,11 +143,10 @@ final class SiblingMerger {
             }
         }
 
-        // Copy children
+        // Copy children using document-aware cloning
         for child in element.children() {
-            if let clone = child.copy() as? Element {
-                try div.appendChild(clone)
-            }
+            let clone = try cloneElement(child, in: doc)
+            try div.appendChild(clone)
         }
 
         // Copy text nodes
@@ -159,6 +155,33 @@ final class SiblingMerger {
         }
 
         return div
+    }
+
+    /// Clone an element into document context
+    /// This ensures the cloned element has proper document ownership
+    private func cloneElement(_ element: Element, in doc: Document) throws -> Element {
+        // Create new element with same tag in document context
+        let clone = try doc.createElement(element.tagName())
+
+        // Copy attributes
+        if let attributes = element.getAttributes() {
+            for attr in attributes {
+                try clone.attr(attr.getKey(), attr.getValue())
+            }
+        }
+
+        // Recursively clone children
+        for child in element.children() {
+            let childClone = try cloneElement(child, in: doc)
+            try clone.appendChild(childClone)
+        }
+
+        // Copy text nodes
+        for textNode in element.textNodes() {
+            try clone.appendText(textNode.text())
+        }
+
+        return clone
     }
 
     // MARK: - Score Threshold Calculation
@@ -182,7 +205,8 @@ final class SiblingMerger {
         from parent: Element,
         to articleContent: Element,
         topCandidate: Element,
-        threshold: Double
+        threshold: Double,
+        in doc: Document
     ) throws {
         let topCandidateClassName = (try? topCandidate.className()) ?? ""
         var siblingsToProcess = parent.children()
@@ -199,7 +223,7 @@ final class SiblingMerger {
             )
 
             if shouldAppend {
-                let alteredSibling = try alterToDivIfNeeded(sibling)
+                let alteredSibling = try alterToDivIfNeeded(sibling, in: doc)
                 try articleContent.appendChild(alteredSibling)
 
                 // Re-fetch children since we modified the DOM

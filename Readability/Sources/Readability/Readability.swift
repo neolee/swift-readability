@@ -1,6 +1,8 @@
 import Foundation
 import SwiftSoup
 
+/// Swift implementation of Mozilla's Readability.js
+/// Extracts readable content from web pages
 public struct Readability {
     private let doc: Document
     private let baseURL: URL?
@@ -18,6 +20,7 @@ public struct Readability {
         // Extract metadata BEFORE prepDocument() to preserve JSON-LD scripts
         let metadata = try extractMetadata()
 
+        // Prepare document (remove scripts, styles, etc.)
         try prepDocument()
 
         // Use metadata title if available, otherwise extract from document
@@ -27,8 +30,17 @@ public struct Readability {
         } else {
             title = try extractTitle()
         }
-        let article = try grabArticle()
-        let textContent = try article.text()
+
+        // Extract article content using new ContentExtractor
+        let extractor = ContentExtractor(doc: doc, options: options)
+        let (articleContent, extractedByline, _) = try extractor.extract()
+
+        // Post-process with ArticleCleaner
+        let cleaner = ArticleCleaner(options: options)
+        try cleaner.prepArticle(articleContent)
+
+        // Get text content
+        let textContent = try articleContent.text()
 
         // Check character threshold
         if textContent.count < options.charThreshold {
@@ -43,20 +55,30 @@ public struct Readability {
         if let metaExcerpt = metadata.excerpt {
             excerpt = metaExcerpt
         } else {
-            excerpt = try extractExcerpt(from: article)
+            excerpt = try extractExcerpt(from: articleContent)
         }
-        let content = try cleanArticle(article)
+
+        // Add page wrapper attributes to article content directly
+        try articleContent.attr("id", "readability-page-1")
+        try articleContent.addClass("page")
+
+        // Clean and serialize content
+        let content = try cleanAndSerialize(articleContent)
+
+        // Use byline from extraction if available, otherwise from metadata
+        let byline = extractedByline ?? metadata.byline
 
         return ReadabilityResult(
             title: title,
-            byline: metadata.byline,
+            byline: byline,
             content: content,
             textContent: textContent,
             excerpt: excerpt
         )
     }
 
-    /// Metadata extraction structure following Mozilla's logic
+    // MARK: - Metadata Extraction
+
     private struct Metadata {
         var title: String?
         var byline: String?
@@ -71,7 +93,6 @@ public struct Readability {
 
         // Skip if JSON-LD is disabled
         if !options.disableJSONLD {
-            // Parse JSON-LD for metadata
             let jsonldMetadata = try extractJSONLDMetadata()
             metadata.title = jsonldMetadata.title
             metadata.byline = jsonldMetadata.byline
@@ -80,11 +101,22 @@ public struct Readability {
             metadata.publishedTime = jsonldMetadata.publishedTime
         }
 
-        // Extract from meta tags following Mozilla's priority order
-        // Pattern for matching property names: (dc|dcterm|og|twitter|parsely|weibo):property
+        // Extract from meta tags
+        let metaMetadata = try extractMetaMetadata()
+        metadata.title = metadata.title ?? metaMetadata.title
+        metadata.byline = metadata.byline ?? metaMetadata.byline
+        metadata.excerpt = metadata.excerpt ?? metaMetadata.excerpt
+        metadata.siteName = metadata.siteName ?? metaMetadata.siteName
+        metadata.publishedTime = metadata.publishedTime ?? metaMetadata.publishedTime
+
+        return metadata
+    }
+
+    private func extractMetaMetadata() throws -> Metadata {
+        var metadata = Metadata()
+
         let propertyPattern = "^\\s*(?:(dc|dcterm|og|twitter|parsely|weibo:(article|webpage))\\s*[-\\.:]\\s*)?(author|creator|pub-date|description|title|site_name)\\s*$"
 
-        // Collect all meta values - support space-separated properties
         var values: [String: String] = [:]
         let metas = try doc.select("meta")
 
@@ -93,21 +125,15 @@ public struct Readability {
             let name = (try? meta.attr("name"))?.lowercased() ?? ""
             let content = (try? meta.attr("content")) ?? ""
 
-            // Collect all keys to check from both property and name attributes
             var keysToCheck: [String] = []
-
-            // Handle space-separated properties (e.g., "x:title dc:title")
             if !property.isEmpty {
                 keysToCheck.append(contentsOf: property.split(separator: " ").map(String.init))
             }
-
-            // Also check name attribute if present
             if !name.isEmpty {
                 keysToCheck.append(name)
             }
 
             for key in keysToCheck {
-                // Match against pattern
                 if let regex = try? NSRegularExpression(pattern: propertyPattern, options: [.caseInsensitive]),
                    regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil,
                    !content.isEmpty {
@@ -116,19 +142,15 @@ public struct Readability {
             }
         }
 
-        // Extract title from meta tags (for use if JSON-LD not available)
-        // Priority: dc:title > dcterm:title > og:title > twitter:title > parsely-title > title
-        let metaTitle = values["dc:title"] ??
-                       values["dcterm:title"] ??
-                       values["og:title"] ??
-                       values["twitter:title"] ??
-                       values["parsely-title"] ??
-                       values["title"]
-        metadata.title = metadata.title ?? metaTitle
+        // Extract title
+        metadata.title = values["dc:title"] ??
+                         values["dcterm:title"] ??
+                         values["og:title"] ??
+                         values["twitter:title"] ??
+                         values["parsely-title"] ??
+                         values["title"]
 
-        // Extract byline (author) following Mozilla's priority
-        // JSON-LD has highest priority, then meta tags
-        // Priority: dc:creator > dcterm:creator > author > parsely-author > weibo:author > twitter:creator > og:creator
+        // Extract byline
         let metaByline = values["dc:creator"] ??
                         values["dcterm:creator"] ??
                         values["author"]
@@ -137,9 +159,8 @@ public struct Readability {
                           values["weibo:webpage:author"]
         let ogByline = values["twitter:creator"] ??
                       values["og:author"]
-        metadata.byline = metadata.byline ?? metaByline ?? socialByline ?? ogByline
+        metadata.byline = metaByline ?? socialByline ?? ogByline
 
-        // Clean up byline (remove "By" prefix, etc.)
         if var byline = metadata.byline {
             byline = byline.trimmingCharacters(in: .whitespaces)
             if byline.lowercased().hasPrefix("by ") {
@@ -148,25 +169,24 @@ public struct Readability {
             metadata.byline = byline
         }
 
-        // Extract description/excerpt following Mozilla's priority
-        // JSON-LD has highest priority, then meta tags
-        let dcDescription = values["dc:description"] ?? values["dcterm:description"]
-        let ogDescription = values["og:description"]
-        let weiboDescription = values["weibo:article:description"] ?? values["weibo:webpage:description"]
-        let stdDescription = values["description"] ?? values["twitter:description"]
-        metadata.excerpt = metadata.excerpt ?? dcDescription ?? ogDescription ?? weiboDescription ?? stdDescription
+        // Extract excerpt
+        metadata.excerpt = values["dc:description"] ??
+                          values["dcterm:description"] ??
+                          values["og:description"] ??
+                          values["weibo:article:description"] ??
+                          values["weibo:webpage:description"] ??
+                          values["description"] ??
+                          values["twitter:description"]
 
         // Extract site name
-        // JSON-LD publisher.name has highest priority, then meta tags
-        let ogSiteName = values["og:site_name"]
-        let twitterSite = values["twitter:site"]
-        let dcPublisher = values["dc:publisher"] ?? values["dcterm:publisher"]
-        metadata.siteName = metadata.siteName ?? ogSiteName ?? twitterSite ?? dcPublisher
+        metadata.siteName = values["og:site_name"] ??
+                           values["twitter:site"] ??
+                           values["dc:publisher"] ??
+                           values["dcterm:publisher"]
 
-        // Clean up excerpt (unescape HTML entities)
+        // Clean up excerpt
         if var excerpt = metadata.excerpt {
             excerpt = excerpt.trimmingCharacters(in: .whitespaces)
-            // Basic HTML entity unescaping
             excerpt = excerpt.replacingOccurrences(of: "&quot;", with: "\"")
                 .replacingOccurrences(of: "&amp;", with: "&")
                 .replacingOccurrences(of: "&lt;", with: "<")
@@ -179,42 +199,26 @@ public struct Readability {
         return metadata
     }
 
-    // MARK: - JSON-LD Metadata Extraction
-
-    /// Extract metadata from JSON-LD scripts
     private func extractJSONLDMetadata() throws -> Metadata {
         var metadata = Metadata()
 
-        // Try multiple selector patterns for JSON-LD scripts
         var scripts = try doc.select("script[type=\"application/ld+json\"]")
         if scripts.isEmpty {
             scripts = try doc.select("script[type='application/ld+json']")
         }
-        if scripts.isEmpty {
-            // Fallback: check all script tags
-            let allScripts = try doc.select("script")
-            for script in allScripts {
-                let typeAttr = (try? script.attr("type")) ?? ""
-                if typeAttr == "application/ld+json" {
-                    scripts.add(script)
-                }
-            }
-        }
+
         var jsonldObjects: [[String: Any]] = []
 
         for script in scripts {
             guard let jsonText = try? script.html() else { continue }
 
-            // Clean up the text (remove CDATA if present)
             let cleanedText = jsonText
                 .replacingOccurrences(of: "<![CDATA[", with: "")
                 .replacingOccurrences(of: "]]>", with: "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
-            guard !cleanedText.isEmpty else { continue }
-
-            // Parse JSON
-            guard let data = cleanedText.data(using: .utf8) else { continue }
+            guard !cleanedText.isEmpty,
+                  let data = cleanedText.data(using: .utf8) else { continue }
 
             do {
                 if let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
@@ -227,7 +231,6 @@ public struct Readability {
             }
         }
 
-        // Find the best matching object (prefer NewsArticle, then Article, then WebPage)
         let preferredTypes = ["NewsArticle", "Article", "WebPage", "BlogPosting"]
         var selectedObject: [String: Any]?
 
@@ -238,7 +241,6 @@ public struct Readability {
             }
         }
 
-        // Fall back to first object if no preferred type found
         if selectedObject == nil && !jsonldObjects.isEmpty {
             selectedObject = jsonldObjects.first
         }
@@ -247,54 +249,43 @@ public struct Readability {
             return metadata
         }
 
-        // Extract headline/title
         if let headline = jsonld["headline"] as? String {
             metadata.title = headline
         }
 
-        // Extract description/excerpt
         if let description = jsonld["description"] as? String {
             metadata.excerpt = description
         }
 
-        // Extract datePublished
         if let datePublished = jsonld["datePublished"] as? String {
             metadata.publishedTime = datePublished
         }
 
-        // Extract author/byline
         metadata.byline = extractAuthorFromJSONLD(jsonld["author"])
 
-        // Extract siteName from publisher
-        if let publisher = jsonld["publisher"] as? [String: Any] {
-            if let publisherName = publisher["name"] as? String {
-                metadata.siteName = publisherName
-            }
+        if let publisher = jsonld["publisher"] as? [String: Any],
+           let publisherName = publisher["name"] as? String {
+            metadata.siteName = publisherName
         }
 
         return metadata
     }
 
-    /// Extract author name from JSON-LD author field (can be string, object, or array)
     private func extractAuthorFromJSONLD(_ author: Any?) -> String? {
         guard let author = author else { return nil }
 
-        // Handle array of authors
         if let authorArray = author as? [Any] {
             let names = authorArray.compactMap { extractAuthorFromJSONLD($0) }
             return names.isEmpty ? nil : names.joined(separator: ", ")
         }
 
-        // Handle string author
         if let authorString = author as? String {
             return authorString
         }
 
-        // Handle object author with name property
-        if let authorObject = author as? [String: Any] {
-            if let name = authorObject["name"] as? String {
-                return name
-            }
+        if let authorObject = author as? [String: Any],
+           let name = authorObject["name"] as? String {
+            return name
         }
 
         return nil
@@ -303,21 +294,14 @@ public struct Readability {
     // MARK: - Document Preparation
 
     private func prepDocument() throws {
-        // Remove script, style, and other non-content elements
         let elementsToRemove = try doc.select("script, style, noscript, iframe, object, embed, template")
         try elementsToRemove.remove()
 
-        // Remove aria-hidden elements (accessibility - visually hidden content)
         try removeAriaHiddenElements()
-
-        // Convert BR tags to paragraphs
         try replaceBrs()
-
-        // Replace font tags with spans
         try replaceFontTags()
     }
 
-    /// Remove elements with aria-hidden="true" attribute
     private func removeAriaHiddenElements() throws {
         let ariaHiddenElements = try doc.select("[aria-hidden=true]")
         try ariaHiddenElements.remove()
@@ -332,7 +316,7 @@ public struct Readability {
             while let current = next, current.tagName() == "br" {
                 if !replaced {
                     replaced = true
-                    let p = Element(Tag("p"), "")
+                    let p = try doc.createElement("p")
                     _ = try br.previousElementSibling()?.after(p)
                 }
                 let sibling = try current.nextElementSibling()
@@ -349,8 +333,7 @@ public struct Readability {
     private func replaceFontTags() throws {
         let fonts = try doc.select("font")
         for font in fonts {
-            let span = Element(Tag("span"), "")
-            // Copy children
+            let span = try doc.createElement("span")
             for child in font.children() {
                 try span.appendChild(child)
             }
@@ -360,18 +343,14 @@ public struct Readability {
 
     // MARK: - Title Extraction
 
-    /// Extract article title following Mozilla Readability.js logic exactly
     private func extractTitle() throws -> String {
         var curTitle = ""
         var origTitle = ""
 
-        // Get original title from document
         origTitle = try doc.title().trimmingCharacters(in: .whitespaces)
         curTitle = origTitle
 
-        // Skip processing if title is empty
         if curTitle.isEmpty {
-            // Try h1 as fallback
             if let h1 = try doc.select("h1").first() {
                 return try h1.text().trimmingCharacters(in: .whitespaces)
             }
@@ -379,15 +358,12 @@ public struct Readability {
         }
 
         var titleHadHierarchicalSeparators = false
-
-        // Check for hierarchical separators: | - – — \ / > »
         let titleSeparators = "|\\-–—\\/»"
         let separatorPattern = "\\s[\(titleSeparators)]\\s"
 
         if let _ = origTitle.range(of: separatorPattern, options: .regularExpression) {
             titleHadHierarchicalSeparators = origTitle.range(of: "\\s[\\/>»]\\s", options: .regularExpression) != nil
 
-            // Find all separator occurrences and take text before the last one
             let regex = try NSRegularExpression(pattern: separatorPattern, options: [.caseInsensitive])
             let matches = regex.matches(in: origTitle, options: [], range: NSRange(location: 0, length: origTitle.utf16.count))
 
@@ -396,7 +372,6 @@ public struct Readability {
                 curTitle = String(origTitle[..<index])
             }
 
-            // If resulting title is too short (< 3 words), remove the first part instead
             if wordCount(curTitle) < 3 {
                 if let firstMatch = matches.first {
                     let endIndex = origTitle.index(origTitle.startIndex, offsetBy: firstMatch.range.location + firstMatch.range.length)
@@ -404,7 +379,6 @@ public struct Readability {
                 }
             }
         } else if curTitle.contains(": ") {
-            // Check if we have a heading containing this exact string
             let headings = try doc.select("h1, h2")
             let trimmedTitle = curTitle.trimmingCharacters(in: .whitespaces)
 
@@ -417,38 +391,31 @@ public struct Readability {
                 }
             }
 
-            // If no exact match in headings, extract title from after the colon
             if !hasExactMatch {
                 if let lastColon = origTitle.lastIndex(of: ":") {
                     let afterColon = origTitle.index(after: lastColon)
                     curTitle = String(origTitle[afterColon...]).trimmingCharacters(in: .whitespaces)
 
-                    // If title is now too short, try the first colon
                     if wordCount(curTitle) < 3 {
                         if let firstColon = origTitle.firstIndex(of: ":") {
                             let afterFirstColon = origTitle.index(after: firstColon)
                             curTitle = String(origTitle[afterFirstColon...]).trimmingCharacters(in: .whitespaces)
                         }
                     } else if wordCount(String(origTitle[..<origTitle.firstIndex(of: ":")!])) > 5 {
-                        // If too many words before first colon, use original title
                         curTitle = origTitle
                     }
                 }
             }
         } else if curTitle.count > 150 || curTitle.count < 15 {
-            // Title too long or too short - try h1
             let hOnes = try doc.select("h1")
             if hOnes.count == 1 {
                 curTitle = try hOnes.first()!.text()
             }
         }
 
-        // Normalize whitespace
         curTitle = curTitle.trimmingCharacters(in: .whitespaces)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
 
-        // If we now have 4 words or fewer and either no hierarchical separators were found
-        // or we decreased the word count by more than 1, use original title
         let curTitleWordCount = wordCount(curTitle)
         if curTitleWordCount <= 4 {
             if !titleHadHierarchicalSeparators {
@@ -464,125 +431,10 @@ public struct Readability {
         return curTitle.isEmpty ? origTitle : curTitle
     }
 
-    /// Count words in a string
     private func wordCount(_ str: String) -> Int {
         return str.components(separatedBy: .whitespacesAndNewlines)
             .filter { !$0.isEmpty }
             .count
-    }
-
-    // MARK: - Article Extraction
-
-    private func grabArticle() throws -> Element {
-        let body = doc.body() ?? doc
-        let elements = try body.select("p, div, article, section, td, pre, blockquote")
-        var candidates: [(element: Element, score: Double)] = []
-
-        for element in elements {
-            let score = try scoreElement(element)
-            if score > 0 {
-                candidates.append((element, score))
-                // Score ancestors
-                if let parent = element.parent() {
-                    let parentScore = score * Configuration.ancestorScoreMultiplier
-                    if parentScore > 0 {
-                        candidates.append((parent, parentScore))
-                    }
-                }
-            }
-        }
-
-        // Aggregate scores by element
-        var scoreMap: [ObjectIdentifier: (element: Element, score: Double)] = [:]
-        for (element, score) in candidates {
-            let key = ObjectIdentifier(element)
-            if let existing = scoreMap[key] {
-                scoreMap[key] = (element, existing.score + score)
-            } else {
-                scoreMap[key] = (element, score)
-            }
-        }
-
-        // Find best element
-        var bestElement: Element?
-        var bestScore: Double = 0
-
-        for (_, (element, score)) in scoreMap {
-            if score > bestScore {
-                bestScore = score
-                bestElement = element
-            }
-        }
-
-        return bestElement ?? body
-    }
-
-    private func scoreElement(_ element: Element) throws -> Double {
-        let tagName = element.tagName().lowercased()
-        let text = try element.text()
-        let textLength = text.count
-
-        // Skip elements with too little text
-        if textLength < 25 {
-            return 0
-        }
-
-        // Skip hidden elements
-        if !DOMHelpers.isProbablyVisible(element) {
-            return 0
-        }
-
-        var score: Double = 0
-
-        // Base score by tag
-        switch tagName {
-        case "div", "article", "section":
-            score += Configuration.baseScoreDiv
-        case "pre", "td", "blockquote":
-            score += Configuration.baseScorePre
-        case "p":
-            score += Configuration.baseScoreP
-        default:
-            break
-        }
-
-        // Score by text length
-        let lengthScore = min(Double(textLength) / 100.0, Configuration.textLengthScoreMax)
-        score += lengthScore
-
-        // Score by comma count (text density indicator)
-        let commaCount = text.filter { $0 == "," }.count
-        score += Double(commaCount) * Configuration.commaScore
-
-        // Penalize by link density
-        let linkDensity = try calculateLinkDensity(element)
-        score *= (1.0 - linkDensity + options.linkDensityModifier)
-
-        // Score by class/id patterns
-        let classAndId = DOMHelpers.getClassAndId(element)
-
-        if DOMHelpers.matchesPatterns(classAndId, patterns: Configuration.positivePatterns) {
-            score += Configuration.classWeightPositive
-        }
-
-        if DOMHelpers.matchesPatterns(classAndId, patterns: Configuration.negativePatterns) {
-            score += Configuration.classWeightNegative
-        }
-
-        return score
-    }
-
-    private func calculateLinkDensity(_ element: Element) throws -> Double {
-        let text = try element.text()
-        let textLength = max(text.count, 1)
-
-        let links = try element.select("a")
-        var linkLength = 0
-        for link in links {
-            linkLength += try link.text().count
-        }
-
-        return Double(linkLength) / Double(textLength)
     }
 
     // MARK: - Excerpt Extraction
@@ -598,24 +450,69 @@ public struct Readability {
         return nil
     }
 
-    // MARK: - Article Cleaning
+    // MARK: - Content Serialization
 
-    private func cleanArticle(_ article: Element) throws -> String {
-        guard let cleaned = article.copy() as? Element else {
-            return try article.outerHtml()
-        }
+    private func cleanAndSerialize(_ element: Element) throws -> String {
+        // Clone element into document context for serialization
+        let cleaned = try cloneElement(element, in: doc)
 
+        // Remove unwanted attributes
         try removeUnwantedAttributes(cleaned)
+
+        // Remove junk elements that might have been missed
         try removeJunkElements(cleaned)
 
         return try cleaned.outerHtml()
     }
 
+    /// Clone an element into document context
+    private func cloneElement(_ element: Element, in doc: Document) throws -> Element {
+        let clone = try doc.createElement(element.tagName())
+
+        // Copy attributes
+        if let attributes = element.getAttributes() {
+            for attr in attributes {
+                try clone.attr(attr.getKey(), attr.getValue())
+            }
+        }
+
+        // Recursively clone children
+        for child in element.children() {
+            let childClone = try cloneElement(child, in: doc)
+            try clone.appendChild(childClone)
+        }
+
+        // Copy text nodes
+        for textNode in element.textNodes() {
+            try clone.appendText(textNode.text())
+        }
+
+        return clone
+    }
+
     private func removeUnwantedAttributes(_ element: Element) throws {
         if !options.keepClasses {
-            let unwantedAttrs = ["style", "class", "id", "onclick", "onload", "width", "height", "align", "border", "cellpadding", "cellspacing"]
+            let unwantedAttrs = ["style", "onclick", "onload", "width", "height", "align", "border", "cellpadding", "cellspacing"]
             for attr in unwantedAttrs {
                 try element.removeAttr(attr)
+            }
+
+            // Handle class attribute - preserve "page" class
+            if let className = try? element.attr("class") {
+                let classes = className.split(separator: " ").map(String.init)
+                let preservedClasses = classes.filter { $0 == "page" }
+                if preservedClasses.isEmpty {
+                    try element.removeAttr("class")
+                } else {
+                    try element.attr("class", preservedClasses.joined(separator: " "))
+                }
+            }
+
+            // Handle id attribute - preserve "readability-page-*" and "readability-content" ids
+            if let id = try? element.attr("id") {
+                if !id.hasPrefix("readability-") {
+                    try element.removeAttr("id")
+                }
             }
         }
 
@@ -626,13 +523,11 @@ public struct Readability {
 
     private func removeJunkElements(_ element: Element) throws {
         let junkSelectors = [
-            "script", "style", "noscript", "iframe", "object", "embed",
+            "script", "style", "noscript",
             "[class*=comment]", "[id*=comment]",
             "[class*=sidebar]", "[id*=sidebar]",
             "[class*=footer]", "[id*=footer]",
-            "[class*=widget]", "[id*=widget]",
             "[class*=ad-]", "[id*=ad-]",
-            "[class*=social]", "[id*=social]",
             "[aria-hidden=true]"
         ]
 
@@ -642,3 +537,5 @@ public struct Readability {
         }
     }
 }
+
+

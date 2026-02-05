@@ -130,20 +130,23 @@ final class ContentExtractor {
 
         // Phase 2: Collect and score elements
         let elementsToScore = try collectElementsToScore(from: body)
-        var candidates: [Element] = []
 
         for element in elementsToScore {
             let score = try scoreElement(element, scoringManager: scoringManager)
             if score > 0 {
-                candidates.append(element)
                 // Propagate score to ancestors
                 selector.propagateScoreToAncestors(element, score: score)
             }
         }
 
-        // Phase 3: Select top candidate
+        // Phase 3: Select top candidate from all scored elements
+        // Get all elements that have been initialized (have scores)
+        let scoredElements = try body.select("*").filter { element in
+            scoringManager.isInitialized(element)
+        }
+
         let (topCandidate, neededToCreate) = try selector.selectTopCandidate(
-            from: candidates,
+            from: scoredElements,
             in: doc
         )
 

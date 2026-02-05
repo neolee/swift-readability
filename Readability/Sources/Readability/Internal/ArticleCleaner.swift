@@ -82,11 +82,18 @@ final class ArticleCleaner {
     private func wrapNodesInParagraph(_ nodes: [Node], parent: Element) throws {
         guard !nodes.isEmpty else { return }
 
-        let p = Element(Tag("p"), "")
+        // Get document context from parent
+        let doc = parent.ownerDocument() ?? Document("")
+        let p = try doc.createElement("p")
 
         for node in nodes {
-            if let clone = node.copy() as? Node {
+            if let elementNode = node as? Element {
+                // Clone element with document context
+                let clone = try cloneElement(elementNode, in: doc)
                 try p.appendChild(clone)
+            } else if let textNode = node as? TextNode {
+                // Clone text node
+                try p.appendText(textNode.text())
             }
         }
 
@@ -94,6 +101,31 @@ final class ArticleCleaner {
         if try !p.text().isEmpty {
             try parent.appendChild(p)
         }
+    }
+
+    /// Clone an element into document context
+    private func cloneElement(_ element: Element, in doc: Document) throws -> Element {
+        let clone = try doc.createElement(element.tagName())
+
+        // Copy attributes
+        if let attributes = element.getAttributes() {
+            for attr in attributes {
+                try clone.attr(attr.getKey(), attr.getValue())
+            }
+        }
+
+        // Recursively clone children
+        for child in element.children() {
+            let childClone = try cloneElement(child, in: doc)
+            try clone.appendChild(childClone)
+        }
+
+        // Copy text nodes
+        for textNode in element.textNodes() {
+            try clone.appendText(textNode.text())
+        }
+
+        return clone
     }
 
     /// Check if element has a single tag inside it
@@ -169,7 +201,9 @@ final class ArticleCleaner {
     /// Change the tag name of an element
     /// Creates a new element with the given tag and moves all content
     func setNodeTag(_ element: Element, newTag: String) throws -> Element {
-        let newElement = Element(Tag(newTag.lowercased()), "")
+        // Get document context from element
+        let doc = element.ownerDocument() ?? Document("")
+        let newElement = try doc.createElement(newTag.lowercased())
 
         // Copy attributes
         if let attributes = element.getAttributes() {
@@ -178,11 +212,10 @@ final class ArticleCleaner {
             }
         }
 
-        // Copy children
+        // Copy children using document-aware cloning
         for child in element.children() {
-            if let clone = child.copy() as? Element {
-                try newElement.appendChild(clone)
-            }
+            let clone = try cloneElement(child, in: doc)
+            try newElement.appendChild(clone)
         }
 
         // Copy text nodes
@@ -302,17 +335,25 @@ final class ArticleCleaner {
                hasSingleTagInsideElement(node, tag: "SECTION") {
                 let child = node.children().first!
 
-                // Copy attributes from parent to child
+                // Get document context - skip if no owner document
+                guard let doc = node.ownerDocument() else {
+                    continue
+                }
+
+                // Clone the child with document context before replacing
+                let clonedChild = try cloneElement(child, in: doc)
+
+                // Copy attributes from parent to cloned child
                 if let attributes = node.getAttributes() {
                     for attr in attributes {
                         let key = attr.getKey()
-                        if !child.hasAttr(key) {
-                            try child.attr(key, attr.getValue())
+                        if !clonedChild.hasAttr(key) {
+                            try clonedChild.attr(key, attr.getValue())
                         }
                     }
                 }
 
-                try node.replaceWith(child)
+                try node.replaceWith(clonedChild)
             }
         }
     }
