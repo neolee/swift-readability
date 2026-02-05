@@ -71,4 +71,36 @@ enum DOMHelpers {
         try element.replaceWith(replacement)
         return replacement
     }
+
+    /// Clone an element into document context
+    /// Preserves the original order of child nodes (elements and text)
+    /// - Parameters:
+    ///   - element: Element to clone
+    ///   - doc: Document for creating the clone
+    /// - Returns: Cloned element with proper document ownership
+    static func cloneElement(_ element: Element, in doc: Document) throws -> Element {
+        let clone = try doc.createElement(element.tagName())
+
+        // Copy attributes
+        if let attributes = element.getAttributes() {
+            for attr in attributes {
+                try clone.attr(attr.getKey(), attr.getValue())
+            }
+        }
+
+        // Clone all child nodes in their original order
+        // Use getChildNodes() to preserve mixed element/text order
+        for node in element.getChildNodes() {
+            if let childElement = node as? Element {
+                // Recursively clone element children
+                let childClone = try cloneElement(childElement, in: doc)
+                try clone.appendChild(childClone)
+            } else if let textNode = node as? TextNode {
+                // Clone text nodes in their original position
+                try clone.appendText(textNode.text())
+            }
+        }
+
+        return clone
+    }
 }

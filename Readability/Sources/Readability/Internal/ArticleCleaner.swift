@@ -88,7 +88,7 @@ final class ArticleCleaner {
         for node in nodes {
             if let elementNode = node as? Element {
                 // Clone element with document context
-                let clone = try cloneElement(elementNode, in: doc)
+                let clone = try DOMHelpers.cloneElement(elementNode, in: doc)
                 try p.appendChild(clone)
             } else if let textNode = node as? TextNode {
                 // Clone text node
@@ -100,31 +100,6 @@ final class ArticleCleaner {
         if try !p.text().isEmpty {
             try parent.appendChild(p)
         }
-    }
-
-    /// Clone an element into document context
-    private func cloneElement(_ element: Element, in doc: Document) throws -> Element {
-        let clone = try doc.createElement(element.tagName())
-
-        // Copy attributes
-        if let attributes = element.getAttributes() {
-            for attr in attributes {
-                try clone.attr(attr.getKey(), attr.getValue())
-            }
-        }
-
-        // Recursively clone children
-        for child in element.children() {
-            let childClone = try cloneElement(child, in: doc)
-            try clone.appendChild(childClone)
-        }
-
-        // Copy text nodes
-        for textNode in element.textNodes() {
-            try clone.appendText(textNode.text())
-        }
-
-        return clone
     }
 
     /// Check if element has a single tag inside it
@@ -199,6 +174,7 @@ final class ArticleCleaner {
 
     /// Change the tag name of an element
     /// Creates a new element with the given tag and moves all content
+    /// Preserves the original order of child nodes (elements and text)
     func setNodeTag(_ element: Element, newTag: String) throws -> Element {
         // Get document context from element
         let doc = element.ownerDocument() ?? Document("")
@@ -211,15 +187,17 @@ final class ArticleCleaner {
             }
         }
 
-        // Copy children using document-aware cloning
-        for child in element.children() {
-            let clone = try cloneElement(child, in: doc)
-            try newElement.appendChild(clone)
-        }
-
-        // Copy text nodes
-        for textNode in element.textNodes() {
-            try newElement.appendText(textNode.text())
+        // Clone all child nodes in their original order
+        // Use getChildNodes() to preserve mixed element/text order
+        for node in element.getChildNodes() {
+            if let childElement = node as? Element {
+                // Recursively clone element children
+                let clone = try DOMHelpers.cloneElement(childElement, in: doc)
+                try newElement.appendChild(clone)
+            } else if let textNode = node as? TextNode {
+                // Clone text nodes in their original position
+                try newElement.appendText(textNode.text())
+            }
         }
 
         // Replace in DOM
@@ -340,7 +318,7 @@ final class ArticleCleaner {
                 }
 
                 // Clone the child with document context before replacing
-                let clonedChild = try cloneElement(child, in: doc)
+                let clonedChild = try DOMHelpers.cloneElement(child, in: doc)
 
                 // Copy attributes from parent to cloned child
                 if let attributes = node.getAttributes() {

@@ -452,7 +452,7 @@ public struct Readability {
 
     private func cleanAndSerialize(_ element: Element) throws -> String {
         // Clone element into document context for serialization
-        let cleaned = try cloneElement(element, in: doc)
+        let cleaned = try DOMHelpers.cloneElement(element, in: doc)
 
         // Remove unwanted attributes
         try removeUnwantedAttributes(cleaned)
@@ -461,31 +461,6 @@ public struct Readability {
         try removeJunkElements(cleaned)
 
         return try cleaned.outerHtml()
-    }
-
-    /// Clone an element into document context
-    private func cloneElement(_ element: Element, in doc: Document) throws -> Element {
-        let clone = try doc.createElement(element.tagName())
-
-        // Copy attributes
-        if let attributes = element.getAttributes() {
-            for attr in attributes {
-                try clone.attr(attr.getKey(), attr.getValue())
-            }
-        }
-
-        // Recursively clone children
-        for child in element.children() {
-            let childClone = try cloneElement(child, in: doc)
-            try clone.appendChild(childClone)
-        }
-
-        // Copy text nodes
-        for textNode in element.textNodes() {
-            try clone.appendText(textNode.text())
-        }
-
-        return clone
     }
 
     private func removeUnwantedAttributes(_ element: Element) throws {

@@ -30,7 +30,7 @@ final class SiblingMerger {
         // Get parent and siblings
         guard let parentOfTopCandidate = topCandidate.parent() else {
             // If no parent, clone the top candidate into document context
-            let clone = try cloneElement(topCandidate, in: doc)
+            let clone = try DOMHelpers.cloneElement(topCandidate, in: doc)
             try articleContent.appendChild(clone)
             return articleContent
         }
@@ -124,13 +124,14 @@ final class SiblingMerger {
 
     /// Alter sibling to DIV if needed
     /// Elements in ALTER_TO_DIV_EXCEPTIONS are kept as-is
+    /// Preserves the original order of child nodes (elements and text)
     private func alterToDivIfNeeded(_ element: Element, in doc: Document) throws -> Element {
         let tagName = element.tagName().uppercased()
 
         // Check if element is in exception list
         if Configuration.alterToDIVExceptions.contains(tagName) {
             // Clone into document context to ensure proper ownership
-            return try cloneElement(element, in: doc)
+            return try DOMHelpers.cloneElement(element, in: doc)
         }
 
         // Create new DIV and move children using document context
@@ -143,45 +144,20 @@ final class SiblingMerger {
             }
         }
 
-        // Copy children using document-aware cloning
-        for child in element.children() {
-            let clone = try cloneElement(child, in: doc)
-            try div.appendChild(clone)
-        }
-
-        // Copy text nodes
-        for textNode in element.textNodes() {
-            try div.appendText(textNode.text())
-        }
-
-        return div
-    }
-
-    /// Clone an element into document context
-    /// This ensures the cloned element has proper document ownership
-    private func cloneElement(_ element: Element, in doc: Document) throws -> Element {
-        // Create new element with same tag in document context
-        let clone = try doc.createElement(element.tagName())
-
-        // Copy attributes
-        if let attributes = element.getAttributes() {
-            for attr in attributes {
-                try clone.attr(attr.getKey(), attr.getValue())
+        // Clone all child nodes in their original order
+        // Use getChildNodes() to preserve mixed element/text order
+        for node in element.getChildNodes() {
+            if let childElement = node as? Element {
+                // Recursively clone element children
+                let clone = try DOMHelpers.cloneElement(childElement, in: doc)
+                try div.appendChild(clone)
+            } else if let textNode = node as? TextNode {
+                // Clone text nodes in their original position
+                try div.appendText(textNode.text())
             }
         }
 
-        // Recursively clone children
-        for child in element.children() {
-            let childClone = try cloneElement(child, in: doc)
-            try clone.appendChild(childClone)
-        }
-
-        // Copy text nodes
-        for textNode in element.textNodes() {
-            try clone.appendText(textNode.text())
-        }
-
-        return clone
+        return div
     }
 
     // MARK: - Score Threshold Calculation
