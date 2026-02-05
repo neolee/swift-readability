@@ -131,12 +131,12 @@ Implemented Mozilla's exact priority order:
 - [x] Handle meta tags with multiple properties: `property="x:title dc:title"`
 
 ### Verification
-- [x] `003-metadata-preferred`: Dublin Core priority working
+- [x] `003-metadata-preferred`: Dublin Core priority working (title, byline, excerpt)
 - [x] `004-metadata-space-separated-properties`: Space-separated properties working
-- [x] `parsely-metadata`: Parsely metadata extraction working
-- [x] `schema-org-context-object`: JSON-LD parsing working (title, siteName, publishedTime)
+- [x] `parsely-metadata`: Parsely metadata extraction working (title, byline, publishedTime)
+- [x] `schema-org-context-object`: JSON-LD parsing working (title, byline, excerpt, siteName, publishedTime)
 
-**Note:** Byline extraction for `001` and `schema-org-context-object` requires HTML content parsing (Phase 5), as these tests expect bylines from article body content, not metadata.
+**Note:** Byline extraction for `001` requires HTML content parsing (Phase 5), as this test expects byline from article body content, not metadata.
 
 ---
 

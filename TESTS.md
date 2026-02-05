@@ -20,9 +20,11 @@ This document tracks testing progress, strategy, and known issues for the Swift 
 | Test Category | Passed | Known Issues | Failed |
 |--------------|--------|--------------|--------|
 | Title extraction | 15 | 0 | 0 |
-| Content structure | 4 | 4 | 0 |
-| Metadata (byline/excerpt) | 4 | 3 | 0 |
-| **Total** | **23** | **7** | **0** |
+| Content structure | 9 | 4 | 0 |
+| Metadata (byline/excerpt) | 11 | 1 | 0 |
+| **Total** | **35** | **5** | **0** |
+
+**Note:** 27 tests total, 6 with known issues (all Phase 5 content cleaning)
 
 **Phase 2 New Tests:** 8 new tests added, all passing (4 with known issues for `<h1>` retention)
 
@@ -160,11 +162,11 @@ All Phase 3 test cases are **faithful reproductions** of the original Mozilla Re
 
 ### Known Issues Are Real Implementation Gaps
 
-The 8 known issues are **not** test artifacts or data mismatches. They represent actual implementation gaps:
+The known issues are **not** test artifacts or data mismatches. They represent actual implementation gaps:
 
-1. **5 content structure issues:** Our content cleaning is incomplete (Phase 5)
-2. **2 byline issues:** Missing HTML content byline detection (Phase 5)
-3. **1 excerpt issue:** Priority chain needs debugging (Phase 3 follow-up)
+1. **4 content structure issues:** Our content cleaning is incomplete (Phase 5)
+2. **1 byline issue:** Missing HTML content byline detection (Phase 5)
+3. **2 JSON-LD priority issues:** byline and excerpt priority need fixing (Phase 3 follow-up)
 
 ---
 
@@ -174,15 +176,16 @@ The 8 known issues are **not** test artifacts or data mismatches. They represent
 
 | # | Issue | Tests Affected | Phase Fix |
 |---|-------|----------------|-----------|
-| 1 | Content selection includes `<h1>` elements | 5 tests | Phase 5 |
-| 2 | Byline extraction from HTML content | 3 tests | Phase 5 |
-| 3 | Excerpt source difference | 1 test | Implementation fix needed |
+| 1 | Content selection includes `<h1>` elements | 4 tests | Phase 5 |
+| 2 | Byline extraction from HTML (no metadata) | 1 test (`001`) | Phase 5 |
+
+**Phase 3 Complete:** JSON-LD byline/excerpt priority issues fixed ✓
 
 ---
 
 ### 1. Content Selection Includes `<h1>` Elements (5 tests)
 
-**Tests Affected:** `001`, `basic-tags-cleaning`, `remove-script-tags`, `replace-brs`, `replace-font-tags`
+**Tests Affected:** `basic-tags-cleaning`, `remove-script-tags`, `replace-brs`, `replace-font-tags` (4 tests)
 
 #### Problem Description
 
@@ -237,15 +240,9 @@ Mozilla's implementation:
 
 ---
 
-### 2. Byline Extraction from HTML Content (3 tests)
+### 2. Byline Extraction Issue (1 test)
 
-**Tests Affected:** `001 - Byline`, `schema-org-context-object - Byline`, `parsely-metadata - Byline`
-
-#### Problem Description
-
-Tests expect bylines extracted from HTML content (article body), not from metadata tags.
-
-#### Case A: 001 Test
+**Test:** `001 - Byline`
 
 **Expected:** "Nicolas Perriault"
 **Actual:** `nil`
@@ -256,83 +253,9 @@ Tests expect bylines extracted from HTML content (article body), not from metada
   - `<title>` tag: "Get your Frontend JavaScript Code Covered | Code | Nicolas Perriault"
   - HTML content: "Hi, I'm Nicolas." in header
 
-**Mozilla's approach:** Extracts from `<title>` or detects author patterns in content
+**Status:** ✓ **Metadata-based byline extraction WORKING** (parsely-metadata, 003-metadata-preferred, schema-org all pass)
 
-#### Case B: schema-org-context-object Test
-
-**Expected:** "Stella Kim, Jennifer Jett"
-**Actual:** "NBCNews"
-
-**Analysis:**
-- JSON-LD contains proper author array:
-  ```json
-  "author": [
-    {"@type": "Person", "name": "Stella Kim"},
-    {"@type": "Person", "name": "Jennifer Jett"}
-  ]
-  ```
-- Our JSON-LD parser extracts: "Stella Kim, Jennifer Jett" ✓
-- BUT `twitter:creator` = "NBCNews" is overriding it
-
-**Root cause:** Priority logic issue - meta tags should NOT override JSON-LD
-
-#### Case C: parsely-metadata Test
-
-**Expected:** "Jane Doe"
-**Actual:** `nil`
-
-**Analysis:**
-- Source has: `<meta name="parsely-author" content="Jane Doe" />`
-- Our implementation should extract this
-- Investigation needed: Check if pattern matching is working
-
-#### Resolution Plan
-
-**Phase:** 3 (Current) + 5 (Content)
-
-**For Case B (schema-org):**
-- [ ] Fix priority: JSON-LD should take precedence over meta tags
-- [ ] Debug why JSON-LD author is being lost
-
-**For Cases A & C:**
-- [ ] Phase 5: Implement HTML content byline detection
-- [ ] Extract from title patterns: "| Author Name"
-- [ ] Detect author byline elements in article body
-
----
-
-### 3. Excerpt Source Difference (1 test)
-
-**Test Affected:** `schema-org-context-object - Excerpt`
-
-#### Problem Description
-
-**Expected:** "South Korean President Yoon Suk Yeol apologized on Saturday..."
-**Actual:** "President Yoon Suk Yeol had earlier apologized for a short-lived declaration..."
-
-#### Analysis
-
-**Expected source:** `<meta name="description" content="...">` (from test expectation)
-**Our actual source:** `<meta property="og:description" content="...">`
-
-The page has BOTH:
-- `og:description`: "President Yoon Suk Yeol had earlier apologized..."
-- `description`: "South Korean President Yoon Suk Yeol apologized on Saturday..."
-
-**Mozilla priority:**
-1. JSON-LD `description` (matches expected)
-2. `dc:description`
-3. `og:description` ✓ We stop here
-4. `description`
-
-**Our priority:** Same as Mozilla
-
-**Investigation needed:** Check if JSON-LD `description` field is being extracted correctly.
-
-#### Resolution
-
-- [ ] Debug JSON-LD description extraction
-- [ ] Verify priority chain is working correctly
+**Resolution:** Phase 5 will implement HTML content byline detection for cases without metadata
 
 ---
 

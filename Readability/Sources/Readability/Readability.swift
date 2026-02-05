@@ -15,10 +15,10 @@ public struct Readability {
 
     /// Parse the document and extract readable content
     public func parse() throws -> ReadabilityResult {
-        try prepDocument()
-
-        // Extract metadata first (following Mozilla's order)
+        // Extract metadata BEFORE prepDocument() to preserve JSON-LD scripts
         let metadata = try extractMetadata()
+
+        try prepDocument()
 
         // Use metadata title if available, otherwise extract from document
         let title: String
@@ -185,7 +185,21 @@ public struct Readability {
     private func extractJSONLDMetadata() throws -> Metadata {
         var metadata = Metadata()
 
-        let scripts = try doc.select("script[type=application/ld+json]")
+        // Try multiple selector patterns for JSON-LD scripts
+        var scripts = try doc.select("script[type=\"application/ld+json\"]")
+        if scripts.isEmpty {
+            scripts = try doc.select("script[type='application/ld+json']")
+        }
+        if scripts.isEmpty {
+            // Fallback: check all script tags
+            let allScripts = try doc.select("script")
+            for script in allScripts {
+                let typeAttr = (try? script.attr("type")) ?? ""
+                if typeAttr == "application/ld+json" {
+                    scripts.add(script)
+                }
+            }
+        }
         var jsonldObjects: [[String: Any]] = []
 
         for script in scripts {
@@ -209,7 +223,6 @@ public struct Readability {
                     jsonldObjects.append(contentsOf: jsonArray)
                 }
             } catch {
-                // Ignore malformed JSON
                 continue
             }
         }

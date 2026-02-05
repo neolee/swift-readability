@@ -77,14 +77,7 @@ struct MozillaCompatibilityTests {
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
 
-        // Track known issues without failing the build
-        if !comparison.isEqual {
-            withKnownIssue("Content mismatch: \(comparison.diff)") {
-                #expect(comparison.isEqual)
-            }
-        } else {
-            #expect(comparison.isEqual)
-        }
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
     @Test("001 - Title matches expected exactly")
@@ -135,15 +128,8 @@ struct MozillaCompatibilityTests {
 
         let expectedExcerpt = testCase.expectedMetadata.excerpt
 
-        // Known issue: excerpt extraction may differ from Mozilla's implementation
-        if result.excerpt != expectedExcerpt {
-            withKnownIssue("Excerpt extraction differs from Mozilla expected value") {
-                #expect(result.excerpt == expectedExcerpt,
-                        "Excerpt mismatch. Expected: '\(expectedExcerpt ?? "nil")', Actual: '\(result.excerpt ?? "nil")'")
-            }
-        } else {
-            #expect(result.excerpt == expectedExcerpt)
-        }
+        #expect(result.excerpt == expectedExcerpt,
+                "Excerpt mismatch. Expected: '\(expectedExcerpt ?? "nil")', Actual: '\(result.excerpt ?? "nil")'")
     }
 
     // MARK: - Basic Tags Cleaning Tests
@@ -160,11 +146,7 @@ struct MozillaCompatibilityTests {
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
 
-        if !comparison.isEqual {
-            withKnownIssue("Content mismatch: \(comparison.diff)") {
-                #expect(comparison.isEqual)
-            }
-        } else {
+        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
             #expect(comparison.isEqual)
         }
     }
@@ -198,11 +180,7 @@ struct MozillaCompatibilityTests {
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
 
-        if !comparison.isEqual {
-            withKnownIssue("Content mismatch: \(comparison.diff)") {
-                #expect(comparison.isEqual)
-            }
-        } else {
+        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
             #expect(comparison.isEqual)
         }
     }
@@ -236,11 +214,7 @@ struct MozillaCompatibilityTests {
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
 
-        if !comparison.isEqual {
-            withKnownIssue("Content mismatch: \(comparison.diff)") {
-                #expect(comparison.isEqual)
-            }
-        } else {
+        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
             #expect(comparison.isEqual)
         }
     }
@@ -274,11 +248,7 @@ struct MozillaCompatibilityTests {
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
 
-        if !comparison.isEqual {
-            withKnownIssue("Content mismatch: \(comparison.diff)") {
-                #expect(comparison.isEqual)
-            }
-        } else {
+        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
             #expect(comparison.isEqual)
         }
     }
@@ -314,11 +284,7 @@ struct MozillaCompatibilityTests {
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
 
-        if !comparison.isEqual {
-            withKnownIssue("Content mismatch: \(comparison.diff)") {
-                #expect(comparison.isEqual)
-            }
-        } else {
+        withKnownIssue("Content mismatch: \(comparison.diff) - fix in Phase 5") {
             #expect(comparison.isEqual)
         }
     }
@@ -354,13 +320,7 @@ struct MozillaCompatibilityTests {
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
 
-        if !comparison.isEqual {
-            withKnownIssue("Content mismatch: \(comparison.diff)") {
-                #expect(comparison.isEqual)
-            }
-        } else {
-            #expect(comparison.isEqual)
-        }
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
     @Test("style-tags-removal - Title matches expected")
@@ -390,13 +350,7 @@ struct MozillaCompatibilityTests {
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
 
-        if !comparison.isEqual {
-            withKnownIssue("Content mismatch: \(comparison.diff)") {
-                #expect(comparison.isEqual)
-            }
-        } else {
-            #expect(comparison.isEqual)
-        }
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
     @Test("normalize-spaces - Title matches expected")
@@ -443,14 +397,8 @@ struct MozillaCompatibilityTests {
 
         let expectedByline = testCase.expectedMetadata.byline
 
-        if result.byline != expectedByline {
-            withKnownIssue("Byline extraction differs from Mozilla expected value") {
-                #expect(result.byline == expectedByline,
-                        "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
-            }
-        } else {
-            #expect(result.byline == expectedByline)
-        }
+        #expect(result.byline == expectedByline,
+                "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
     }
 
     @Test("parsely-metadata - Published time matches expected")
@@ -494,14 +442,8 @@ struct MozillaCompatibilityTests {
 
         let expectedByline = testCase.expectedMetadata.byline
 
-        if result.byline != expectedByline {
-            withKnownIssue("Byline extraction differs from Mozilla expected value") {
-                #expect(result.byline == expectedByline,
-                        "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
-            }
-        } else {
-            #expect(result.byline == expectedByline)
-        }
+        #expect(result.byline == expectedByline,
+                "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
     }
 
     @Test("schema-org-context-object - Excerpt matches expected")
@@ -516,14 +458,8 @@ struct MozillaCompatibilityTests {
 
         let expectedExcerpt = testCase.expectedMetadata.excerpt
 
-        if result.excerpt != expectedExcerpt {
-            withKnownIssue("Excerpt extraction differs from Mozilla expected value") {
-                #expect(result.excerpt == expectedExcerpt,
-                        "Excerpt mismatch. Expected: '\(expectedExcerpt ?? "nil")', Actual: '\(result.excerpt ?? "nil")'")
-            }
-        } else {
-            #expect(result.excerpt == expectedExcerpt)
-        }
+        #expect(result.excerpt == expectedExcerpt,
+                "Excerpt mismatch. Expected: '\(expectedExcerpt ?? "nil")', Actual: '\(result.excerpt ?? "nil")'")
     }
 
     @Test("003-metadata-preferred - Title matches expected")
@@ -553,14 +489,8 @@ struct MozillaCompatibilityTests {
 
         let expectedByline = testCase.expectedMetadata.byline
 
-        if result.byline != expectedByline {
-            withKnownIssue("Byline extraction differs from Mozilla expected value") {
-                #expect(result.byline == expectedByline,
-                        "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
-            }
-        } else {
-            #expect(result.byline == expectedByline)
-        }
+        #expect(result.byline == expectedByline,
+                "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
     }
 
     @Test("004-metadata-space-separated-properties - Title matches expected")
