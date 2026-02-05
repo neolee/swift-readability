@@ -2,7 +2,7 @@
 
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
-**Current Status:** Phase 4 Complete (Core Scoring Algorithm with A-H sub-phases)  
+**Current Status:** Phase 4 Complete (Core Scoring Algorithm with A-H sub-phases)
 **See TESTS.md for detailed testing progress.**
 
 ---
@@ -222,7 +222,7 @@ Sources/Readability/Internal/
 **Goal:** Fix remaining content quality issues and complete cleaning
 
 ### 5.1 Text Node Ordering Fix [IN PROGRESS]
-**Priority:** High  
+**Priority:** High
 **Issue:** DOM manipulation reorders text nodes and inline elements
 
 - [ ] Implement mixed node list preservation

@@ -32,7 +32,7 @@ var topCandidates = [];
 for (var c = 0, cl = candidates.length; c < cl; c += 1) {
   var candidate = candidates[c];
   var candidateScore = candidate.readability.contentScore * (1 - this._getLinkDensity(candidate));
-  
+
   for (var t = 0; t < this._nbTopCandidates; t++) {
     var aTopCandidate = topCandidates[t];
     if (!aTopCandidate || candidateScore > aTopCandidate.readability.contentScore) {
@@ -120,12 +120,12 @@ var siblings = parentOfTopCandidate.children;
 for (var s = 0, sl = siblings.length; s < sl; s++) {
   var sibling = siblings[s];
   var append = false;
-  
+
   // Give bonus if sibling has same classname
   if (sibling.className === topCandidate.className && topCandidate.className !== "") {
     contentBonus += topCandidate.readability.contentScore * 0.2;
   }
-  
+
   // Append if score above threshold
   if (sibling.readability && sibling.readability.contentScore + contentBonus >= siblingScoreThreshold) {
     append = true;
@@ -134,7 +134,7 @@ for (var s = 0, sl = siblings.length; s < sl; s++) {
     var linkDensity = this._getLinkDensity(sibling);
     var nodeContent = this._getInnerText(sibling);
     var nodeLength = nodeContent.length;
-    
+
     if (nodeLength > 80 && linkDensity < 0.25) {
       append = true;
     } else if (nodeLength < 80 && nodeLength > 0 && linkDensity === 0 && nodeContent.search(/\.( |$)/) !== -1) {
@@ -160,11 +160,11 @@ for (var s = 0, sl = siblings.length; s < sl; s++) {
 while (true) {
   var stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
   // ... scoring logic ...
-  
+
   if (textLength < this._charThreshold) {
     parseSuccessful = false;
     page.innerHTML = pageCacheHtml; // Restore original
-    
+
     if (this._flagIsActive(this.FLAG_STRIP_UNLIKELYS)) {
       this._removeFlag(this.FLAG_STRIP_UNLIKELYS);
     } else if (this._flagIsActive(this.FLAG_WEIGHT_CLASSES)) {
@@ -206,7 +206,7 @@ if (stripUnlikelyCandidates) {
     node = this._removeAndGetNext(node);
     continue;
   }
-  
+
   if (this.UNLIKELY_ROLES.includes(node.getAttribute("role"))) {
     node = this._removeAndGetNext(node);
     continue;
@@ -243,7 +243,7 @@ if (node.tagName === "DIV") {
         fragment.appendChild(childNode);
         childNode = nextSibling;
       } while (childNode && this._isPhrasingContent(childNode));
-      
+
       // Wrap in P tag
       if (fragment.firstChild) {
         var p = doc.createElement("p");
@@ -253,7 +253,7 @@ if (node.tagName === "DIV") {
     }
     childNode = nextSibling;
   }
-  
+
   // Convert DIV with single P and low link density
   if (this._hasSingleTagInsideElement(node, "P") && this._getLinkDensity(node) < 0.25) {
     var newNode = node.children[0];
@@ -282,7 +282,7 @@ if (node.tagName === "DIV") {
 // Lines 903-940: Full initialization with tag-based scores
 _initializeNode(node) {
   node.readability = { contentScore: 0 };
-  
+
   switch (node.tagName) {
     case "DIV":
       node.readability.contentScore += 5;
@@ -312,7 +312,7 @@ _initializeNode(node) {
       node.readability.contentScore -= 5;
       break;
   }
-  
+
   node.readability.contentScore += this._getClassWeight(node);
 }
 ```
@@ -335,14 +335,14 @@ _getLinkDensity(element) {
   if (textLength === 0) {
     return 0;
   }
-  
+
   var linkLength = 0;
   this._forEachNode(element.getElementsByTagName("a"), function (linkNode) {
     var href = linkNode.getAttribute("href");
     var coefficient = href && this.REGEXPS.hashUrl.test(href) ? 0.3 : 1;
     linkLength += this._getInnerText(linkNode).length * coefficient;
   });
-  
+
   return linkLength / textLength;
 }
 ```

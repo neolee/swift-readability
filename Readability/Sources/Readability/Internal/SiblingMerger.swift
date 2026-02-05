@@ -196,66 +196,6 @@ final class SiblingMerger {
             topScore * Configuration.siblingScoreThresholdRatio
         )
     }
-
-    // MARK: - Content Appending with Shifting
-
-    /// Append siblings to article content with proper index handling
-    /// This mirrors Mozilla's approach of re-fetching children after append
-    func appendSiblingsToArticle(
-        from parent: Element,
-        to articleContent: Element,
-        topCandidate: Element,
-        threshold: Double,
-        in doc: Document
-    ) throws {
-        let topCandidateClassName = (try? topCandidate.className()) ?? ""
-        var siblingsToProcess = parent.children()
-
-        var index = 0
-        while index < siblingsToProcess.count {
-            let sibling = siblingsToProcess[index]
-
-            let shouldAppend = try shouldAppendSibling(
-                sibling,
-                topCandidate: topCandidate,
-                topCandidateClassName: topCandidateClassName,
-                threshold: threshold
-            )
-
-            if shouldAppend {
-                let alteredSibling = try alterToDivIfNeeded(sibling, in: doc)
-                try articleContent.appendChild(alteredSibling)
-
-                // Re-fetch children since we modified the DOM
-                siblingsToProcess = parent.children()
-                // Don't increment index since we removed the current element
-            } else {
-                index += 1
-            }
-        }
-    }
-
-    // MARK: - Link Density Check for Siblings
-
-    /// Check if sibling has acceptable link density
-    private func hasAcceptableLinkDensity(_ element: Element, isList: Bool = false) throws -> Bool {
-        let linkDensity = try scoringManager.getLinkDensity(for: element)
-
-        if isList {
-            // Lists are allowed to have higher link density
-            return linkDensity < 0.5 + options.linkDensityModifier
-        } else {
-            return linkDensity < 0.25 + options.linkDensityModifier
-        }
-    }
-
-    // MARK: - Content Length Check
-
-    /// Check if element has meaningful content length
-    private func hasContentLength(_ element: Element, minLength: Int = 25) throws -> Bool {
-        let text = try element.text()
-        return text.count >= minLength
-    }
 }
 
 // MARK: - Article Content Creation

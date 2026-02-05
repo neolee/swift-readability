@@ -5,13 +5,11 @@ import SwiftSoup
 /// Extracts readable content from web pages
 public struct Readability {
     private let doc: Document
-    private let baseURL: URL?
     private let options: ReadabilityOptions
 
     /// Initialize with HTML string and optional configuration
-    public init(html: String, baseURL: URL? = nil, options: ReadabilityOptions = .default) throws {
+    public init(html: String, options: ReadabilityOptions = .default) throws {
         self.doc = try SwiftSoup.parse(html)
-        self.baseURL = baseURL
         self.options = options
     }
 

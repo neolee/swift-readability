@@ -40,7 +40,6 @@ final class ContentExtractor {
         // Cache original HTML for restoration
         pageCacheHtml = try body.html()
 
-        var parseSuccessful = false
         var result: (content: Element, byline: String?, neededToCreate: Bool)?
 
         // Multi-attempt loop
@@ -62,7 +61,6 @@ final class ContentExtractor {
 
             if textLength >= options.charThreshold {
                 // Success!
-                parseSuccessful = true
                 result = (
                     content: attemptResult.content,
                     byline: articleByline ?? attemptResult.byline,
@@ -87,7 +85,6 @@ final class ContentExtractor {
                 // No more flags to try, use best attempt
                 if let bestAttempt = attempts.max(by: { $0.textLength < $1.textLength }),
                    bestAttempt.textLength > 0 {
-                    parseSuccessful = true
                     result = (
                         content: bestAttempt.articleContent,
                         byline: articleByline,

@@ -2,7 +2,7 @@
 
 This document tracks testing progress, strategy, and known issues for the Swift Readability port.
 
-**Last Updated:** Phase 4 Complete (Core Scoring Algorithm with A-H sub-phases)  
+**Last Updated:** Phase 4 Complete (Core Scoring Algorithm with A-H sub-phases)
 **Current Status:** 32/32 tests, 28 passing, 4 failing (1 known byline issue)
 
 ---
@@ -101,7 +101,7 @@ for textNode in element.textNodes() {
 
 #### Resolution Plan
 
-**Phase:** Content Cleaning (Phase 5)  
+**Phase:** Content Cleaning (Phase 5)
 **Specific tasks:**
 - [ ] Implement mixed node list preservation (elements + text nodes in original order)
 - [ ] Use `childNodes()` instead of separate `children()` and `textNodes()` loops
@@ -115,7 +115,7 @@ for textNode in element.textNodes() {
 
 **Test:** `001 - Byline`
 
-**Expected:** "Nicolas Perriault"  
+**Expected:** "Nicolas Perriault"
 **Actual:** `nil`
 
 **Analysis:**
