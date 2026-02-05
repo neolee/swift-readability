@@ -56,62 +56,61 @@ This document tracks testing progress, strategy, and known issues for the Swift 
 
 ## Known Issues
 
-### 1. Text Node Ordering in Content Extraction (3 tests)
+### 1. Text Node Ordering in Content Extraction [FIXED]
 
-**Tests Affected:** `001`, `replace-brs`, `replace-font-tags`
+**Status:** FIXED in Phase 5.1
 
-#### Problem Description
+**Tests Affected:** `001` (was 89%, now 100%)
 
-During DOM manipulation in `SiblingMerger` and `ArticleCleaner`, text nodes and inline elements can be reordered compared to the original document. This affects the semantic flow of text content.
+**Problem:** During DOM manipulation, text nodes and inline elements were reordered because `cloneElement()` processed `children()` first, then `textNodes()`.
 
-**Example (001 test case):**
-```
-Expected: "So finally you're <a>testing your frontend</a>? Great!"
-Actual:   "<a>testing your frontend</a><a>code coverage</a>So finally you're ? Great!"
-```
+**Solution:** Changed all `cloneElement` implementations to use `getChildNodes()` which preserves the original mixed order of elements and text.
 
-**Similarity Scores:**
-| Test | Similarity | Issue |
-|------|------------|-------|
-| 001 | 89% | First paragraph links/text reordered |
-| replace-brs | 92% | BR to paragraph conversion differences |
-| replace-font-tags | 98% | Minor text node ordering |
-
-#### Root Cause
-
-1. **SiblingMerging**: When collecting siblings into article content, the cloning process doesn't preserve exact text node interleaving with inline elements.
-
-2. **Element Cloning**: `cloneElement()` recursively clones children, but text nodes are appended after all element children, disrupting original order.
-
-3. **DOM Traversal**: Node iteration order during cleaning can differ from original document order.
-
-#### Technical Details
-
-```swift
-// Current implementation in ArticleCleaner.cloneElement():
-for child in element.children() {
-    let childClone = try cloneElement(child, in: doc)
-    try clone.appendChild(childClone)  // Elements first
-}
-for textNode in element.textNodes() {
-    try clone.appendText(textNode.text())  // Text after all elements
-}
-// This breaks: "text <b>bold</b> text" -> "<b>bold</b> text text"
-```
-
-#### Resolution Plan
-
-**Phase:** Content Cleaning (Phase 5)
-**Specific tasks:**
-- [ ] Implement mixed node list preservation (elements + text nodes in original order)
-- [ ] Use `childNodes()` instead of separate `children()` and `textNodes()` loops
-- [ ] Test with complex inline element nesting
-
-**Priority:** Medium - content is still readable, just reordered.
+**Files Modified:**
+- `DOMHelpers.swift` - Added shared `cloneElement()` utility
+- `Readability.swift` - Use `DOMHelpers.cloneElement()`
+- `SiblingMerger.swift` - Use `DOMHelpers.cloneElement()`
+- `ArticleCleaner.swift` - Use `DOMHelpers.cloneElement()`
 
 ---
 
-### 2. Byline Extraction from HTML Content (1 test)
+### 2. BR to Paragraph Conversion Differences (1 test)
+
+**Test:** `replace-brs - Content`
+
+**Similarity:** 92%
+
+**Problem:** 
+- Expected: Multiple `<p>` paragraphs with `<br />` tags preserved
+- Actual: Single paragraph with BRs removed, content merged
+
+**Root Cause:**
+- Our `replaceBrs()` merges consecutive BRs into paragraphs differently than Mozilla
+- Content wrapper selection differs (keeps `<article>` and `<h1>` tags)
+
+**Impact:** Low - text content is correct, paragraph structure differs
+
+**Resolution:** Phase 6 - Content Cleaning refinement
+
+---
+
+### 3. Font Tag Conversion Differences (1 test)
+
+**Test:** `replace-font-tags - Content`
+
+**Similarity:** 98%
+
+**Problem:** Minor structural differences in output
+
+**Root Cause:** Similar to replace-brs, content wrapper selection differs
+
+**Impact:** Low - text content is nearly identical
+
+**Resolution:** Phase 6 - Content Cleaning refinement
+
+---
+
+### 4. Byline Extraction from HTML Content (1 test)
 
 **Test:** `001 - Byline`
 
@@ -126,7 +125,7 @@ for textNode in element.textNodes() {
 
 **Status:** Metadata-based byline extraction WORKING (parsely-metadata, 003-metadata-preferred, schema-org all pass)
 
-**Resolution:** Phase 5 will implement HTML content byline detection for cases without metadata
+**Resolution:** Phase 5.2 will implement HTML content byline detection for cases without metadata
 
 ---
 
