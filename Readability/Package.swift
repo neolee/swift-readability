@@ -24,7 +24,10 @@ let package = Package(
         ),
         .testTarget(
             name: "ReadabilityTests",
-            dependencies: ["Readability"]
+            dependencies: ["Readability", "SwiftSoup"],
+            resources: [
+                .copy("Resources/test-pages")
+            ]
         ),
     ]
 )

@@ -2,6 +2,124 @@
 
 This document helps AI agents work effectively in the Swift Readability codebase.
 
+## Critical Testing Principles (MUST READ)
+
+These principles override all other considerations when writing or modifying tests:
+
+### 1. Tests Must NOT Accommodate Flawed Implementations
+
+**FORBIDDEN - Never write tests like this:**
+```swift
+// ❌ WRONG: Accepts any containment relationship
+#expect(result.title.contains(expectedTitle) || expectedTitle.contains(result.title))
+
+// ❌ WRONG: Only checks length, not content quality
+#expect(result.length > 500)
+
+// ❌ WRONG: Vague existence checks
+#expect(result.textContent.contains("some content"))
+```
+
+**REQUIRED - Write tests like this:**
+```swift
+// ✅ CORRECT: Exact match or clear deviation tracking
+#expect(result.title == expectedTitle, "Title mismatch. Expected: '\(expectedTitle)', got: '\(result.title)'")
+
+// ✅ CORRECT: Compare against expected output structure
+let normalizedResult = normalizeHTML(result.content)
+let normalizedExpected = normalizeHTML(testCase.expectedHTML)
+#expect(normalizedResult == normalizedExpected, "HTML structure doesn't match")
+
+// ✅ CORRECT: Measure semantic similarity
+let matchRatio = calculateContentMatch(result.textContent, expectedText)
+#expect(matchRatio > 0.85, "Content match ratio \(matchRatio) below threshold")
+```
+
+### 2. Mozilla Test Cases Must Be Used As-Is
+
+When importing Mozilla test cases:
+- ✅ Use `source.html` exactly as provided - no modifications
+- ✅ Use `expected.html` as the gold standard for verification
+- ✅ Use `expected-metadata.json` for exact metadata assertions
+- ✅ Replicate Mozilla's test behavior and assertion logic
+
+**The goal is behavioral equivalence with Mozilla Readability.js, not just "working" code.**
+
+### 3. Failed Tests Must Be Investigated, Not Worked Around
+
+When a test fails:
+1. **STOP** - Do not modify the test to pass
+2. **ANALYZE** - Is our implementation incorrect?
+3. **INVESTIGATE** - Is it a technical limitation (SwiftSoup vs JSDOM)?
+4. **DECIDE** - Can we fix it, or should we document it as a known limitation?
+5. **DOCUMENT** - If intentionally not matching, explain why in comments
+
+**Never comment out failing tests or make them less strict to get a "passing" build.**
+
+### 4. Test Categorization for Known Issues
+
+If a test cannot pass due to technical limitations:
+```swift
+@Test("Known limitation: Byline extraction from JSON-LD")
+func testBylineExtraction() async throws {
+    // Known issue: We don't yet implement JSON-LD parsing
+    // Tracked in: PLAN.md Phase 3
+    // Original Mozilla test: test-pages/001/expected-metadata.json
+    withKnownIssue("JSON-LD metadata extraction not yet implemented") {
+        let result = try readability.parse()
+        #expect(result.byline == "Nicolas Perriault")
+    }
+}
+```
+
+### 5. Importance-Based Prioritization
+
+When encountering difficult test failures, assess by frequency of real-world occurrence:
+- **P0 (Critical)**: Common news sites, major blogs - must fix
+- **P1 (High)**: Moderate traffic sites - should fix
+- **P2 (Medium)**: Edge cases - document and decide
+- **P3 (Low)**: Rare formats - can defer with documentation
+
+---
+
+## Core Porting Principle
+
+### "Port First, Improve Later"
+
+**Unless there are exceptional circumstances (e.g., implementation is prohibitively difficult or unreasonably complex), the default answer is always: replicate the original logic and target standards as closely as possible.**
+
+This is what "porting" means. We are creating a Swift version of Mozilla Readability.js that produces **identical output** to the original.
+
+### Implementation Guidelines
+
+1. **Default to Copy**: When in doubt, copy Mozilla's implementation exactly
+2. **Document Deviations**: If we MUST deviate, document why in code comments
+3. **Improvements are Secondary**: Better ideas should be recorded for future enhancement via options, not implemented as default behavior
+
+### Examples
+
+**Title Processing** (current issue):
+- ❌ Wrong: Remove all separators, keep longest part
+- ✅ Right: Follow Mozilla's algorithm: split by `| - – — \ / > »`, use h1 as fallback, word count checks, etc.
+
+**Excerpt Extraction** (current issue):
+- ❌ Wrong: Always use first paragraph
+- ✅ Right: Priority order: JSON-LD > dc:description > og:description > twitter:description > meta description > first paragraph
+
+### Future Improvements
+
+If we identify improvements over Mozilla's implementation:
+1. First achieve 1:1 compatibility
+2. Record improvement ideas in IMPROVEMENTS.md
+3. Implement as **opt-in options** via `ReadabilityOptions`, never as default behavior
+4. Clearly document differences from Mozilla behavior
+
+---
+
+## Project Overview
+
+---
+
 ## Project Overview
 
 This is a pure Swift implementation of Mozilla's Readability.js algorithm for extracting article content from HTML. It consists of two Swift packages:
@@ -169,23 +287,31 @@ Use `#expect()` for assertions, not `XCTAssert*`.
 
 ### Current Implementation Status
 
-**MVP Phase**: Basic scoring and extraction working. See **PLAN.md** for detailed roadmap.
+**Phase 1 Complete**: Architecture and configuration system ready. See **PLAN.md** for detailed roadmap.
 
-Completed:
-- Basic document preparation (script/style removal)
-- Simple BR tag handling
-- Title extraction from `<title>` and `<h1>`
-- Basic content scoring (tag weights, text length, link density)
-- Simple article extraction
-- Basic attribute cleanup
+**Completed** (Phase 1):
+- ✅ `ReadabilityOptions` - Configuration system with all major options
+- ✅ `ReadabilityError` - Proper error types with descriptions
+- ✅ `Internal/` directory structure with `Configuration.swift` and `DOMHelpers.swift`
+- ✅ Mozilla test suite integration (4 test cases, 9 tests passing)
+- ✅ Test loader infrastructure for easy test case addition
 
-Pending (in priority order):
-- JSON-LD metadata extraction
-- Open Graph / Twitter Cards metadata
-- Advanced content scoring (ancestor propagation)
-- Conditional content cleaning
-- Lazy image fixing
-- Multi-attempt fallback mechanism
+**Completed** (MVP):
+- Basic document preparation (script/style removal, template removal)
+- BR tag handling
+- Font tag replacement
+- Title extraction from `<title>` and `<h1>` with separator cleaning
+- Content scoring (tag weights, text length, comma count, link density, class/id patterns)
+- Article extraction with ancestor score propagation
+- Attribute cleanup with `keepClasses` option
+- Character threshold validation
+
+**Pending** (see **PLAN.md** for roadmap):
+- Phase 2: Advanced document preprocessing
+- Phase 3: JSON-LD, Open Graph, Twitter Cards metadata
+- Phase 4: Enhanced scoring algorithm (top N candidates, sibling merging)
+- Phase 5: Conditional cleaning (`_cleanConditionally`)
+- Phase 6: Advanced features (pagination, code block protection)
 
 ### Algorithm Structure (Readability.swift)
 

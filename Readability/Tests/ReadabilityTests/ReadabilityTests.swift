@@ -1,6 +1,3 @@
-import Testing
-@testable import Readability
+// Placeholder for additional unit tests
+// See MozillaTests.swift and StrictMozillaTests.swift for comprehensive test coverage
 
-@Test func example() async throws {
-    // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-}

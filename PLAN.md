@@ -19,67 +19,77 @@
 
 ---
 
-## Phase 1: 基础架构完善 (当前 → Day 1-2)
+## Phase 1: 基础架构完善 ✅ 已完成
 
 **目标**: 建立完整的项目结构和配置系统
 
-### 1.1 配置系统 (`ReadabilityOptions`)
+**状态**: 已完成 (9 项测试通过)
 
+### 1.1 配置系统 (`ReadabilityOptions`) ✅
+
+**已完成**:
 ```swift
-public struct ReadabilityOptions {
+public struct ReadabilityOptions: Sendable {
     var maxElemsToParse: Int      // 默认 0 (无限制)
     var nbTopCandidates: Int      // 默认 5
     var charThreshold: Int        // 默认 500
     var keepClasses: Bool         // 默认 false
     var disableJSONLD: Bool       // 默认 false
-    var allowedVideoRegex: Regex  // 视频 URL 白名单
-    // ... 其他配置
+    var classesToPreserve: [String]
+    var allowedVideoRegex: String
+    var linkDensityModifier: Double
+    var debug: Bool
 }
 ```
 
-**验证标准**:
-- [ ] 配置项可以被正确传递
-- [ ] 默认配置能正确处理标准网页
-- [ ] CLI 支持 `--config` 或相关参数
+**验证结果**:
+- ✅ 配置项可以被正确传递
+- ✅ 默认配置能正确处理标准网页
+- [ ] CLI 支持 `--config` 参数 (Phase 6)
 
-### 1.2 错误类型体系
+### 1.2 错误类型体系 ✅
 
+**已完成**:
 ```swift
-public enum ReadabilityError: Error {
-    case noContent                // 找不到内容
-    case contentTooShort          // 内容太短
-    case parsingFailed(Error)     // 解析失败
-    case invalidHTML              // HTML 无效
+public enum ReadabilityError: Error, CustomStringConvertible, Sendable {
+    case noContent
+    case contentTooShort(actualLength: Int, threshold: Int)
+    case parsingFailed(underlying: Error)
+    case invalidHTML
+    case elementNotFound(String)
 }
 ```
 
-**验证标准**:
-- [ ] 每种错误都能被正确抛出和捕获
-- [ ] 错误信息清晰有用
-- [ ] CLI 能正确显示错误信息
+**验证结果**:
+- ✅ 每种错误都能被正确抛出和捕获
+- ✅ 错误信息清晰有用
+- ✅ CLI 能正确显示错误信息
 
-### 1.3 目录结构调整
+### 1.3 目录结构调整 ✅
 
+**已完成结构**:
 ```
 Sources/Readability/
-├── Readability.swift              # 主入口 (简化)
-├── ReadabilityOptions.swift       # 配置选项
+├── Readability.swift              # 主入口
+├── ReadabilityOptions.swift       # 配置选项 ✅
 ├── ReadabilityResult.swift        # 结果结构
-├── ReadabilityError.swift         # 错误定义
+├── ReadabilityError.swift         # 错误定义 ✅
 └── Internal/
-    ├── Configuration.swift        # 常量配置 (选择器、正则、权重)
-    ├── DOMHelpers.swift           # DOM 工具方法
-    ├── DocumentPreparer.swift     # 文档预处理
-    ├── ArticleGrabber.swift       # 文章提取核心
-    ├── ContentScorer.swift        # 内容评分
-    ├── ContentCleaner.swift       # 内容清理
-    └── MetadataExtractor.swift    # 元数据提取
+    ├── Configuration.swift        # 常量配置 ✅
+    └── DOMHelpers.swift           # DOM 工具方法 ✅
 ```
 
-**验证标准**:
-- [ ] 项目能正常编译
-- [ ] 所有原有功能正常工作
-- [ ] 内部模块间无循环依赖
+**待后续 Phase 补充**:
+- DocumentPreparer.swift
+- ArticleGrabber.swift
+- ContentScorer.swift
+- ContentCleaner.swift
+- MetadataExtractor.swift
+
+**验证结果**:
+- ✅ 项目能正常编译
+- ✅ 所有原有功能正常工作
+- ✅ 内部模块间无循环依赖
 
 ---
 
@@ -351,14 +361,21 @@ for attempt in 0..<maxAttempts {
 
 ## Phase 7: 测试与基准 (持续进行)
 
-### 7.1 导入 Mozilla 测试套件
+### 7.1 导入 Mozilla 测试套件 ✅ 部分完成
 
+**已完成**:
 ```
 Tests/ReadabilityTests/Resources/
 └── test-pages/
-    ├── source/           # 输入 HTML
-    └── expected/         # 期望输出
+    ├── 001/                    # 真实文章测试
+    ├── basic-tags-cleaning/    # 基础标签清理
+    ├── remove-script-tags/     # 脚本移除
+    └── replace-brs/            # BR 标签处理
 ```
+
+**测试加载器**: `TestLoader.swift` 支持动态加载测试用例
+
+**当前测试**: 9 项测试全部通过
 
 ### 7.2 测试覆盖率目标
 
@@ -415,6 +432,23 @@ cat test.html | swift run ReadabilityCLI --text-only
 
 ## 下一步行动
 
-1. **立即开始**: Phase 1.1 (配置系统) + Phase 1.3 (目录结构调整)
-2. **本周目标**: 完成 Phase 2 (文档预处理)
-3. **里程碑**: Phase 4 结束时达到 60% 测试通过率
+### Phase 1 已完成 ✅
+- 9 项测试全部通过
+- 配置系统、错误体系、目录结构已就位
+- Mozilla 测试套件框架已建立
+
+### 立即开始: Phase 2 (文档预处理完善)
+1. **导入更多 Mozilla 测试用例** - 选择 5-10 个覆盖不同场景
+2. **完善 `prepDocument()`** - 处理 template 标签、特殊字符
+3. **增强 `replaceBrs()`** - 优化段落分割逻辑
+4. **添加更多预处理测试** - 验证清理逻辑
+
+### 本周目标
+- 完成 Phase 2 所有任务
+- 测试用例达到 15-20 个
+- 通过率保持 100%
+
+### 里程碑
+- Phase 2 结束: 30% Mozilla 测试通过率
+- Phase 4 结束: 60% Mozilla 测试通过率
+- Phase 5 结束: 80% Mozilla 测试通过率
