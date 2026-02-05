@@ -281,23 +281,42 @@ Sources/Readability/Internal/
 
 ## Phase 6: Content Cleaning & Test Suite Completion
 
-**Goal:** Achieve 90%+ test pass rate by completing content cleaning
+**Goal:** Complete all standard Mozilla test cases (non real-world sites) and achieve 95%+ pass rate
 
-### 6.1 BR to Paragraph Conversion [Deferred from Phase 5]
-**Tests:** `replace-brs`
+**Scope:** 49 standard functional tests (excluding 78 real-world site tests)
+**Current:** 16/49 tests imported (33%)
+**Target:** 49/49 tests imported and passing
+
+### Ordering Principle
+
+Tasks are ordered by **dependency complexity** (not just priority):
+- **Earlier sections** (6.1-6.3): More integrated with core algorithm, affect multiple downstream features
+- **Later sections** (6.4-6.9): More independent, can be implemented in isolation
+- **Final section** (6.10): Comprehensive test import and known issue resolution
+
+This ensures foundational improvements are in place before adding specialized handling.
+
+---
+
+### 6.1 Legacy Issue Resolution [P0 - Blocking]
+
+Complete deferred issues from Phase 5 before proceeding.
+
+#### 6.1.1 BR to Paragraph Conversion
+**Tests:** `replace-brs` (currently has known issue, 92% similarity)
 
 **Issues:**
 - BR tag to paragraph conversion differs from Mozilla
 - Multiple consecutive BRs should create separate paragraphs
-- Content wrapper selection includes extra elements (`<article>`, `<h1>`)
+- Content wrapper selection includes extra elements
 
 **Tasks:**
 - [ ] Fix `replaceBrs()` to match Mozilla's paragraph splitting
 - [ ] Preserve `<br />` tags within paragraphs
 - [ ] Proper paragraph boundary detection
 
-### 6.2 Font Tag Conversion [Deferred from Phase 5]
-**Tests:** `replace-font-tags`
+#### 6.1.2 Font Tag Conversion Refinement
+**Tests:** `replace-font-tags` (currently has known issue, 98% similarity)
 
 **Issues:**
 - Minor structural differences in output
@@ -306,48 +325,196 @@ Sources/Readability/Internal/
 - [ ] Refine font tag to span conversion
 - [ ] Match Mozilla's exact output structure
 
-### 6.3 Content Wrapper Cleanup
-**Issues:**
-- Output includes `<article>`, `<h1>`, `<h2>` tags that should be filtered
-- Expected: clean `<div>` with content only
+---
+
+### 6.2 Content Post-Processing (_prepArticle) [P1 - Core]
+**Dependency:** Core scoring algorithm
+**Impact:** Affects all content output quality
+
+**Tests:**
+- `002` - Basic content extraction validation
+- `reordering-paragraphs` - Paragraph ordering preservation
+- `missing-paragraphs` - Detect and preserve missing paragraphs
+- `remove-extra-brs` - Remove trailing/consecutive BRs
+- `remove-extra-paragraphs` - Remove empty paragraphs
+- `ol` - Ordered list handling
 
 **Tasks:**
-- [ ] Filter heading elements that duplicate title
-- [ ] Remove article wrapper when appropriate
-- [ ] Clean up container elements
+- [ ] Remove extra BRs (trailing BRs before P tags)
+- [ ] Remove extra paragraphs (empty P with no content)
+- [ ] H1→H2 replacement (H1 should only be title)
+- [ ] Single-cell table flattening (convert to P or DIV)
+- [ ] Paragraph reordering validation
+- [ ] Missing paragraph detection and recovery
 
-### 6.4 Conditional Cleaning [Deferred from Phase 5]
-Remove elements based on:
-- [ ] Image-to-paragraph ratio
-- [ ] Input element count
-- [ ] Link density thresholds
-- [ ] Content length checks
-- [ ] Ad/navigation pattern detection
+---
 
-### 6.5 SVG Handling [Deferred from Phase 2]
-- [ ] SVG content in `<head>` removal
-- [ ] Inline SVG preservation (when meaningful)
-- [ ] SVG reference preservation (`<img src="*.svg">`, `<use>`)
+### 6.3 Conditional Cleaning Enhancement [P1 - Core]
+**Dependency:** Content extraction
+**Impact:** Content quality, noise removal
 
-### 6.6 Pagination Support
-- [ ] Detect "next page" links
-- [ ] Merge multi-page content
+**Tests:**
+- `clean-links` - Link cleaning and filtering
+- `links-in-tables` - Table link handling
+- `social-buttons` - Social button removal
+- `article-author-tag` - Author tag byline extraction
+- `table-style-attributes` - Presentational attribute removal
+- `invalid-attributes` - Invalid attribute cleanup
 
-### 6.7 Code Block Protection
-- [ ] Preserve `<pre>`, `<code>` content
-- [ ] Do not clean conditional on code blocks
+**Tasks:**
+- [ ] Complete `_cleanConditionally` implementation
+- [ ] Image-to-paragraph ratio checks
+- [ ] Input element count thresholds
+- [ ] Link density with hash URL coefficient (0.3)
+- [ ] Heading density calculation
+- [ ] Ad/loading words pattern detection (`adWords`, `loadingWords`)
+- [ ] Video embed preservation (iframe/object with video URLs)
+- [ ] Share elements removal
+- [ ] Invalid/presentational attributes cleanup
 
-### 6.8 Table Handling
-- [ ] Detect layout vs data tables
-- [ ] Preserve meaningful tables
+---
 
-### 6.9 CLI Enhancements
-- [ ] Configuration file support
-- [ ] Batch processing
+### 6.4 Hidden Node & Visibility Handling [P2]
+**Dependency:** DOM preprocessing
+**Impact:** Content accuracy
 
-### Verification
-- [ ] 90%+ Mozilla test pass rate
-- [ ] All content cleaning tests passing
+**Tests:**
+- `hidden-nodes` - `display: none` and `hidden` attribute
+- `visibility-hidden` - `visibility: hidden` handling
+
+**Tasks:**
+- [ ] Remove elements with `display: none`
+- [ ] Remove elements with `hidden` attribute
+- [ ] Handle `visibility: hidden` elements
+- [ ] Respect `aria-hidden` (already implemented, verify)
+
+---
+
+### 6.5 Lazy Images & Media Handling [P2]
+**Dependency:** Image processing
+**Impact:** Media content quality
+
+**Tests:**
+- `lazy-image-1`, `lazy-image-2`, `lazy-image-3` - Lazy loading images
+- `data-url-image` - Base64 data URL handling
+- `embedded-videos` - Video embed detection
+- `videos-1`, `videos-2` - Video element handling
+
+**Tasks:**
+- [ ] Fix lazy images from `data-src`, `data-original` attributes
+- [ ] Base64 data URL validation (remove tiny placeholder images)
+- [ ] Figure element image creation
+- [ ] Video embed preservation (iframe, object, embed)
+- [ ] Picture element handling
+
+---
+
+### 6.6 SVG Handling [P3]
+**Dependency:** Content parsing
+**Impact:** Visual content accuracy
+
+**Tests:**
+- `svg-parsing` - Inline SVG preservation
+- `cnet-svg-classes` (deferred to Phase 7 - real-world site)
+
+**Tasks:**
+- [ ] Inline SVG preservation in content
+- [ ] SVG in `<head>` removal
+- [ ] SVG reference preservation (`<img src="*.svg">`)
+- [ ] Data URI SVG detection (preserve even if small)
+
+---
+
+### 6.7 Link & URL Processing [P3]
+**Dependency:** URL parsing
+**Impact:** Link accuracy
+
+**Tests:**
+- `base-url` - Base URL handling
+- `base-url-base-element` - `<base>` element support
+- `base-url-base-element-relative` - Relative base URL
+- `js-link-replacement` - JavaScript link handling
+
+**Tasks:**
+- [ ] Parse `<base>` element for relative URL resolution
+- [ ] Resolve relative URLs in links and images
+- [ ] Handle JavaScript: links appropriately
+
+---
+
+### 6.8 Internationalization & Special Content [P3]
+**Dependency:** Text processing
+**Impact:** Multi-language support
+
+**Tests:**
+- `rtl-1`, `rtl-2`, `rtl-3`, `rtl-4` - RTL text direction
+- `mathjax` - MathJax content preservation
+- `005-unescape-html-entities` - HTML entity decoding
+
+**Tasks:**
+- [ ] Preserve `dir` attribute for RTL content
+- [ ] Preserve `lang` attribute
+- [ ] MathJax content handling
+- [ ] HTML entity unescaping in metadata
+
+---
+
+### 6.9 Edge Cases & Script Handling [P4]
+**Dependency:** Parser robustness
+**Impact:** Stability
+
+**Tests:**
+- `comment-inside-script-parsing` - Script content parsing
+- `toc-missing` - Table of contents handling
+- `metadata-content-missing` - Missing metadata handling
+- `bug-1255978` - Specific bug regression test
+
+**Tasks:**
+- [ ] Handle comments inside script tags
+- [ ] TOC detection and handling
+- [ ] Graceful handling of missing metadata
+- [ ] Bug fix verification
+
+---
+
+### 6.10 Test Suite Completion & Known Issues Resolution [P5 - Final]
+
+**Goal:** Import all remaining standard tests and resolve known issues
+
+**Import Queue:**
+
+| Batch | Tests | Purpose |
+|-------|-------|---------|
+| Batch 1 | `002`, `005-unescape-html-entities` | Basic validation |
+| Batch 2 | `reordering-paragraphs`, `missing-paragraphs`, `ol`, `remove-extra-brs`, `remove-extra-paragraphs` | Content structure |
+| Batch 3 | `clean-links`, `links-in-tables`, `social-buttons`, `article-author-tag`, `invalid-attributes`, `table-style-attributes` | Conditional cleaning |
+| Batch 4 | `hidden-nodes`, `visibility-hidden` | Visibility |
+| Batch 5 | `lazy-image-1/2/3`, `data-url-image`, `embedded-videos`, `videos-1/2` | Media |
+| Batch 6 | `svg-parsing` | SVG |
+| Batch 7 | `base-url`, `base-url-base-element`, `base-url-base-element-relative`, `js-link-replacement` | URL handling |
+| Batch 8 | `rtl-1/2/3/4`, `mathjax` | I18N |
+| Batch 9 | `comment-inside-script-parsing`, `toc-missing`, `metadata-content-missing`, `bug-1255978` | Edge cases |
+
+**Known Issues to Resolve:**
+- [ ] `replace-brs` content mismatch (92% similarity)
+- [ ] `replace-font-tags` content mismatch (98% similarity)
+
+**Verification Criteria:**
+- [ ] 49/49 standard functional tests imported
+- [ ] 0 known issues remaining
+- [ ] 95%+ test pass rate on standard tests
+- [ ] Document any technical limitations with clear explanations
+
+---
+
+### Phase 6 Verification
+
+| Metric | Target | Status |
+|--------|--------|--------|
+| Standard tests imported | 49/49 | 16/49 (33%) |
+| Standard tests passing | 95%+ | TBD |
+| Known issues | 0 | 2 (replace-brs, replace-font-tags) |
+| Real-world tests | Phase 7 | 0/78 (0%) |
 
 ---
 
@@ -370,95 +537,239 @@ Remove elements based on:
 
 ## Test Coverage Targets
 
-| Phase | Target Pass Rate | Test Cases | Status |
-|-------|------------------|------------|--------|
-| Phase 1 | N/A (foundation) | 4 | COMPLETE |
-| Phase 2 | 30% | 8 | COMPLETE |
-| Phase 3 | Metadata extraction | 12 | COMPLETE |
-| Phase 4 | Core scoring | 16 | COMPLETE |
-| Phase 5 | Content quality & byline | 4 | COMPLETE |
+### Test Case Classification
 
-**Current Status:** 29/32 tests passing (90.6%) with 3 known issues
+Mozilla Readability has **130 test cases** total, divided into:
 
-### Phase 5 Progress
-- [x] 5.1 Text Node Ordering Fix - COMPLETE (`001` content now passes)
-- [x] 5.2 HTML Byline Extraction - COMPLETE (`001` byline now passes)
+| Category | Count | Description |
+|----------|-------|-------------|
+| Standard Functional Tests | 49 | Feature-specific tests (replace-brs, lazy-images, etc.) |
+| Real-World Site Tests | 78 | Tests from actual websites (wikipedia, nytimes, etc.) |
+| **Total** | **127** | (3 tests may be utilities/infrastructure) |
 
-### Deferred to Phase 6
-- [ ] 5.3 Conditional Cleaning (moved to Phase 6.4)
+### Phase Coverage Overview
 
-### Known Issues Deferred to Phase 6
-| Issue | Tests | Plan |
-|-------|-------|------|
-| BR to paragraph conversion | `replace-brs` | Phase 6.1 |
-| Font tag conversion | `replace-font-tags` | Phase 6.2 |
-| Phase 6 | 90%+ | 130 (all) | PENDING |
+| Phase | Scope | Target Pass Rate | Test Cases | Status |
+|-------|-------|------------------|------------|--------|
+| Phase 1 | Foundation | N/A | 4 | COMPLETE |
+| Phase 2 | Preprocessing | 100% | 8 | COMPLETE |
+| Phase 3 | Metadata | 100% | 12 | COMPLETE |
+| Phase 4 | Core Scoring | 100% | 16 | COMPLETE |
+| Phase 5 | Content Quality | 100% | 4 | COMPLETE |
+| **Phase 6** | **Standard Tests** | **95%+** | **49** | **IN PROGRESS** |
+| Phase 7 | Real-World Sites | 90%+ | 78 | PENDING |
 
-**Current:** 16/130 test cases (12%), 28/32 tests passing (87.5%)
+### Current Status
+
+**Standard Tests:** 16/49 imported (33%), 28/32 assertions passing (87.5%)  
+**Known Issues:** 2 (`replace-brs`, `replace-font-tags`)
+
+### Phase 6 Detailed Progress
+
+#### 6.1 Legacy Issues
+- [ ] `replace-brs` content mismatch (92% similarity)
+- [ ] `replace-font-tags` content mismatch (98% similarity)
+
+#### 6.2 Content Post-Processing (6 tests)
+- [ ] Import `002`
+- [ ] Import `reordering-paragraphs`
+- [ ] Import `missing-paragraphs`
+- [ ] Import `remove-extra-brs`
+- [ ] Import `remove-extra-paragraphs`
+- [ ] Import `ol`
+
+#### 6.3 Conditional Cleaning (6 tests)
+- [ ] Import `clean-links`
+- [ ] Import `links-in-tables`
+- [ ] Import `social-buttons`
+- [ ] Import `article-author-tag`
+- [ ] Import `table-style-attributes`
+- [ ] Import `invalid-attributes`
+
+#### 6.4 Hidden Node Handling (2 tests)
+- [ ] Import `hidden-nodes`
+- [ ] Import `visibility-hidden`
+
+#### 6.5 Lazy Images & Media (6 tests)
+- [ ] Import `lazy-image-1/2/3`
+- [ ] Import `data-url-image`
+- [ ] Import `embedded-videos`
+- [ ] Import `videos-1/2`
+
+#### 6.6 SVG Handling (1 test)
+- [ ] Import `svg-parsing`
+
+#### 6.7 Link & URL Processing (4 tests)
+- [ ] Import `base-url` (3 variants)
+- [ ] Import `js-link-replacement`
+
+#### 6.8 Internationalization (6 tests)
+- [ ] Import `rtl-1/2/3/4`
+- [ ] Import `mathjax`
+- [ ] Import `005-unescape-html-entities`
+
+#### 6.9 Edge Cases (4 tests)
+- [ ] Import `comment-inside-script-parsing`
+- [ ] Import `toc-missing`
+- [ ] Import `metadata-content-missing`
+- [ ] Import `bug-1255978`
 
 ---
 
 ## Mozilla Test Case Import Priority
 
-### Phase 4 Completed (via CORE.md Phases A-H)
-- [x] `title-en-dash`
-- [x] `title-and-h1-discrepancy`
-- [x] `keep-images`
-- [x] `keep-tabular-data`
+### Completed Test Imports
 
-### Phase 5 (Content Cleaning)
+**Phase 1-4 (Foundation & Core):**
+- [x] `title-en-dash`, `title-and-h1-discrepancy` - Title handling
+- [x] `keep-images`, `keep-tabular-data` - Content preservation
+- [x] `003-metadata-preferred`, `004-metadata-space-separated-properties` - Metadata
+- [x] `parsely-metadata`, `schema-org-context-object` - JSON-LD
 
-**Text Node Ordering:**
-- `001`
-- `replace-brs`
-- `replace-font-tags`
+**Phase 5 (Content Quality):**
+- [x] `001` - Byline extraction from HTML
+- [x] `basic-tags-cleaning`, `remove-script-tags` - Basic cleaning
+- [x] `replace-brs`, `replace-font-tags` - Tag conversion (with known issues)
+- [x] `remove-aria-hidden`, `style-tags-removal`, `normalize-spaces` - Preprocessing
 
-**Content Cleaning:**
-- `lazy-image-*`
-- `svg-parsing` (deferred from Phase 2)
-- `cnet-svg-classes` (deferred from Phase 2)
-- And other content cleaning tests
+### Phase 6 Import Queue (by priority)
 
-### Complete Set (Phase 6)
-All 130 Mozilla test cases for full compatibility verification
+**Batch 1: Legacy Issues (2 tests)**
+- `replace-brs` - Fix 92% similarity
+- `replace-font-tags` - Fix 98% similarity
+
+**Batch 2: Content Post-Processing (6 tests)**
+- `002`, `ol` - Basic validation
+- `reordering-paragraphs`, `missing-paragraphs` - Paragraph handling
+- `remove-extra-brs`, `remove-extra-paragraphs` - Cleanup
+
+**Batch 3: Conditional Cleaning (6 tests)**
+- `clean-links`, `links-in-tables`, `social-buttons`
+- `article-author-tag`, `table-style-attributes`, `invalid-attributes`
+
+**Batch 4: Visibility (2 tests)**
+- `hidden-nodes`, `visibility-hidden`
+
+**Batch 5: Media (6 tests)**
+- `lazy-image-1/2/3`, `data-url-image`
+- `embedded-videos`, `videos-1/2`
+
+**Batch 6: SVG (1 test)**
+- `svg-parsing`
+
+**Batch 7: URL Processing (4 tests)**
+- `base-url`, `base-url-base-element`, `base-url-base-element-relative`
+- `js-link-replacement`
+
+**Batch 8: Internationalization (6 tests)**
+- `rtl-1/2/3/4`, `mathjax`, `005-unescape-html-entities`
+
+**Batch 9: Edge Cases (4 tests)**
+- `comment-inside-script-parsing`, `toc-missing`
+- `metadata-content-missing`, `bug-1255978`
+
+### Phase 7: Real-World Sites (78 tests)
+
+Real-world site tests from major websites (wikipedia, nytimes, medium, bbc, cnn, etc.)
 
 ---
 
 ## Summary
 
-### Completed Phases (1-4)
+### Completed Phases (1-5)
 
-All foundation, preprocessing, metadata extraction, and core scoring work is complete. The implementation successfully extracts readable content from web pages without crashes.
+All foundation work is complete through Phase 5:
 
-**Phase 4 Implementation:** See `CORE.md` for detailed breakdown of Phases A-H which cover:
-- A: Foundation (DOM traversal, scoring infrastructure)
-- B: Node Cleaner (unlikely candidate removal)
-- C: Candidate Selection (Top N candidates)
-- D: Sibling Merging (content merging)
-- E: Multi-attempt Fallback (robustness)
-- F: DIV to P Conversion (phrasing content)
-- G: Article Cleaning (conditional cleaning)
-- H: Integration & Polish (module wiring, DOM context fixes)
+- **Phase 1**: Configuration and error handling
+- **Phase 2**: Document preprocessing (tag removal, BR handling)
+- **Phase 3**: Metadata extraction (JSON-LD, OpenGraph, Dublin Core)
+- **Phase 4**: Core scoring algorithm (Top N candidates, sibling merging, multi-attempt fallback)
+- **Phase 5**: Content quality improvements (text node ordering fix, HTML byline extraction)
 
-### Current Blockers for 100% Test Pass Rate
+**Phase 4 Implementation:** See `CORE.md` for detailed breakdown of Phases A-H.
 
-1. **Text Node Ordering** (3 tests): DOM manipulation reorders text nodes and inline elements
-2. **Byline from HTML** (1 test): Need to parse author from article body content
+### Current Focus: Phase 6
 
-These are known limitations documented in TESTS.md with detailed technical analysis.
+**Goal:** Complete all 49 standard functional tests with 95%+ pass rate.
 
-### Next Steps
+**Current Status:** 16/49 tests imported, 28/32 assertions passing (87.5%)
 
-1. **Phase 5**: Fix text node ordering in DOM manipulation
-2. **Phase 5**: Implement HTML content byline detection
-3. **Phase 5**: Complete content cleaning features
-4. **Phase 6**: Import remaining test cases for 90%+ pass rate
+**Active Work:**
+1. Resolve legacy issues (replace-brs, replace-font-tags)
+2. Implement content post-processing (_prepArticle enhancements)
+3. Complete conditional cleaning
+4. Import remaining tests in priority order
+
+### Phase 7 Preview
+
+After completing Phase 6, Phase 7 will focus on:
+- Importing 78 real-world site tests
+- Performance optimization
+- API documentation
+- Release preparation
+
+---
+
+## Known Issues History
+
+This section tracks resolved and active known issues for reference.
+
+### Resolved Issues
+
+#### 1. Text Node Ordering in Content Extraction [FIXED in Phase 5.1]
+
+**Tests Affected:** `001` (was 89%, now 100%)
+
+**Problem:** During DOM manipulation, text nodes and inline elements were reordered because `cloneElement()` processed `children()` first, then `textNodes()`.
+
+**Solution:** Changed all `cloneElement` implementations to use `getChildNodes()` which preserves the original mixed order of elements and text.
+
+**Files Modified:**
+- `DOMHelpers.swift` - Added shared `cloneElement()` utility
+- `Readability.swift`, `SiblingMerger.swift`, `ArticleCleaner.swift` - Use `DOMHelpers.cloneElement()`
+
+#### 2. Byline Extraction from HTML Content [FIXED in Phase 5.2]
+
+**Test:** `001 - Byline`
+
+**Implementation:**
+- Added byline detection in `NodeCleaner.checkAndExtractByline()`
+- Detects `rel="author"`, `itemprop="author"`, and byline class/id patterns
+- Searches for `itemprop="name"` child nodes for accurate author names
+- Proper priority: metadata byline > HTML content byline
+
+### Active Issues (Phase 6)
+
+#### 1. BR to Paragraph Conversion
+
+**Test:** `replace-brs`
+
+**Similarity:** 92%
+
+**Problem:**
+- Expected: Multiple `<p>` paragraphs with `<br />` tags preserved
+- Actual: Single paragraph with BRs removed, content merged
+
+**Root Cause:** Our `replaceBrs()` merges consecutive BRs into paragraphs differently than Mozilla. Content wrapper selection differs (keeps `<article>` and `<h1>` tags).
+
+**Resolution Plan:** Phase 6.1.1
+
+#### 2. Font Tag Conversion
+
+**Test:** `replace-font-tags`
+
+**Similarity:** 98%
+
+**Problem:** Minor structural differences in output
+
+**Root Cause:** Similar to replace-brs, content wrapper selection differs
+
+**Resolution Plan:** Phase 6.1.2
 
 ---
 
 ## See Also
 
-- `AGENTS.md` - Core principles and coding standards
-- `TESTS.md` - Detailed testing strategy and current progress
+- `AGENTS.md` - Core principles, coding standards, and testing guidelines
 - `CORE.md` - Phase 4 detailed implementation plan (Phases A-H)
 - `INIT.md` - Original project planning (Chinese)

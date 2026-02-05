@@ -1,6 +1,8 @@
 # Agent Guidelines for Swift Readability
 
-This document contains **principles and long-term guidelines** for working in this codebase. For specific implementation status and testing progress, see `PLAN.md` and `TESTS.md`.
+This document contains **principles, coding standards, and development guidelines** for working in this codebase.
+
+**For implementation status and progress tracking, see `PLAN.md`.**
 
 ---
 
@@ -173,6 +175,81 @@ import Testing
 
 ---
 
+## Testing Guidelines
+
+### Running Tests
+
+**Run All Tests:**
+```bash
+cd Readability && swift test
+```
+
+**Run Compatibility Tests Only:**
+```bash
+cd Readability && swift test --filter MozillaCompatibilityTests
+```
+
+**Run Specific Test:**
+```bash
+cd Readability && swift test --filter "001 - Title matches expected exactly"
+```
+
+### Test Infrastructure
+
+**TestLoader.swift** - Utility for loading Mozilla test cases:
+```swift
+let testCase = TestLoader.loadTestCase(named: "001")
+// Returns: sourceHTML, expectedHTML, expectedMetadata
+```
+
+**Mozilla Test Case Format:**
+```
+test-pages/001/
+├── source.html            # Input HTML
+├── expected.html          # Expected output
+└── expected-metadata.json # Expected metadata
+```
+
+**DOM Comparison:** Custom traversal comparing:
+- Node types (element, text)
+- Tag names
+- Text content (normalized whitespace)
+- Full text similarity ratio for reporting
+
+### Importing New Mozilla Tests
+
+When adding a new test case from Mozilla:
+
+1. Copy test directory from `ref/mozilla-readability/test/test-pages/<name>/`
+2. Add test methods to `MozillaCompatibilityTests.swift`:
+   ```swift
+   @Test("<name> - Title matches expected")
+   func test<name>Title() async throws {
+       guard let testCase = TestLoader.loadTestCase(named: "<name>") else {
+           Issue.record("Failed to load test case")
+           return
+       }
+       let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+       let result = try readability.parse()
+       #expect(result.title == testCase.expectedMetadata.title)
+   }
+   ```
+3. Use `withKnownIssue()` for expected failures with clear documentation
+4. Update PLAN.md to mark test as imported
+
+### Test Failure Response Protocol
+
+When a test fails:
+
+1. **Do NOT modify test to make it pass**
+2. Analyze if implementation is incorrect
+3. Check if it is a known technical limitation (`SwiftSoup` vs `JSDOM`)
+4. If fixable: fix implementation
+5. If limitation: mark with `withKnownIssue()` and document
+6. If unsure: discuss before proceeding
+
+---
+
 ## Quick Reference
 
 ### Commands
@@ -195,6 +272,6 @@ cd ReadabilityCLI && swift run ReadabilityCLI <url> --text-only
 
 ## See Also
 
-- `PLAN.md` - Feature roadmap and implementation phases
-- `TESTS.md` - Testing strategy and progress tracking
+- `PLAN.md` - Feature roadmap, implementation phases, and known issues
+- `CORE.md` - Core scoring algorithm detailed design
 - `INIT.md` - Original project planning (Chinese)
