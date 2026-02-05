@@ -409,7 +409,7 @@ struct MozillaCompatibilityTests {
         }
 
         let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
-        let result = try readability.parse()
+        _ = try readability.parse()
 
         // Note: publishedTime is not yet exposed in ReadabilityResult, tracked for future enhancement
         #expect(true)
