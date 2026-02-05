@@ -84,7 +84,14 @@ enum TestLoader {
             "title-en-dash",
             "title-and-h1-discrepancy",
             "keep-images",
-            "keep-tabular-data"
+            "keep-tabular-data",
+            // Phase 6.3: Conditional Cleaning
+            "clean-links",
+            "links-in-tables",
+            "social-buttons",
+            "article-author-tag",
+            "table-style-attributes",
+            "invalid-attributes"
         ]
         return testNames.compactMap { loadTestCase(named: $0) }
     }

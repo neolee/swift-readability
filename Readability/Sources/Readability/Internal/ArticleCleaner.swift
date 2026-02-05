@@ -15,14 +15,14 @@ final class ArticleCleaner {
     /// Prepare article content for output
     /// This is the main entry point for article cleaning
     func prepArticle(_ articleContent: Element) throws {
+        // Remove unwanted elements FIRST (before cleanStyles removes class attributes)
+        try removeUnwantedElements(articleContent)
+
         // Clean styles
         try cleanStyles(articleContent)
 
         // Fix lazy images
         try fixLazyImages(articleContent)
-
-        // Remove unwanted elements
-        try removeUnwantedElements(articleContent)
 
         // Convert DIVs to Ps where appropriate
         try convertDivsToParagraphs(articleContent)
@@ -291,6 +291,26 @@ final class ArticleCleaner {
                     try el.remove()
                 }
             }
+        }
+
+        // Remove share/social elements
+        try removeShareElements(element)
+    }
+
+    /// Remove share/social elements from article content
+    private func removeShareElements(_ element: Element) throws {
+        // Build a combined selector for efficiency
+        // Match elements where class contains share patterns
+        var selectors: [String] = []
+        for pattern in Configuration.shareElements {
+            selectors.append("[class*=\(pattern)]")
+            selectors.append("[id*=\(pattern)]")
+        }
+
+        if !selectors.isEmpty {
+            let combinedSelector = selectors.joined(separator: ", ")
+            let found = try element.select(combinedSelector)
+            try found.remove()
         }
     }
 
