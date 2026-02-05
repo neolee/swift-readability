@@ -7,13 +7,17 @@ public struct ReadabilityResult: Sendable {
     public let textContent: String
     public let excerpt: String?
     public let length: Int
+    public let siteName: String?
+    public let publishedTime: String?
 
     public init(
         title: String,
         byline: String? = nil,
         content: String,
         textContent: String,
-        excerpt: String? = nil
+        excerpt: String? = nil,
+        siteName: String? = nil,
+        publishedTime: String? = nil
     ) {
         self.title = title
         self.byline = byline
@@ -21,5 +25,7 @@ public struct ReadabilityResult: Sendable {
         self.textContent = textContent
         self.excerpt = excerpt
         self.length = textContent.count
+        self.siteName = siteName
+        self.publishedTime = publishedTime
     }
 }

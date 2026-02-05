@@ -65,7 +65,9 @@ public struct Readability {
             byline: byline,
             content: content,
             textContent: textContent,
-            excerpt: excerpt
+            excerpt: excerpt,
+            siteName: metadata.siteName,
+            publishedTime: metadata.publishedTime
         )
     }
 
@@ -126,8 +128,10 @@ public struct Readability {
             }
 
             for key in keysToCheck {
+                // Check if key matches the pattern OR is article:published_time
+                let isArticlePublishedTime = key == "article:published_time"
                 if let regex = try? NSRegularExpression(pattern: propertyPattern, options: [.caseInsensitive]),
-                   regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil,
+                   (regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil || isArticlePublishedTime),
                    !content.isEmpty {
                     values[key] = content
                 }
@@ -175,6 +179,10 @@ public struct Readability {
                            values["twitter:site"] ??
                            values["dc:publisher"] ??
                            values["dcterm:publisher"]
+
+        // Extract published time
+        metadata.publishedTime = values["article:published_time"] ??
+                                 values["parsely-pub-date"]
 
         // Clean up excerpt
         if var excerpt = metadata.excerpt {

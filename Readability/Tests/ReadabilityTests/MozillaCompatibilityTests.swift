@@ -176,6 +176,21 @@ struct MozillaCompatibilityTests {
         #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
 
+    @Test("002 - Site name matches expected")
+    func test002SiteName() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "002") else {
+            Issue.record("Failed to load test case 002")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedSiteName = testCase.expectedMetadata.siteName
+        #expect(result.siteName == expectedSiteName,
+                "Site name mismatch. Expected: '\(expectedSiteName ?? "nil")', Actual: '\(result.siteName ?? "nil")'")
+    }
+
     // MARK: - Phase 6.2: Content Post-Processing Tests
 
     @Test("remove-extra-brs - Content matches expected")
@@ -503,10 +518,11 @@ struct MozillaCompatibilityTests {
         }
 
         let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
-        _ = try readability.parse()
+        let result = try readability.parse()
 
-        // Note: publishedTime is not yet exposed in ReadabilityResult, tracked for future enhancement
-        #expect(true)
+        let expectedPublishedTime = testCase.expectedMetadata.publishedTime
+        #expect(result.publishedTime == expectedPublishedTime,
+                "Published time mismatch. Expected: '\(expectedPublishedTime ?? "nil")', Actual: '\(result.publishedTime ?? "nil")'")
     }
 
     @Test("schema-org-context-object - Title matches expected")
@@ -554,6 +570,36 @@ struct MozillaCompatibilityTests {
 
         #expect(result.excerpt == expectedExcerpt,
                 "Excerpt mismatch. Expected: '\(expectedExcerpt ?? "nil")', Actual: '\(result.excerpt ?? "nil")'")
+    }
+
+    @Test("schema-org-context-object - Published time matches expected")
+    func testSchemaOrgContextObjectPublishedTime() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "schema-org-context-object") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedPublishedTime = testCase.expectedMetadata.publishedTime
+        #expect(result.publishedTime == expectedPublishedTime,
+                "Published time mismatch. Expected: '\(expectedPublishedTime ?? "nil")', Actual: '\(result.publishedTime ?? "nil")'")
+    }
+
+    @Test("schema-org-context-object - Site name matches expected")
+    func testSchemaOrgContextObjectSiteName() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "schema-org-context-object") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedSiteName = testCase.expectedMetadata.siteName
+        #expect(result.siteName == expectedSiteName,
+                "Site name mismatch. Expected: '\(expectedSiteName ?? "nil")', Actual: '\(result.siteName ?? "nil")'")
     }
 
     @Test("003-metadata-preferred - Title matches expected")
@@ -664,6 +710,36 @@ struct MozillaCompatibilityTests {
                 "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
     }
 
+    @Test("keep-images - Published time matches expected")
+    func testKeepImagesPublishedTime() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "keep-images") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedPublishedTime = testCase.expectedMetadata.publishedTime
+        #expect(result.publishedTime == expectedPublishedTime,
+                "Published time mismatch. Expected: '\(expectedPublishedTime ?? "nil")', Actual: '\(result.publishedTime ?? "nil")'")
+    }
+
+    @Test("keep-images - Site name matches expected")
+    func testKeepImagesSiteName() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "keep-images") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedSiteName = testCase.expectedMetadata.siteName
+        #expect(result.siteName == expectedSiteName,
+                "Site name mismatch. Expected: '\(expectedSiteName ?? "nil")', Actual: '\(result.siteName ?? "nil")'")
+    }
+
     @Test("keep-tabular-data - Title matches expected")
     func testKeepTabularDataTitle() async throws {
         guard let testCase = TestLoader.loadTestCase(named: "keep-tabular-data") else {
@@ -677,6 +753,21 @@ struct MozillaCompatibilityTests {
         let expectedTitle = testCase.expectedMetadata.title ?? ""
         #expect(result.title == expectedTitle,
                 "Title mismatch. Expected: '\(expectedTitle)', Actual: '\(result.title)'")
+    }
+
+    @Test("keep-tabular-data - Site name matches expected")
+    func testKeepTabularDataSiteName() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "keep-tabular-data") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedSiteName = testCase.expectedMetadata.siteName
+        #expect(result.siteName == expectedSiteName,
+                "Site name mismatch. Expected: '\(expectedSiteName ?? "nil")', Actual: '\(result.siteName ?? "nil")'")
     }
 
     // MARK: - Phase 6.3: Conditional Cleaning Tests
@@ -750,6 +841,36 @@ struct MozillaCompatibilityTests {
         let expectedByline = testCase.expectedMetadata.byline
         #expect(result.byline == expectedByline,
                 "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
+    }
+
+    @Test("article-author-tag - Published time matches expected")
+    func testArticleAuthorTagPublishedTime() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "article-author-tag") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedPublishedTime = testCase.expectedMetadata.publishedTime
+        #expect(result.publishedTime == expectedPublishedTime,
+                "Published time mismatch. Expected: '\(expectedPublishedTime ?? "nil")', Actual: '\(result.publishedTime ?? "nil")'")
+    }
+
+    @Test("article-author-tag - Site name matches expected")
+    func testArticleAuthorTagSiteName() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "article-author-tag") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedSiteName = testCase.expectedMetadata.siteName
+        #expect(result.siteName == expectedSiteName,
+                "Site name mismatch. Expected: '\(expectedSiteName ?? "nil")', Actual: '\(result.siteName ?? "nil")'")
     }
 
     @Test("table-style-attributes - Content matches expected")
