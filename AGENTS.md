@@ -188,6 +188,7 @@ cd ReadabilityCLI && swift run ReadabilityCLI <url> --text-only
 
 ### External Resources
 - Mozilla Readability: https://github.com/mozilla/readability
+  - Local clone at `./ref/mozilla-readability`
 - SwiftSoup: https://github.com/scinfu/SwiftSoup
 
 ---
