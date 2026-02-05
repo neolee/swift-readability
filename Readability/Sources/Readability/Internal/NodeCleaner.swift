@@ -147,7 +147,14 @@ final class NodeCleaner {
 
     /// Find child node with itemprop="name"
     private func findItemPropNameNode(startingAt node: Element) -> Element? {
-        var current: Element? = node
+        // First check the node itself
+        let nodeItemprop = (try? node.attr("itemprop").lowercased()) ?? ""
+        if nodeItemprop.contains("name") {
+            return node
+        }
+
+        // Then search children
+        var current: Element? = DOMTraversal.getNextNode(node)
         let endOfSearchMarker = DOMTraversal.getNextNode(node, ignoreSelfAndKids: true)
 
         while let element = current, element !== endOfSearchMarker {

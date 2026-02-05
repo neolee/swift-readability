@@ -110,22 +110,18 @@ This document tracks testing progress, strategy, and known issues for the Swift 
 
 ---
 
-### 4. Byline Extraction from HTML Content (1 test)
+### 4. Byline Extraction from HTML Content (FIXED)
 
 **Test:** `001 - Byline`
 
-**Expected:** "Nicolas Perriault"
-**Actual:** `nil`
+**Status:** PASSING
 
-**Analysis:**
-- Source HTML contains NO metadata author tags
-- Author name appears only in:
-  - `<title>` tag: "Get your Frontend JavaScript Code Covered | Code | Nicolas Perriault"
-  - HTML content header: "Hi, I'm Nicolas."
-
-**Status:** Metadata-based byline extraction WORKING (parsely-metadata, 003-metadata-preferred, schema-org all pass)
-
-**Resolution:** Phase 5.2 will implement HTML content byline detection for cases without metadata
+**Implementation:**
+- Added byline detection in `NodeCleaner.checkAndExtractByline()`
+- Detects `rel="author"`, `itemprop="author"`, and byline class/id patterns
+- Searches for `itemprop="name"` child nodes for accurate author names
+- Integrated into `ContentExtractor.performExtraction()`
+- Proper priority: metadata byline > HTML content byline
 
 ---
 

@@ -117,12 +117,17 @@ final class ContentExtractor {
         let cleaner = NodeCleaner(options: options)
         let selector = CandidateSelector(options: options, scoringManager: scoringManager)
 
-        // Phase 1: Remove unlikely candidates
+        // Phase 1: Remove unlikely candidates and extract byline
         if isFlagActive(Configuration.flagStripUnlikelies) {
             try cleaner.removeUnlikelyCandidates(
                 from: body,
                 stripUnlikelyCandidates: true
             )
+        }
+
+        // Extract byline from document if not already found
+        if articleByline == nil {
+            articleByline = try extractByline(from: body, cleaner: cleaner)
         }
 
         // Phase 2: Collect and score elements
@@ -155,6 +160,37 @@ final class ContentExtractor {
         )
 
         return (content: articleContent, byline: articleByline, neededToCreate: neededToCreate)
+    }
+
+    // MARK: - Byline Extraction
+
+    /// Extract byline from HTML content
+    /// Traverses all nodes looking for author indicators
+    private func extractByline(from body: Element, cleaner: NodeCleaner) throws -> String? {
+        var node: Element? = body
+
+        while let current = node {
+            let matchString = getMatchString(current)
+
+            // Check if this node contains a valid byline
+            if cleaner.checkAndExtractByline(current, matchString: matchString) {
+                // Found byline, remove the node and return
+                let byline = cleaner.getExtractedByline()
+                _ = DOMTraversal.removeAndGetNext(current)
+                return byline
+            }
+
+            node = DOMTraversal.getNextNode(current)
+        }
+
+        return nil
+    }
+
+    /// Get match string (class + id) for pattern matching
+    private func getMatchString(_ element: Element) -> String {
+        let className = (try? element.className()) ?? ""
+        let id = element.id()
+        return "\(className) \(id)".lowercased()
     }
 
     // MARK: - Element Collection

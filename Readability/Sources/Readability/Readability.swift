@@ -63,8 +63,9 @@ public struct Readability {
         // Clean and serialize content
         let content = try cleanAndSerialize(articleContent)
 
-        // Use byline from extraction if available, otherwise from metadata
-        let byline = extractedByline ?? metadata.byline
+        // Use byline from metadata if available, otherwise from content extraction
+        // This matches Mozilla's behavior: metadata.byline || this._articleByline
+        let byline = metadata.byline ?? extractedByline
 
         return ReadabilityResult(
             title: title,

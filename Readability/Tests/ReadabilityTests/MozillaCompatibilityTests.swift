@@ -109,11 +109,8 @@ struct MozillaCompatibilityTests {
 
         let expectedByline = testCase.expectedMetadata.byline
 
-        // Known issue: byline extraction not yet implemented (Phase 3)
-        withKnownIssue("Byline extraction not yet implemented (tracked in PLAN.md Phase 3)") {
-            #expect(result.byline == expectedByline,
-                    "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
-        }
+        #expect(result.byline == expectedByline,
+                "Byline mismatch. Expected: '\(expectedByline ?? "nil")', Actual: '\(result.byline ?? "nil")'")
     }
 
     @Test("001 - Excerpt matches expected")
