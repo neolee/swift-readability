@@ -566,9 +566,9 @@ Mozilla Readability has **130 test cases** total, divided into:
 
 ### Phase 6 Detailed Progress
 
-#### 6.1 Legacy Issues
-- [ ] `replace-brs` content mismatch (92% similarity)
-- [ ] `replace-font-tags` content mismatch (98% similarity)
+#### 6.1 Legacy Issues [COMPLETE]
+- [x] `replace-brs` content mismatch (FIXED - was 92%, now 100%)
+- [x] `replace-font-tags` content mismatch (FIXED - was 98%, now 100%)
 
 #### 6.2 Content Post-Processing (6 tests)
 - [ ] Import `002`
@@ -738,33 +738,54 @@ This section tracks resolved and active known issues for reference.
 - Searches for `itemprop="name"` child nodes for accurate author names
 - Proper priority: metadata byline > HTML content byline
 
-### Active Issues (Phase 6)
+### Resolved Issues (Phase 6.1)
 
-#### 1. BR to Paragraph Conversion
+#### 1. BR to Paragraph Conversion [FIXED]
 
 **Test:** `replace-brs`
 
-**Similarity:** 92%
+**Status:** FIXED - Similarity improved from 92% to 100%
 
 **Problem:**
 - Expected: Multiple `<p>` paragraphs with `<br />` tags preserved
 - Actual: Single paragraph with BRs removed, content merged
 
-**Root Cause:** Our `replaceBrs()` merges consecutive BRs into paragraphs differently than Mozilla. Content wrapper selection differs (keeps `<article>` and `<h1>` tags).
+**Root Cause:** Original `replaceBrs()` didn't correctly implement Mozilla's algorithm for:
+- Skipping whitespace text nodes between BR elements (using `_nextNode` equivalent)
+- Properly handling phrasing content collection after creating paragraph
+- Removing trailing whitespace from new paragraphs
 
-**Resolution Plan:** Phase 6.1.1
+**Solution:**
+- Implemented `nextNode()` helper to skip whitespace text nodes (matching Mozilla's `_nextNode`)
+- Properly detect BR chains (2+ consecutive BRs)
+- Move phrasing content into new paragraph until next BR chain or non-phrasing content
+- Remove trailing whitespace from paragraphs
+- Handle parent P tag conversion to DIV
 
-#### 2. Font Tag Conversion
+**Files Modified:** `Readability.swift`
+
+#### 2. Font Tag Conversion [FIXED]
 
 **Test:** `replace-font-tags`
 
-**Similarity:** 98%
+**Status:** FIXED - Similarity improved from 98% to 100%
 
-**Problem:** Minor structural differences in output
+**Problem:** Minor structural differences in output, missing attributes and text content
 
-**Root Cause:** Similar to replace-brs, content wrapper selection differs
+**Root Cause:** Original `replaceFontTags()` only copied child elements, not:
+- Attributes (face, size, etc.)
+- Text nodes directly inside font tags
 
-**Resolution Plan:** Phase 6.1.2
+**Solution:**
+- Copy all attributes from `<font>` to `<span>`
+- Use `getChildNodes()` to include text nodes, not just `children()`
+- Move all child nodes (not copy) to preserve document structure
+
+**Files Modified:** `Readability.swift`
+
+### Active Issues
+
+None - All known issues from previous phases have been resolved.
 
 ---
 

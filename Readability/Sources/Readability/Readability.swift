@@ -306,36 +306,153 @@ public struct Readability {
         try ariaHiddenElements.remove()
     }
 
+    /// Replaces 2 or more successive <br> elements with a single <p>.
+    /// Whitespace between <br> elements are ignored.
+    /// Based on Mozilla Readability.js _replaceBrs()
     private func replaceBrs() throws {
         let brs = try doc.select("br")
+
         for br in brs {
-            var next: Element? = try br.nextElementSibling()
+            // Get the next non-whitespace sibling
+            var next = nextNode(br.nextSibling())
             var replaced = false
 
-            while let current = next, current.tagName() == "br" {
-                if !replaced {
-                    replaced = true
-                    let p = try doc.createElement("p")
-                    _ = try br.previousElementSibling()?.after(p)
-                }
-                let sibling = try current.nextElementSibling()
+            // If we find a <br> chain, remove the <br>s until we hit another element
+            // or non-whitespace. This leaves behind the first <br> in the chain.
+            while let current = next,
+                  current.nodeName().lowercased() == "br" {
+                replaced = true
+                let brSibling = current.nextSibling()
                 try current.remove()
-                next = sibling
+                next = nextNode(brSibling)
             }
 
+            // If we removed a <br> chain, replace the remaining <br> with a <p>
             if replaced {
-                try br.remove()
+                let p = try doc.createElement("p")
+                try br.replaceWith(p)
+
+                // Add all sibling nodes as children of the <p> until we hit another <br> chain
+                next = p.nextSibling()
+                while let current = next {
+                    // If we've hit another <br><br>, we're done adding children to this <p>
+                    if current.nodeName().lowercased() == "br" {
+                        if let nextElem = nextNode(current.nextSibling()),
+                           nextElem.nodeName().lowercased() == "br" {
+                            break
+                        }
+                    }
+
+                    // Only add phrasing content
+                    if !isPhrasingContent(current) {
+                        break
+                    }
+
+                    // Otherwise, make this node a child of the new <p>
+                    let sibling = current.nextSibling()
+                    try p.appendChild(current)
+                    next = sibling
+                }
+
+                // Remove trailing whitespace from the paragraph
+                while let lastChild = p.children().last {
+                    if isWhitespace(lastChild) {
+                        try lastChild.remove()
+                    } else {
+                        break
+                    }
+                }
+
+                // If the parent is a <p>, convert it to a <div>
+                if let parent = p.parent(),
+                   parent.tagName().lowercased() == "p" {
+                    _ = try DOMHelpers.setTagName(parent, newTag: "div")
+                }
             }
         }
+    }
+
+    /// Get the next non-whitespace node, skipping text nodes that only contain whitespace
+    /// Similar to Mozilla's _nextNode()
+    private func nextNode(_ node: Node?) -> Node? {
+        var current = node
+        while let n = current {
+            // If it's an element node, return it
+            if n is Element {
+                return n
+            }
+            // If it's a text node with non-whitespace content, return it
+            if let textNode = n as? TextNode {
+                if !textNode.text().trimmingCharacters(in: .whitespaces).isEmpty {
+                    return n
+                }
+            }
+            // Skip whitespace text nodes and move to next sibling
+            current = n.nextSibling()
+        }
+        return nil
+    }
+
+    /// Check if node is phrasing content (inline content)
+    private func isPhrasingContent(_ node: Node) -> Bool {
+        // Text nodes are phrasing content
+        if node is TextNode {
+            return true
+        }
+
+        guard let element = node as? Element else { return false }
+
+        let phrasingTags = Set(Configuration.phrasingElements.map { $0.lowercased() })
+        let tagName = element.tagName().lowercased()
+
+        // Direct phrasing elements
+        if phrasingTags.contains(tagName) {
+            return true
+        }
+
+        // A, DEL, INS are phrasing if all their children are phrasing
+        if ["a", "del", "ins"].contains(tagName) {
+            for child in element.children() {
+                if !isPhrasingContent(child) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        return false
+    }
+
+    /// Check if node is whitespace
+    private func isWhitespace(_ node: Node) -> Bool {
+        if let textNode = node as? TextNode {
+            return textNode.text().trimmingCharacters(in: .whitespaces).isEmpty
+        }
+        if let element = node as? Element {
+            return element.tagName().lowercased() == "br"
+        }
+        return false
     }
 
     private func replaceFontTags() throws {
         let fonts = try doc.select("font")
         for font in fonts {
             let span = try doc.createElement("span")
-            for child in font.children() {
-                try span.appendChild(child)
+
+            // Copy attributes from font to span
+            if let attributes = font.getAttributes() {
+                for attr in attributes {
+                    try span.attr(attr.getKey(), attr.getValue())
+                }
             }
+
+            // Move all child nodes (including text nodes) to span in original order
+            // We move rather than clone since we're replacing the parent
+            let childNodes = font.getChildNodes()
+            for node in childNodes {
+                try span.appendChild(node)
+            }
+
             try font.replaceWith(span)
         }
     }
