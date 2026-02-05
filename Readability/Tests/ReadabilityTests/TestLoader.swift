@@ -74,7 +74,12 @@ enum TestLoader {
             "replace-font-tags",
             "remove-aria-hidden",
             "style-tags-removal",
-            "normalize-spaces"
+            "normalize-spaces",
+            // Phase 3: Metadata extraction
+            "003-metadata-preferred",
+            "004-metadata-space-separated-properties",
+            "parsely-metadata",
+            "schema-org-context-object"
         ]
         return testNames.compactMap { loadTestCase(named: $0) }
     }

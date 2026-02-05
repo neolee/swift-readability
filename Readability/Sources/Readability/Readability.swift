@@ -20,7 +20,13 @@ public struct Readability {
         // Extract metadata first (following Mozilla's order)
         let metadata = try extractMetadata()
 
-        let title = try extractTitle()
+        // Use metadata title if available, otherwise extract from document
+        let title: String
+        if let metaTitle = metadata.title {
+            title = metaTitle
+        } else {
+            title = try extractTitle()
+        }
         let article = try grabArticle()
         let textContent = try article.text()
 
@@ -65,14 +71,20 @@ public struct Readability {
 
         // Skip if JSON-LD is disabled
         if !options.disableJSONLD {
-            // TODO: Implement JSON-LD parsing (Phase 3)
+            // Parse JSON-LD for metadata
+            let jsonldMetadata = try extractJSONLDMetadata()
+            metadata.title = jsonldMetadata.title
+            metadata.byline = jsonldMetadata.byline
+            metadata.excerpt = jsonldMetadata.excerpt
+            metadata.siteName = jsonldMetadata.siteName
+            metadata.publishedTime = jsonldMetadata.publishedTime
         }
 
         // Extract from meta tags following Mozilla's priority order
         // Pattern for matching property names: (dc|dcterm|og|twitter|parsely|weibo):property
         let propertyPattern = "^\\s*(?:(dc|dcterm|og|twitter|parsely|weibo:(article|webpage))\\s*[-\\.:]\\s*)?(author|creator|pub-date|description|title|site_name)\\s*$"
 
-        // Collect all meta values
+        // Collect all meta values - support space-separated properties
         var values: [String: String] = [:]
         let metas = try doc.select("meta")
 
@@ -81,25 +93,51 @@ public struct Readability {
             let name = (try? meta.attr("name"))?.lowercased() ?? ""
             let content = (try? meta.attr("content")) ?? ""
 
-            let key = property.isEmpty ? name : property
+            // Collect all keys to check from both property and name attributes
+            var keysToCheck: [String] = []
 
-            // Match against pattern
-            if let regex = try? NSRegularExpression(pattern: propertyPattern, options: [.caseInsensitive]),
-               regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil,
-               !content.isEmpty {
-                values[key] = content
+            // Handle space-separated properties (e.g., "x:title dc:title")
+            if !property.isEmpty {
+                keysToCheck.append(contentsOf: property.split(separator: " ").map(String.init))
+            }
+
+            // Also check name attribute if present
+            if !name.isEmpty {
+                keysToCheck.append(name)
+            }
+
+            for key in keysToCheck {
+                // Match against pattern
+                if let regex = try? NSRegularExpression(pattern: propertyPattern, options: [.caseInsensitive]),
+                   regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil,
+                   !content.isEmpty {
+                    values[key] = content
+                }
             }
         }
 
+        // Extract title from meta tags (for use if JSON-LD not available)
+        // Priority: dc:title > dcterm:title > og:title > twitter:title > parsely-title > title
+        let metaTitle = values["dc:title"] ??
+                       values["dcterm:title"] ??
+                       values["og:title"] ??
+                       values["twitter:title"] ??
+                       values["parsely-title"] ??
+                       values["title"]
+        metadata.title = metadata.title ?? metaTitle
+
         // Extract byline (author) following Mozilla's priority
-        metadata.byline = values["dc:creator"] ??
-                         values["dcterm:creator"] ??
-                         values["author"] ??
-                         values["parsely:author"] ??
-                         values["weibo:article:author"] ??
-                         values["weibo:webpage:author"] ??
-                         values["twitter:creator"] ??
-                         values["og:author"]
+        // JSON-LD has highest priority, then meta tags
+        // Priority: dc:creator > dcterm:creator > author > parsely-author > weibo:author > twitter:creator > og:creator
+        let metaByline = values["dc:creator"] ??
+                        values["dcterm:creator"] ??
+                        values["author"]
+        let socialByline = values["parsely-author"] ??
+                          values["weibo:article:author"] ??
+                          values["weibo:webpage:author"]
+        let ogByline = values["twitter:creator"] ??
+                      values["og:author"]
+        metadata.byline = metadata.byline ?? metaByline ?? socialByline ?? ogByline
 
         // Clean up byline (remove "By" prefix, etc.)
         if var byline = metadata.byline {
@@ -111,19 +149,19 @@ public struct Readability {
         }
 
         // Extract description/excerpt following Mozilla's priority
-        metadata.excerpt = values["dc:description"] ??
-                          values["dcterm:description"] ??
-                          values["og:description"] ??
-                          values["weibo:article:description"] ??
-                          values["weibo:webpage:description"] ??
-                          values["description"] ??
-                          values["twitter:description"]
+        // JSON-LD has highest priority, then meta tags
+        let dcDescription = values["dc:description"] ?? values["dcterm:description"]
+        let ogDescription = values["og:description"]
+        let weiboDescription = values["weibo:article:description"] ?? values["weibo:webpage:description"]
+        let stdDescription = values["description"] ?? values["twitter:description"]
+        metadata.excerpt = metadata.excerpt ?? dcDescription ?? ogDescription ?? weiboDescription ?? stdDescription
 
         // Extract site name
-        metadata.siteName = values["og:site_name"] ??
-                           values["twitter:site"] ??
-                           values["dc:publisher"] ??
-                           values["dcterm:publisher"]
+        // JSON-LD publisher.name has highest priority, then meta tags
+        let ogSiteName = values["og:site_name"]
+        let twitterSite = values["twitter:site"]
+        let dcPublisher = values["dc:publisher"] ?? values["dcterm:publisher"]
+        metadata.siteName = metadata.siteName ?? ogSiteName ?? twitterSite ?? dcPublisher
 
         // Clean up excerpt (unescape HTML entities)
         if var excerpt = metadata.excerpt {
@@ -139,6 +177,114 @@ public struct Readability {
         }
 
         return metadata
+    }
+
+    // MARK: - JSON-LD Metadata Extraction
+
+    /// Extract metadata from JSON-LD scripts
+    private func extractJSONLDMetadata() throws -> Metadata {
+        var metadata = Metadata()
+
+        let scripts = try doc.select("script[type=application/ld+json]")
+        var jsonldObjects: [[String: Any]] = []
+
+        for script in scripts {
+            guard let jsonText = try? script.html() else { continue }
+
+            // Clean up the text (remove CDATA if present)
+            let cleanedText = jsonText
+                .replacingOccurrences(of: "<![CDATA[", with: "")
+                .replacingOccurrences(of: "]]>", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            guard !cleanedText.isEmpty else { continue }
+
+            // Parse JSON
+            guard let data = cleanedText.data(using: .utf8) else { continue }
+
+            do {
+                if let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    jsonldObjects.append(jsonObject)
+                } else if let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                    jsonldObjects.append(contentsOf: jsonArray)
+                }
+            } catch {
+                // Ignore malformed JSON
+                continue
+            }
+        }
+
+        // Find the best matching object (prefer NewsArticle, then Article, then WebPage)
+        let preferredTypes = ["NewsArticle", "Article", "WebPage", "BlogPosting"]
+        var selectedObject: [String: Any]?
+
+        for type in preferredTypes {
+            if let match = jsonldObjects.first(where: { ($0["@type"] as? String)?.lowercased() == type.lowercased() }) {
+                selectedObject = match
+                break
+            }
+        }
+
+        // Fall back to first object if no preferred type found
+        if selectedObject == nil && !jsonldObjects.isEmpty {
+            selectedObject = jsonldObjects.first
+        }
+
+        guard let jsonld = selectedObject else {
+            return metadata
+        }
+
+        // Extract headline/title
+        if let headline = jsonld["headline"] as? String {
+            metadata.title = headline
+        }
+
+        // Extract description/excerpt
+        if let description = jsonld["description"] as? String {
+            metadata.excerpt = description
+        }
+
+        // Extract datePublished
+        if let datePublished = jsonld["datePublished"] as? String {
+            metadata.publishedTime = datePublished
+        }
+
+        // Extract author/byline
+        metadata.byline = extractAuthorFromJSONLD(jsonld["author"])
+
+        // Extract siteName from publisher
+        if let publisher = jsonld["publisher"] as? [String: Any] {
+            if let publisherName = publisher["name"] as? String {
+                metadata.siteName = publisherName
+            }
+        }
+
+        return metadata
+    }
+
+    /// Extract author name from JSON-LD author field (can be string, object, or array)
+    private func extractAuthorFromJSONLD(_ author: Any?) -> String? {
+        guard let author = author else { return nil }
+
+        // Handle array of authors
+        if let authorArray = author as? [Any] {
+            let names = authorArray.compactMap { extractAuthorFromJSONLD($0) }
+            return names.isEmpty ? nil : names.joined(separator: ", ")
+        }
+
+        // Handle string author
+        if let authorString = author as? String {
+            return authorString
+        }
+
+        // Handle object author with name property
+        if let authorObject = author as? [String: Any] {
+            if let name = authorObject["name"] as? String {
+                return name
+            }
+        }
+
+        return nil
     }
 
     // MARK: - Document Preparation
