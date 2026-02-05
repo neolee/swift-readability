@@ -91,7 +91,10 @@ enum TestLoader {
             "social-buttons",
             "article-author-tag",
             "table-style-attributes",
-            "invalid-attributes"
+            "invalid-attributes",
+            // Phase 6.4: Hidden Node & Visibility Handling
+            "hidden-nodes",
+            "visibility-hidden"
         ]
         return testNames.compactMap { loadTestCase(named: $0) }
     }

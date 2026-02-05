@@ -511,9 +511,9 @@ Complete deferred issues from Phase 5 before proceeding.
 
 | Metric | Target | Status |
 |--------|--------|--------|
-| Standard tests imported | 49/49 | 16/49 (33%) |
-| Standard tests passing | 95%+ | TBD |
-| Known issues | 0 | 2 (replace-brs, replace-font-tags) |
+| Standard tests imported | 49/49 | 24/49 (49%) |
+| Standard tests passing | 95%+ | 50/51 (98%) |
+| Known issues | 0 | 1 (002 - 99% similarity) |
 | Real-world tests | Phase 7 | 0/78 (0%) |
 
 ---
@@ -578,17 +578,17 @@ Mozilla Readability has **130 test cases** total, divided into:
 - [x] Import `remove-extra-paragraphs` - PASS
 - [x] Import `ol` - PASS
 
-#### 6.3 Conditional Cleaning (6 tests)
-- [ ] Import `clean-links`
-- [ ] Import `links-in-tables`
-- [ ] Import `social-buttons`
-- [ ] Import `article-author-tag`
-- [ ] Import `table-style-attributes`
-- [ ] Import `invalid-attributes`
+#### 6.3 Conditional Cleaning (6 tests) [COMPLETE]
+- [x] Import `clean-links` - PASS
+- [x] Import `links-in-tables` - PASS
+- [x] Import `social-buttons` - PASS
+- [x] Import `article-author-tag` - PASS
+- [x] Import `table-style-attributes` - PASS
+- [x] Import `invalid-attributes` - PASS
 
-#### 6.4 Hidden Node Handling (2 tests)
-- [ ] Import `hidden-nodes`
-- [ ] Import `visibility-hidden`
+#### 6.4 Hidden Node Handling (2 tests) [COMPLETE]
+- [x] Import `hidden-nodes` - PASS
+- [x] Import `visibility-hidden` - PASS
 
 #### 6.5 Lazy Images & Media (6 tests)
 - [ ] Import `lazy-image-1/2/3`

@@ -779,4 +779,49 @@ struct MozillaCompatibilityTests {
         let comparison = compareDOM(result.content, testCase.expectedHTML)
         #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
     }
+
+    // MARK: - Phase 6.4: Hidden Node & Visibility Handling
+
+    @Test("hidden-nodes - Content matches expected")
+    func testHiddenNodes() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "hidden-nodes") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let comparison = compareDOM(result.content, testCase.expectedHTML)
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
+    }
+
+    @Test("hidden-nodes - Title matches expected")
+    func testHiddenNodesTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "hidden-nodes") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let expectedTitle = testCase.expectedMetadata.title ?? ""
+        #expect(result.title == expectedTitle,
+                "Title mismatch. Expected: '\(expectedTitle)', Actual: '\(result.title)'")
+    }
+
+    @Test("visibility-hidden - Content matches expected")
+    func testVisibilityHidden() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "visibility-hidden") else {
+            Issue.record("Failed to load test case")
+            return
+        }
+
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let result = try readability.parse()
+
+        let comparison = compareDOM(result.content, testCase.expectedHTML)
+        #expect(comparison.isEqual, "Content mismatch: \(comparison.diff)")
+    }
 }
