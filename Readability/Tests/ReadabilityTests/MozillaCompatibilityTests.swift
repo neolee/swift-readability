@@ -241,11 +241,8 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        // Use lower threshold for this short content test
-        var options = defaultOptions
-        options.charThreshold = 50
-
-        let readability = try Readability(html: testCase.sourceHTML, options: options)
+        // Test with default charThreshold to verify retry logic works
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -383,11 +380,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        // Use lower threshold for this test case (short content by design)
-        var options = defaultOptions
-        options.charThreshold = 100
-
-        let readability = try Readability(html: testCase.sourceHTML, options: options)
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -401,11 +394,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        // Use lower threshold for this test case (short content by design)
-        var options = defaultOptions
-        options.charThreshold = 100
-
-        let readability = try Readability(html: testCase.sourceHTML, options: options)
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -784,11 +773,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        // Use lower threshold for this test case (short content by design)
-        var options = defaultOptions
-        options.charThreshold = 50
-
-        let readability = try Readability(html: testCase.sourceHTML, options: options)
+        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)

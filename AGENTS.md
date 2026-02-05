@@ -24,7 +24,7 @@ Do not use emoji in documentation. Use text-based indicators instead.
 **Wrong:**
 ```markdown
 - (checkmark) Completed feature
-- (cross) Broken implementation  
+- (cross) Broken implementation
 - (warning) Warning message
 ```
 
@@ -270,8 +270,42 @@ cd ReadabilityCLI && swift run ReadabilityCLI <url> --text-only
 
 ---
 
+## Future Enhancements
+
+### DOM Comparison Strictness (P2)
+
+**Current State:** The test comparison logic in `MozillaCompatibilityTests.compareDOM()` uses text-based similarity (Jaccard index) rather than structural DOM comparison.
+
+**Differences from Mozilla Original:**
+
+| Aspect | Mozilla Original | Current Implementation |
+|--------|------------------|----------------------|
+| HTML Formatting | Uses `js-beautify` `prettyPrint()` | No formatting |
+| Node Comparison | Traverses DOM, compares tag names, IDs, classes, attributes | Compares text content only |
+| Text Comparison | Collapses whitespace, exact match | Jaccard similarity (default 100%) |
+| Attribute Comparison | Compares all valid XML attributes | Not compared |
+
+**Impact:**
+- The `002` test fails with 99% similarity due to whitespace handling differences between `SwiftSoup` and `JSDOM`
+- Potential to miss structural HTML differences that don't affect text content
+- Less strict than Mozilla's original test suite
+
+**Proposed Enhancement:**
+1. Add HTML formatting equivalent to `js-beautify` for consistent comparison
+2. Implement structural DOM traversal matching Mozilla's `traverseDOM()` logic
+3. Compare element tags, IDs, classes, and attributes in addition to text
+4. Keep text similarity as fallback for known platform differences
+
+**Priority:** P2 (Medium) - Current tests catch functional issues; this is for stricter compliance.
+
+**Files to Modify:**
+- `Tests/ReadabilityTests/MozillaCompatibilityTests.swift` - `compareDOM()` function
+- May need new utility for HTML formatting
+
+---
+
 ## See Also
 
-- `PLAN.md` - Feature roadmap, implementation phases, and known issues
+- `PLAN.md` - Feature road map, implementation phases, and known issues
 - `CORE.md` - Core scoring algorithm detailed design
 - `INIT.md` - Original project planning (Chinese)

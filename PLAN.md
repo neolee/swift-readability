@@ -327,7 +327,7 @@ Complete deferred issues from Phase 5 before proceeding.
 
 ---
 
-### 6.2 Content Post-Processing (_prepArticle) [P1 - Core]
+### 6.2 Content Post-Processing (`_prepArticle`) [P1 - Core]
 **Dependency:** Core scoring algorithm
 **Impact:** Affects all content output quality
 
@@ -368,7 +368,7 @@ Complete deferred issues from Phase 5 before proceeding.
 - [ ] Link density with hash URL coefficient (0.3)
 - [ ] Heading density calculation
 - [ ] Ad/loading words pattern detection (`adWords`, `loadingWords`)
-- [ ] Video embed preservation (iframe/object with video URLs)
+- [ ] Video embed preservation (`iframe` / `object` with video URLs)
 - [ ] Share elements removal
 - [ ] Invalid/presentational attributes cleanup
 

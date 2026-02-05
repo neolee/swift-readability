@@ -41,14 +41,6 @@ public struct Readability {
         // Get text content
         let textContent = try articleContent.text()
 
-        // Check character threshold
-        if textContent.count < options.charThreshold {
-            throw ReadabilityError.contentTooShort(
-                actualLength: textContent.count,
-                threshold: options.charThreshold
-            )
-        }
-
         // Extract excerpt: use metadata if available, otherwise from article
         let excerpt: String?
         if let metaExcerpt = metadata.excerpt {
