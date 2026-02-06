@@ -310,7 +310,9 @@ public struct Readability {
     // MARK: - Document Preparation
 
     private func prepDocument() throws {
-        let elementsToRemove = try doc.select("script, style, noscript, iframe, object, embed, template")
+        // Keep media/embed nodes for later scoring/cleaning. Mozilla only strips
+        // style tags at prep stage and defers iframe/embed pruning to article cleaning.
+        let elementsToRemove = try doc.select("script, style, noscript, object, embed, template")
         try elementsToRemove.remove()
 
         try removeHiddenElements()

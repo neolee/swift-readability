@@ -26,13 +26,13 @@ Working assumptions applied:
 
 From local `cd Readability && swift test`:
 
-- Total: `252` tests
+- Total: `280` tests
 - Failed: `0`
-- Known issues: `1` (`mathjax - Content matches expected`)
+- Known issues: `6` (`mathjax`, `data-url-image`, `lazy-image-1`, `lazy-image-2`, `embedded-videos`, `videos-1` content assertions)
 
 Imported Mozilla pages in this repo:
 
-- Current local resources: `40` test pages
+- Current local resources: `48` test pages
 - Mozilla upstream test pages in local ref: `130`
 
 Test taxonomy alignment for planning:
@@ -514,11 +514,12 @@ Legend:
     - Edge behavior: `comment-inside-script-parsing`, `toc-missing`, `metadata-content-missing`, `bug-1255978`
 - Acceptance method:
   - `Test`: `cd Readability && swift test --filter MozillaCompatibilityTests`
-- Pass standard:
+ - Pass standard:
   - Each imported case has content + metadata assertions with no relaxed matching.
   - Current imported batches:
     - URL/base: `base-url`, `base-url-base-element`, `base-url-base-element-relative`, `js-link-replacement`
     - I18N/entities: `005-unescape-html-entities`, `rtl-1..4`, `mathjax` (content currently marked as known issue)
+    - Media/SVG: `data-url-image`, `lazy-image-1`, `lazy-image-2`, `lazy-image-3`, `embedded-videos`, `videos-1`, `videos-2`, `svg-parsing` (content known issues currently: `data-url-image`, `lazy-image-1`, `lazy-image-2`, `embedded-videos`, `videos-1`)
 
 #### S3F-T2: Implement/validate `dir`/`lang` parity path for functional RTL scope
 

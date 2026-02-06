@@ -215,6 +215,11 @@ final class ArticleCleaner {
 
     /// Remove style attributes and presentational attributes
     private func cleanStyles(_ element: Element) throws {
+        // Match Mozilla: keep SVG subtree untouched.
+        if element.tagName().lowercased() == "svg" {
+            return
+        }
+
         if !options.keepClasses {
             // Remove presentational attributes
             for attr in Configuration.presentationalAttributes {
@@ -254,20 +259,95 @@ final class ArticleCleaner {
         let images = try element.select("img, picture, figure")
 
         for img in images {
-            // Check for data-src attributes
+            // Remove tiny non-SVG base64 placeholders when alternate image
+            // sources exist on other attributes.
+            let currentSrc = (try? img.attr("src")) ?? ""
+            if let prefix = currentSrc.range(of: "^data:([^;,]+);base64,", options: [.regularExpression, .caseInsensitive]) {
+                let mimePrefix = String(currentSrc[prefix]).lowercased()
+                if !mimePrefix.contains("image/svg+xml") {
+                    var srcCouldBeRemoved = false
+                    if let attributes = img.getAttributes() {
+                        for attr in attributes {
+                            if attr.getKey().lowercased() == "src" {
+                                continue
+                            }
+                            if attr.getValue().range(of: "\\.(jpg|jpeg|png|webp)", options: [.regularExpression, .caseInsensitive]) != nil {
+                                srcCouldBeRemoved = true
+                                break
+                            }
+                        }
+                    }
+
+                    if srcCouldBeRemoved {
+                        let prefixLength = currentSrc.distance(from: currentSrc.startIndex, to: prefix.upperBound)
+                        let payloadLength = currentSrc.count - prefixLength
+                        if payloadLength < 133 {
+                            try img.removeAttr("src")
+                        }
+                    }
+                }
+            }
+
+            // If src/srcset already present and not lazy-marked, keep as-is.
+            let src = (try? img.attr("src")) ?? ""
+            let srcset = (try? img.attr("srcset")) ?? ""
+            let className = ((try? img.className()) ?? "").lowercased()
+            if (!src.isEmpty || (!srcset.isEmpty && srcset != "null")) && !className.contains("lazy") {
+                continue
+            }
+
+            var pendingSrc: String?
+            var pendingSrcset: String?
+
             if let attributes = img.getAttributes() {
                 for attr in attributes {
                     let key = attr.getKey().lowercased()
-                    let value = attr.getValue()
-
-                    // Common lazy loading patterns
-                    if key.hasPrefix("data-") && (key.contains("src") || key.contains("original")) {
-                        // Check if it looks like an image URL
-                        if value.range(of: "\\.(jpg|jpeg|png|webp|gif)", options: .regularExpression) != nil {
-                            try img.attr("src", value)
-                            break
-                        }
+                    let value = attr.getValue().trimmingCharacters(in: .whitespacesAndNewlines)
+                    if key == "src" || key == "srcset" || key == "alt" || value.isEmpty {
+                        continue
                     }
+
+                    // srcset-like: "...jpg 1x, ...webp 2x" or "...jpg 480w"
+                    if value.range(of: "\\.(jpg|jpeg|png|webp)(\\S*)\\s+\\d", options: [.regularExpression, .caseInsensitive]) != nil {
+                        pendingSrcset = pendingSrcset ?? value
+                        continue
+                    }
+
+                    // src-like: single image URL/token
+                    if value.range(of: "^\\s*\\S+\\.(jpg|jpeg|png|webp)\\S*\\s*$", options: [.regularExpression, .caseInsensitive]) != nil {
+                        pendingSrc = pendingSrc ?? value
+                    }
+                }
+            }
+
+            if let pendingSrcset {
+                if img.tagName().uppercased() == "IMG" || img.tagName().uppercased() == "PICTURE" {
+                    try img.attr("srcset", pendingSrcset)
+                }
+            }
+
+            if let pendingSrc {
+                if img.tagName().uppercased() == "IMG" || img.tagName().uppercased() == "PICTURE" {
+                    try img.attr("src", pendingSrc)
+                } else if img.tagName().uppercased() == "FIGURE" {
+                    let hasInnerMedia = (try? img.select("img, picture").isEmpty()) == false
+                    if !hasInnerMedia {
+                        let doc = img.ownerDocument() ?? Document("")
+                        let child = try doc.createElement("img")
+                        try child.attr("src", pendingSrc)
+                        try img.appendChild(child)
+                    }
+                }
+            }
+
+            // Figure can also carry srcset-style attributes without src.
+            if let pendingSrcset, img.tagName().uppercased() == "FIGURE" {
+                let hasInnerMedia = (try? img.select("img, picture").isEmpty()) == false
+                if !hasInnerMedia {
+                    let doc = img.ownerDocument() ?? Document("")
+                    let child = try doc.createElement("img")
+                    try child.attr("srcset", pendingSrcset)
+                    try img.appendChild(child)
                 }
             }
         }
@@ -280,13 +360,42 @@ final class ArticleCleaner {
         // Remove script and style tags
         try element.select("script, style, noscript").remove()
         // Match Mozilla _clean() defaults for obvious non-article containers.
-        try element.select("footer, aside, object, embed, link").remove()
+        try element.select("footer, aside, link").remove()
+        try removeDisallowedEmbeds(element)
 
         // Remove elements with hidden attribute
         try VisibilityRules.removeHiddenElements(from: element)
 
         // Remove share/social elements
         try removeShareElements(element)
+    }
+
+    /// Remove iframe/object/embed nodes unless they match allowed video patterns.
+    private func removeDisallowedEmbeds(_ element: Element) throws {
+        let embeds = try element.select("iframe, object, embed")
+        for embed in embeds where !isAllowedVideoEmbed(embed) {
+            try embed.remove()
+        }
+    }
+
+    private func isAllowedVideoEmbed(_ element: Element) -> Bool {
+        let pattern = options.allowedVideoRegex
+
+        if let attrs = element.getAttributes() {
+            for attr in attrs {
+                if attr.getValue().range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil {
+                    return true
+                }
+            }
+        }
+
+        if element.tagName().lowercased() == "object",
+           let html = try? element.html(),
+           html.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil {
+            return true
+        }
+
+        return false
     }
 
     /// Remove share/social elements from article content

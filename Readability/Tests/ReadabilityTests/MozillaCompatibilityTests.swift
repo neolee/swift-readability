@@ -335,4 +335,110 @@ struct MozillaCompatibilityTests {
 
     @Test("mathjax - Title matches expected")
     func testMathJaxTitle() async throws { try assertMetadataFieldMatches(.title, for: "mathjax") }
+
+    // MARK: - Stage 3-F: Media and SVG Handling
+
+    @Test("data-url-image - Content matches expected")
+    func testDataURLImageContent() async throws {
+        withKnownIssue("Image source normalization misses Mozilla's synthesized srcset on data URL images.") {
+            try assertContentMatches("data-url-image")
+        }
+    }
+
+    @Test("data-url-image - Title matches expected")
+    func testDataURLImageTitle() async throws { try assertMetadataFieldMatches(.title, for: "data-url-image") }
+
+    @Test("lazy-image-1 - Content matches expected")
+    func testLazyImage1Content() async throws {
+        withKnownIssue("Paragraph ID cleanup differs; Swift output keeps an extra paragraph id that Mozilla drops.") {
+            try assertContentMatches("lazy-image-1")
+        }
+    }
+
+    @Test("lazy-image-1 - Title matches expected")
+    func testLazyImage1Title() async throws { try assertMetadataFieldMatches(.title, for: "lazy-image-1") }
+
+    @Test("lazy-image-1 - Byline matches expected")
+    func testLazyImage1Byline() async throws { try assertMetadataFieldMatches(.byline, for: "lazy-image-1") }
+
+    @Test("lazy-image-1 - Site name matches expected")
+    func testLazyImage1SiteName() async throws { try assertMetadataFieldMatches(.siteName, for: "lazy-image-1") }
+
+    @Test("lazy-image-1 - Published time matches expected")
+    func testLazyImage1PublishedTime() async throws { try assertMetadataFieldMatches(.publishedTime, for: "lazy-image-1") }
+
+    @Test("lazy-image-2 - Content matches expected")
+    func testLazyImage2Content() async throws {
+        withKnownIssue("Lazy-image URL rewriting misses expected srcset preservation on extracted image.") {
+            try assertContentMatches("lazy-image-2")
+        }
+    }
+
+    @Test("lazy-image-2 - Title matches expected")
+    func testLazyImage2Title() async throws { try assertMetadataFieldMatches(.title, for: "lazy-image-2") }
+
+    @Test("lazy-image-2 - Byline matches expected")
+    func testLazyImage2Byline() async throws { try assertMetadataFieldMatches(.byline, for: "lazy-image-2") }
+
+    @Test("lazy-image-2 - Site name matches expected")
+    func testLazyImage2SiteName() async throws { try assertMetadataFieldMatches(.siteName, for: "lazy-image-2") }
+
+    @Test("lazy-image-2 - Published time matches expected")
+    func testLazyImage2PublishedTime() async throws { try assertMetadataFieldMatches(.publishedTime, for: "lazy-image-2") }
+
+    @Test("lazy-image-3 - Content matches expected")
+    func testLazyImage3Content() async throws { try assertContentMatches("lazy-image-3") }
+
+    @Test("lazy-image-3 - Title matches expected")
+    func testLazyImage3Title() async throws { try assertMetadataFieldMatches(.title, for: "lazy-image-3") }
+
+    @Test("embedded-videos - Content matches expected")
+    func testEmbeddedVideosContent() async throws {
+        withKnownIssue("Media container shaping differs; expected <article> wrapper is flattened to paragraph blocks.") {
+            try assertContentMatches("embedded-videos")
+        }
+    }
+
+    @Test("embedded-videos - Title matches expected")
+    func testEmbeddedVideosTitle() async throws { try assertMetadataFieldMatches(.title, for: "embedded-videos") }
+
+    @Test("videos-1 - Content matches expected")
+    func testVideos1Content() async throws {
+        withKnownIssue("Top-level candidate wrapper tag differs (expected div, actual section) after post-processing.") {
+            try assertContentMatches("videos-1")
+        }
+    }
+
+    @Test("videos-1 - Title matches expected")
+    func testVideos1Title() async throws { try assertMetadataFieldMatches(.title, for: "videos-1") }
+
+    @Test("videos-1 - Byline matches expected")
+    func testVideos1Byline() async throws { try assertMetadataFieldMatches(.byline, for: "videos-1") }
+
+    @Test("videos-1 - Site name matches expected")
+    func testVideos1SiteName() async throws { try assertMetadataFieldMatches(.siteName, for: "videos-1") }
+
+    @Test("videos-1 - Published time matches expected")
+    func testVideos1PublishedTime() async throws { try assertMetadataFieldMatches(.publishedTime, for: "videos-1") }
+
+    @Test("videos-2 - Content matches expected")
+    func testVideos2Content() async throws { try assertContentMatches("videos-2") }
+
+    @Test("videos-2 - Title matches expected")
+    func testVideos2Title() async throws { try assertMetadataFieldMatches(.title, for: "videos-2") }
+
+    @Test("videos-2 - Byline matches expected")
+    func testVideos2Byline() async throws { try assertMetadataFieldMatches(.byline, for: "videos-2") }
+
+    @Test("videos-2 - Site name matches expected")
+    func testVideos2SiteName() async throws { try assertMetadataFieldMatches(.siteName, for: "videos-2") }
+
+    @Test("videos-2 - Published time matches expected")
+    func testVideos2PublishedTime() async throws { try assertMetadataFieldMatches(.publishedTime, for: "videos-2") }
+
+    @Test("svg-parsing - Content matches expected")
+    func testSVGParsingContent() async throws { try assertContentMatches("svg-parsing") }
+
+    @Test("svg-parsing - Title matches expected")
+    func testSVGParsingTitle() async throws { try assertMetadataFieldMatches(.title, for: "svg-parsing") }
 }
