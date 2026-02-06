@@ -6,20 +6,21 @@ Batch: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 ## Summary
 
 - Total cases: 5
-- Strict pass: 0
-- Known issue instances: 8
-- Known issue clusters: 5
+- Strict pass: 2 (`nytimes-1`, `cnn`)
+- Known issue instances: 5
+- Known issue clusters: 4
 
 ## Case Findings (first divergence)
 
 1. `cnn`
-- Content: expected `h2`, actual `div#js-ie-storytop` at first structural divergence.
-- Metadata: title trailing whitespace mismatch.
-- Cluster: leading container normalization + title whitespace cleanup.
+- Status: resolved in current branch.
+- Content: matches expected structure and metadata under strict comparison.
+- Cluster: `RW-C1` (closed for this case).
 
 2. `nytimes-1`
-- Content: wrapper path now aligns to `div#page.page > main#main > article#story`, but output keeps an extra trailing `main > section` block (expected node count 85, actual 98).
-- Cluster: sibling boundary / trailing section cleanup.
+- Status: resolved in current branch.
+- Content: matches expected structure and metadata under strict comparison.
+- Cluster: `RW-C1` (closed for this case).
 
 3. `wapo-1`
 - Content: expected `p`, actual `div#gallery-embed_*`.
@@ -37,6 +38,9 @@ Batch: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 
 ## Notes
 
-- These tests are intentionally kept as `withKnownIssue` while Stage 3-R failure clusters are being fixed.
+- Remaining unresolved tests are intentionally kept as `withKnownIssue` while Stage 3-R failure clusters are being fixed.
 - Functional/core baseline remains separate and fully green.
 - Deep-dive update (2026-02-06): candidate scoring pipeline was aligned closer to Mozilla (paragraph scoring + ancestor propagation semantics + candidate score write-back), which resolved the prior `nytimes-1` wrapper-selection drift and exposed the remaining tail-section issue as the next actionable delta.
+- Step-1 progress update (2026-02-06): targeted explicit no-content container cleanup removed `main > section` tail drift in `nytimes-1` and reduced its mismatch from `+13` nodes to `+6` nodes.
+- Step-1 closure update (2026-02-06): additional cleanup of feedback/supplemental modules removed remaining residual nodes; `nytimes-1` now passes without `withKnownIssue`.
+- Step-1 cnn closure update (2026-02-06): removing legacy wrappers plus targeted in-read ad shell cleanup (`ADVERTISING inRead invented by Teads`) closed the remaining structural residual; `cnn` now passes without `withKnownIssue`.

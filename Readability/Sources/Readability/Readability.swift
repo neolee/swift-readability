@@ -173,6 +173,9 @@ public struct Readability {
                          values["twitter:title"] ??
                          values["parsely-title"] ??
                          values["title"]
+        if let title = metadata.title {
+            metadata.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
 
         // Extract byline
         let metaByline = values["dc:creator"] ??

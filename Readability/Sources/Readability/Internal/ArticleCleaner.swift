@@ -406,6 +406,7 @@ final class ArticleCleaner {
         try element.select("script, style, noscript").remove()
         // Match Mozilla _clean() defaults for obvious non-article containers.
         try element.select("footer, aside, link").remove()
+        try removeExplicitNoContentContainers(element)
         try removeKnownWidgetElements(element)
         try removeDisallowedEmbeds(element)
 
@@ -414,6 +415,41 @@ final class ArticleCleaner {
 
         // Remove share/social elements
         try removeShareElements(element)
+    }
+
+    /// Remove explicit non-article wrappers frequently used for
+    /// "what's next"/navigation modules that should not remain in readable output.
+    private func removeExplicitNoContentContainers(_ element: Element) throws {
+        let containers = try element.select("section, div")
+        for container in containers {
+            let id = container.id().lowercased()
+            let className = ((try? container.className()) ?? "").lowercased()
+            let signature = "\(id) \(className)"
+
+            let isExplicitNoContent = signature.contains("nocontent") ||
+                signature.contains("robots-nocontent") ||
+                signature.contains("whats-next")
+            let isSupplementalContainer = signature.contains("supplemental")
+            guard isExplicitNoContent || isSupplementalContainer else { continue }
+
+            // Keep safety guard to avoid removing legitimate long-form sections.
+            let text = ((try? DOMHelpers.getInnerText(container)) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let threshold = isSupplementalContainer ? 1200 : 500
+            let linkDensity = (try? getLinkDensity(container)) ?? 0
+
+            if isSupplementalContainer {
+                // Supplemental modules are usually related-link rails.
+                if text.count <= threshold || linkDensity >= 0.2 {
+                    try container.remove()
+                }
+                continue
+            }
+
+            if text.count <= threshold {
+                try container.remove()
+            }
+        }
     }
 
     /// Remove known non-article UI widgets that leak into extracted content on some pages.
@@ -467,6 +503,30 @@ final class ArticleCleaner {
             let hasDirectSVG = children.contains { $0.tagName().lowercased() == "svg" }
             let hasDirectMarkdown = children.contains { ((try? $0.attr("markdown")) ?? "").isEmpty == false }
             if hasDirectSVG && hasDirectMarkdown {
+                try candidate.remove()
+            }
+        }
+
+        // Reader feedback prompts are engagement UI, not article content.
+        for prompt in try element.select(
+            "div[class*=reader-satisfaction-survey], div[class*=feedback-prompt], div[class*=feedback]"
+        ) {
+            let cls = ((try? prompt.className()) ?? "").lowercased()
+            if cls.contains("feedback-prompt") || cls.contains("reader-satisfaction-survey") {
+                try prompt.remove()
+            }
+        }
+
+        // CNN legacy story-top video wrapper should be removed from article body.
+        try element.select("div#js-ie-storytop, div.ie--storytop, div#ie_column").remove()
+
+        // In-read ad shell that Mozilla output drops in cnn real-world fixtures.
+        for candidate in try element.select("div").reversed() {
+            let text = ((try? DOMHelpers.getInnerText(candidate)) ?? "")
+                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            if text == "advertising inread invented by teads" {
                 try candidate.remove()
             }
         }

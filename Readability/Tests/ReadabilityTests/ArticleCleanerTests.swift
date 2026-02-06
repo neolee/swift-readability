@@ -256,6 +256,32 @@ struct ArticleCleanerTests {
         #expect(try div.text() == "alpha beta head gamma delta")
     }
 
+    @Test("prepArticle removes teads in-read ad shell")
+    func testPrepArticleRemovesTeadsInReadAdShell() throws {
+        let html = """
+        <article>
+            <div id="storytext">
+                <p>Paragraph one</p>
+                <div class="teads-inread">
+                    <span>ADVERTISING</span>
+                    <span>inRead</span>
+                    <span>invented by Teads</span>
+                </div>
+                <p>Paragraph two</p>
+            </div>
+        </article>
+        """
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let article = try doc.select("article").first()!
+
+        let cleaner = ArticleCleaner(options: .default)
+        try cleaner.prepArticle(article)
+
+        #expect(try article.text().contains("Paragraph one"))
+        #expect(try article.text().contains("Paragraph two"))
+        #expect((try article.text().lowercased().contains("invented by teads")) == false)
+    }
+
     // MARK: - cleanStyles Tests
 
     @Test("cleanStyles removes presentational attributes")

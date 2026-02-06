@@ -12,8 +12,7 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
   - Example A: expected `h2`, actual `div#js-ie-storytop`.
   - Example B: expected article end at paragraph tail, actual keeps extra `main > section`.
 - Impacted cases:
-  - `cnn`
-  - `nytimes-1`
+  - None (closed for current Batch 1 scope: `nytimes-1`, `cnn`)
 - Priority: P1
 - Candidate areas:
   - Candidate scoring/parent promotion and sibling merge boundaries.
@@ -60,7 +59,6 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
   - Byline format mismatch (`By X` vs `@x`).
   - Excerpt truncation/selection mismatch.
 - Impacted cases:
-  - `cnn` (title whitespace)
   - `wapo-1` (byline normalization)
   - `wikipedia` (excerpt behavior)
 - Priority: P1
@@ -73,8 +71,6 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 
 | Case | First Divergence | Secondary Divergence | Clusters |
 |------|------------------|----------------------|----------|
-| `cnn` | `h2` vs `div#js-ie-storytop` | title trailing space | `RW-C1`, `RW-C5` |
-| `nytimes-1` | extra trailing `main > section` retained (node count +13) | - | `RW-C1` |
 | `wapo-1` | gallery `div` vs expected `p` | byline format mismatch | `RW-C2`, `RW-C5` |
 | `medium-1` | `figure > div` vs `figure > p` | - | `RW-C3` |
 | `wikipedia` | `p#toctitle` vs `div#toctitle` | excerpt mismatch | `RW-C4`, `RW-C5` |
@@ -85,6 +81,35 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 2. `RW-C5` (metadata normalization): low-risk parity polish, likely unlocks multiple cases.
 3. `RW-C2` (embedded media/gallery): medium risk, site-template specific.
 4. `RW-C3`/`RW-C4` (tag-conversion edge paths): medium-high risk; validate against functional suite after each change.
+
+## Current Execution Plan (Approved)
+
+1. Step 1 (`RW-C1`) - fix trailing/leading non-article container drift
+- Scope: `nytimes-1`, `cnn`
+- Target:
+  - remove retained trailing `main > section` in `nytimes-1`
+  - resolve leading `h2` vs `div#js-ie-storytop` and in-read ad shell residual in `cnn` without widening regressions
+- Acceptance:
+  - impacted real-world cases pass strict assertions without `withKnownIssue`
+  - `MozillaCompatibilityTests` remains `119/119` pass
+
+2. Step 2 (`RW-C5`) - metadata normalization parity polish
+- Scope: title whitespace, byline format, excerpt parity
+- Target:
+  - trim trailing title whitespace (`cnn`)
+  - align byline normalization precedence (`wapo-1`)
+  - align excerpt fallback/length behavior (`wikipedia`)
+- Acceptance:
+  - metadata mismatches for target cases removed or reduced
+  - `MozillaCompatibilityTests` remains `119/119` pass
+
+3. Step 3 (`RW-C2`) - embedded media/gallery structural parity
+- Scope: gallery/media block handling (`wapo-1`)
+- Target:
+  - align gallery wrapper/tag outcome to Mozilla expected DOM
+- Acceptance:
+  - `wapo-1` structural first-diff cluster cleared
+  - `MozillaCompatibilityTests` remains `119/119` pass
 
 ## Acceptance Standard Per Cluster
 

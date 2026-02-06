@@ -71,16 +71,12 @@ struct RealWorldCompatibilityTests {
 
     @Test("realworld/nytimes-1 - content and metadata match")
     func testNYTimes1() async throws {
-        withKnownIssue("S3R Batch 1 baseline [RW-C1]: page wrapper/id-class structural mismatch against Mozilla expected output.") {
-            try assertContentAndMetadataMatch("nytimes-1")
-        }
+        try assertContentAndMetadataMatch("nytimes-1")
     }
 
     @Test("realworld/cnn - content and metadata match")
     func testCNN() async throws {
-        withKnownIssue("S3R Batch 1 baseline [RW-C1, RW-C5]: leading content container and title whitespace mismatch against Mozilla expected output.") {
-            try assertContentAndMetadataMatch("cnn")
-        }
+        try assertContentAndMetadataMatch("cnn")
     }
 
     @Test("realworld/wapo-1 - content and metadata match")

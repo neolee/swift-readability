@@ -9,6 +9,26 @@ struct NodeCleanerTests {
 
     // MARK: - Unlikely Candidate Removal Tests
 
+    @Test("removeUnlikelyCandidates removes real-world supplemental modules")
+    func testRemoveRealWorldSupplementalModule() throws {
+        guard let testCase = TestLoader.loadRealWorldTestCase(named: "nytimes-1") else {
+            Issue.record("Failed to load real-world test case nytimes-1")
+            return
+        }
+
+        let doc = try SwiftSoup.parse(testCase.sourceHTML)
+        guard let body = doc.body() else {
+            Issue.record("Missing body in nytimes-1 source")
+            return
+        }
+
+        let cleaner = NodeCleaner(options: .default)
+        try cleaner.removeUnlikelyCandidates(from: body, stripUnlikelyCandidates: true)
+
+        let supplemental = try doc.select("#supplemental-1")
+        #expect(supplemental.isEmpty())
+    }
+
     @Test("removeUnlikelyCandidates removes banner elements")
     func testRemoveBannerElements() throws {
         let html = """
