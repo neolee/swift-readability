@@ -327,11 +327,7 @@ struct MozillaCompatibilityTests {
     func testRTL4Title() async throws { try assertMetadataFieldMatches(.title, for: "rtl-4") }
 
     @Test("mathjax - Content matches expected")
-    func testMathJaxContent() async throws {
-        withKnownIssue("First extracted block differs from Mozilla fixture (expected leading <p>, actual leading <h2>). Keep importing while isolating heading-cleanup parity.") {
-            try assertContentMatches("mathjax")
-        }
-    }
+    func testMathJaxContent() async throws { try assertContentMatches("mathjax") }
 
     @Test("mathjax - Title matches expected")
     func testMathJaxTitle() async throws { try assertMetadataFieldMatches(.title, for: "mathjax") }
@@ -340,9 +336,7 @@ struct MozillaCompatibilityTests {
 
     @Test("data-url-image - Content matches expected")
     func testDataURLImageContent() async throws {
-        withKnownIssue("Image source normalization misses Mozilla's synthesized srcset on data URL images.") {
-            try assertContentMatches("data-url-image")
-        }
+        try assertContentMatches("data-url-image")
     }
 
     @Test("data-url-image - Title matches expected")
@@ -393,11 +387,7 @@ struct MozillaCompatibilityTests {
     func testLazyImage3Title() async throws { try assertMetadataFieldMatches(.title, for: "lazy-image-3") }
 
     @Test("embedded-videos - Content matches expected")
-    func testEmbeddedVideosContent() async throws {
-        withKnownIssue("Media container shaping differs; expected <article> wrapper is flattened to paragraph blocks.") {
-            try assertContentMatches("embedded-videos")
-        }
-    }
+    func testEmbeddedVideosContent() async throws { try assertContentMatches("embedded-videos") }
 
     @Test("embedded-videos - Title matches expected")
     func testEmbeddedVideosTitle() async throws { try assertMetadataFieldMatches(.title, for: "embedded-videos") }

@@ -6,6 +6,7 @@ import SwiftSoup
 final class ContentExtractor {
     private let doc: Document
     private let options: ReadabilityOptions
+    private let articleTitle: String
     private var flags: UInt32
     private var attempts: [ExtractionAttempt]
     private var pageCacheHtml: String?
@@ -18,9 +19,10 @@ final class ContentExtractor {
         let flags: UInt32
     }
 
-    init(doc: Document, options: ReadabilityOptions) {
+    init(doc: Document, options: ReadabilityOptions, articleTitle: String = "") {
         self.doc = doc
         self.options = options
+        self.articleTitle = articleTitle
         self.flags = Configuration.flagStripUnlikelies |
                      Configuration.flagWeightClasses |
                      Configuration.flagCleanConditionally
@@ -115,6 +117,7 @@ final class ContentExtractor {
         scoringManager: NodeScoringManager
     ) throws -> (content: Element, byline: String?, neededToCreate: Bool) {
         let cleaner = NodeCleaner(options: options)
+        cleaner.setArticleTitle(articleTitle)
         let selector = CandidateSelector(options: options, scoringManager: scoringManager)
 
         // Phase 1: Remove unlikely candidates and extract byline
@@ -134,7 +137,7 @@ final class ContentExtractor {
         }
 
         // Phase 2: Collect and score elements
-        let elementsToScore = try collectElementsToScore(from: body)
+        let elementsToScore = try collectElementsToScore(from: body, cleaner: cleaner)
 
         for element in elementsToScore {
             let score = try scoreElement(element, scoringManager: scoringManager)
@@ -198,13 +201,26 @@ final class ContentExtractor {
 
     // MARK: - Element Collection
 
-    private func collectElementsToScore(from body: Element) throws -> [Element] {
+    private func collectElementsToScore(from body: Element, cleaner: NodeCleaner) throws -> [Element] {
         var elements: [Element] = []
         let defaultTags = Set(Configuration.defaultTagsToScore.map { $0.uppercased() })
         let blockTags = Set(Configuration.divToPElements.map { $0.uppercased() })
 
         var node: Element? = body
         while let current = node {
+            let tag = current.tagName().uppercased()
+
+            if (tag == "H1" || tag == "H2"), cleaner.headerDuplicatesTitle(current) {
+                node = DOMTraversal.removeAndGetNext(current)
+                continue
+            }
+
+            if ["H1", "H2", "H3", "H4", "H5", "H6"].contains(tag),
+               DOMTraversal.isElementWithoutContent(current) {
+                node = DOMTraversal.removeAndGetNext(current)
+                continue
+            }
+
             if defaultTags.contains(current.tagName().uppercased()) {
                 elements.append(current)
             }
@@ -250,7 +266,7 @@ final class ContentExtractor {
 
                 if hasSingleTagInsideElement(current, tag: "P"),
                    try getLinkDensity(current) < 0.25,
-                   !hasContainerIdentity(current) {
+                   !shouldPreserveSingleParagraphWrapper(current) {
                     if let newNode = current.children().first {
                         try current.replaceWith(newNode)
                         elements.append(newNode)
@@ -355,6 +371,12 @@ final class ContentExtractor {
         let className = ((try? element.className()) ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return !className.isEmpty
+    }
+
+    private func shouldPreserveSingleParagraphWrapper(_ element: Element) -> Bool {
+        guard hasContainerIdentity(element) else { return false }
+        // Keep explicit container identity for embedded media blocks only.
+        return ((try? element.select("iframe, embed, object, video").isEmpty()) == false)
     }
 
     // MARK: - Element Scoring

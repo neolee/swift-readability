@@ -3,7 +3,7 @@
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
 **Current Status:** Phase 6 In Progress (Functional suite expansion and hardening)
-**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 280 tests, 0 failures (`MozillaCompatibilityTests` includes 5 known issues: `mathjax`, `data-url-image`, `lazy-image-1`, `lazy-image-2`, `embedded-videos` content assertions)
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 280 tests, 0 failures (`MozillaCompatibilityTests` includes 2 known issues: `lazy-image-1`, `lazy-image-2` content assertions)
 
 ### Stage 3-F Import Progress (S3F-T1)
 
@@ -18,13 +18,13 @@ This document outlines the phased implementation plan for porting Mozilla Readab
   - `rtl-2`
   - `rtl-3`
   - `rtl-4`
-  - `mathjax` (content assertion currently tracked as known issue)
+  - `mathjax` (content assertion passing)
 - [x] Media/SVG batch imported:
-  - `data-url-image` (content assertion currently tracked as known issue)
+  - `data-url-image` (content assertion passing)
   - `lazy-image-1` (content assertion currently tracked as known issue)
   - `lazy-image-2` (content assertion currently tracked as known issue)
   - `lazy-image-3`
-  - `embedded-videos` (content assertion currently tracked as known issue)
+  - `embedded-videos` (content assertion passing)
   - `videos-1` (content assertion now passing)
   - `videos-2` (content assertion now passing)
   - `svg-parsing` (content assertion now passing)

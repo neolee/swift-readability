@@ -30,6 +30,9 @@ public struct Readability {
         }
         lifecycleState.hasParsed = true
 
+        // Match Mozilla: upgrade lazy/placeholder images from <noscript> first.
+        try unwrapNoscriptImages()
+
         // Extract metadata BEFORE prepDocument() to preserve JSON-LD scripts
         let metadata = try extractMetadata()
 
@@ -45,7 +48,7 @@ public struct Readability {
         }
 
         // Extract article content using new ContentExtractor
-        let extractor = ContentExtractor(doc: doc, options: options)
+        let extractor = ContentExtractor(doc: doc, options: options, articleTitle: title)
         let (articleContent, extractedByline, _) = try extractor.extract()
 
         // Post-process with ArticleCleaner
@@ -308,6 +311,110 @@ public struct Readability {
     }
 
     // MARK: - Document Preparation
+
+    private func unwrapNoscriptImages() throws {
+        let imgs = try doc.select("img")
+        for img in imgs {
+            var keep = false
+            if let attrs = img.getAttributes() {
+                for attr in attrs {
+                    let key = attr.getKey().lowercased()
+                    if key == "src" || key == "srcset" || key == "data-src" || key == "data-srcset" {
+                        keep = true
+                        break
+                    }
+                    if attr.getValue().range(of: "\\.(jpg|jpeg|png|webp)", options: [.regularExpression, .caseInsensitive]) != nil {
+                        keep = true
+                        break
+                    }
+                }
+            }
+
+            if !keep {
+                try img.remove()
+            }
+        }
+
+        let noscripts = try doc.select("noscript")
+        for noscript in noscripts {
+            guard let extractedImage = try extractSingleImage(fromNoscript: noscript) else {
+                continue
+            }
+
+            guard let prevElement = try? noscript.previousElementSibling(),
+                  isSingleImage(prevElement) else {
+                continue
+            }
+
+            let prevImg: Element?
+            if prevElement.tagName().uppercased() == "IMG" {
+                prevImg = prevElement
+            } else {
+                prevImg = try prevElement.select("img").first()
+            }
+
+            guard let oldImg = prevImg else { continue }
+            try copyLegacyImageAttributes(from: oldImg, to: extractedImage)
+            try prevElement.replaceWith(extractedImage)
+        }
+    }
+
+    private func extractSingleImage(fromNoscript noscript: Element) throws -> Element? {
+        let html = try noscript.html()
+        let fragment = try SwiftSoup.parseBodyFragment(html)
+        guard let body = fragment.body(),
+              isSingleImage(body),
+              let img = try body.select("img").first() else {
+            return nil
+        }
+        return try DOMHelpers.cloneElement(img, in: doc)
+    }
+
+    private func isSingleImage(_ element: Element?) -> Bool {
+        var current = element
+        while let node = current {
+            if node.tagName().uppercased() == "IMG" {
+                return true
+            }
+            if node.children().count != 1 {
+                return false
+            }
+            let text = (try? node.text())?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if !text.isEmpty {
+                return false
+            }
+            current = node.children().first
+        }
+        return false
+    }
+
+    private func copyLegacyImageAttributes(from oldImg: Element, to newImg: Element) throws {
+        guard let attrs = oldImg.getAttributes() else { return }
+        for attr in attrs {
+            let key = attr.getKey()
+            let value = attr.getValue()
+            if value.isEmpty {
+                continue
+            }
+
+            let lowerKey = key.lowercased()
+            let looksLikeImageURL = value.range(
+                of: "\\.(jpg|jpeg|png|webp)",
+                options: [.regularExpression, .caseInsensitive]
+            ) != nil
+            guard lowerKey == "src" || lowerKey == "srcset" || looksLikeImageURL else {
+                continue
+            }
+
+            let existing = (try? newImg.attr(key)) ?? ""
+            if existing == value {
+                continue
+            }
+
+            let targetKey = newImg.hasAttr(key) ? "data-old-\(key)" : key
+            try newImg.attr(targetKey, value)
+        }
+    }
 
     private func prepDocument() throws {
         // Keep media/embed nodes for later scoring/cleaning. Mozilla only strips
@@ -663,6 +770,11 @@ public struct Readability {
             let uri = rawURI.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !uri.isEmpty else { return rawURI }
 
+            // Keep data URLs verbatim to match Mozilla/jsdom behavior.
+            if uri.lowercased().hasPrefix("data:") {
+                return uri
+            }
+
             if uri.hasPrefix("#"), baseMatchesDocument {
                 return uri
             }
@@ -729,6 +841,31 @@ public struct Readability {
             let poster = (try? media.attr("poster")) ?? ""
             if !poster.isEmpty {
                 try media.attr("poster", toAbsoluteURI(poster))
+            }
+
+            let srcset = (try? media.attr("srcset")) ?? ""
+            if !srcset.isEmpty {
+                let pattern = "(\\S+)(\\s+[\\d.]+[xw])?(\\s*(?:,|$))"
+                if let regex = try? NSRegularExpression(pattern: pattern) {
+                    let nsRange = NSRange(srcset.startIndex..<srcset.endIndex, in: srcset)
+                    let matches = regex.matches(in: srcset, options: [], range: nsRange)
+                    var rewritten = srcset
+                    for match in matches.reversed() {
+                        guard match.numberOfRanges >= 4,
+                              let totalRange = Range(match.range(at: 0), in: rewritten),
+                              let r1 = Range(match.range(at: 1), in: srcset),
+                              let r2 = Range(match.range(at: 2), in: srcset),
+                              let r3 = Range(match.range(at: 3), in: srcset) else {
+                            continue
+                        }
+                        let rawURL = String(srcset[r1])
+                        let descriptor = String(srcset[r2])
+                        let trailing = String(srcset[r3])
+                        let replacement = toAbsoluteURI(rawURL) + descriptor + trailing
+                        rewritten.replaceSubrange(totalRange, with: replacement)
+                    }
+                    try media.attr("srcset", rewritten)
+                }
             }
         }
     }

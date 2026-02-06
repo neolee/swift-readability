@@ -90,7 +90,7 @@ final class ArticleCleaner {
             // If DIV has exactly one P child and low link density, unwrap to that P.
             if hasSingleTagInsideElement(div, tag: "P"),
                try getLinkDensity(div) < 0.25,
-               !hasContainerIdentity(div) {
+               !shouldPreserveSingleParagraphWrapper(div) {
                 if let onlyChild = div.children().first {
                     try div.replaceWith(onlyChild)
                 }
@@ -167,6 +167,12 @@ final class ArticleCleaner {
         let className = ((try? element.className()) ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return !className.isEmpty
+    }
+
+    private func shouldPreserveSingleParagraphWrapper(_ element: Element) -> Bool {
+        guard hasContainerIdentity(element) else { return false }
+        // Preserve identity wrappers for embedded media blocks (videos/iframes).
+        return ((try? element.select("iframe, embed, object, video").isEmpty()) == false)
     }
 
     /// Check if node is phrasing content (inline content)
