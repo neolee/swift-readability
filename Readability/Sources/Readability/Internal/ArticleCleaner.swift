@@ -57,21 +57,21 @@ final class ArticleCleaner {
 
     /// Wrap consecutive phrasing content nodes in paragraph tags
     private func wrapPhrasingContentInParagraphs(_ element: Element) throws {
+        let childNodes = element.getChildNodes()
         var currentFragment: [Node] = []
 
-        for child in element.children() {
+        for child in childNodes {
+            // Skip nodes that were already moved by previous wrapping.
+            guard let parent = child.parent(), parent === element else { continue }
+
             if isPhrasingContent(child) {
                 currentFragment.append(child)
-            } else {
-                // Wrap collected phrasing content in p
-                if !currentFragment.isEmpty {
-                    try wrapNodesInParagraph(currentFragment, parent: element)
-                    currentFragment.removeAll()
-                }
+            } else if !currentFragment.isEmpty {
+                try wrapNodesInParagraph(currentFragment, parent: element)
+                currentFragment.removeAll()
             }
         }
 
-        // Wrap any remaining phrasing content
         if !currentFragment.isEmpty {
             try wrapNodesInParagraph(currentFragment, parent: element)
         }
@@ -85,21 +85,22 @@ final class ArticleCleaner {
         let doc = parent.ownerDocument() ?? Document("")
         let p = try doc.createElement("p")
 
-        for node in nodes {
-            if let elementNode = node as? Element {
-                // Clone element with document context
-                let clone = try DOMHelpers.cloneElement(elementNode, in: doc)
-                try p.appendChild(clone)
-            } else if let textNode = node as? TextNode {
-                // Clone text node
-                let textClone = TextNode(textNode.text(), doc.location())
-                try p.appendChild(textClone)
-            }
+        // Keep original node order by inserting before the first node,
+        // then moving the original nodes into the new paragraph.
+        if let first = nodes.first {
+            try first.before(p)
+        } else {
+            try parent.appendChild(p)
         }
 
-        // Only append if paragraph has content
-        if try !p.text().isEmpty {
-            try parent.appendChild(p)
+        for node in nodes {
+            guard node.parent() != nil else { continue }
+            try p.appendChild(node)
+        }
+
+        // Drop empty paragraphs created from whitespace-only fragments.
+        if try p.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            try p.remove()
         }
     }
 
@@ -433,9 +434,8 @@ final class ArticleCleaner {
     /// Post-process article content (equivalent to Mozilla's _prepArticle)
     /// This should be called after the main content extraction is complete
     func postProcessArticle(_ articleContent: Element) throws {
-        // Note: removeExtraBRs is disabled because replaceBrs in Readability.swift
-        // already handles BR conversion properly. Additional BR removal here
-        // was causing issues with the replace-brs test case.
+        // Remove BR tags that should not remain in final output.
+        try removeExtraBRs(articleContent)
 
         // Remove empty paragraphs
         try removeEmptyParagraphs(articleContent)

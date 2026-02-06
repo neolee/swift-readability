@@ -377,8 +377,9 @@ public struct Readability {
                     next = sibling
                 }
 
-                // Remove trailing whitespace from the paragraph
-                while let lastChild = p.children().last {
+                // Remove trailing whitespace from the paragraph.
+                // Use all child nodes to include trailing text nodes.
+                while let lastChild = p.getChildNodes().last {
                     if isWhitespace(lastChild) {
                         try lastChild.remove()
                     } else {
@@ -406,7 +407,7 @@ public struct Readability {
             }
             // If it's a text node with non-whitespace content, return it
             if let textNode = n as? TextNode {
-                if !textNode.text().trimmingCharacters(in: .whitespaces).isEmpty {
+                if !textNode.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     return n
                 }
             }
@@ -449,7 +450,7 @@ public struct Readability {
     /// Check if node is whitespace
     private func isWhitespace(_ node: Node) -> Bool {
         if let textNode = node as? TextNode {
-            return textNode.text().trimmingCharacters(in: .whitespaces).isEmpty
+            return textNode.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         if let element = node as? Element {
             return element.tagName().lowercased() == "br"
