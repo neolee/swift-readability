@@ -580,6 +580,8 @@ Complete deferred issues from Phase 5 before proceeding.
   - `swift test --filter RealWorldCompatibilityTests` -> 5 tests, 8 known issues (quarantined)
 - Report:
   - `Readability/Tests/ReadabilityTests/Resources/realworld-pages/BATCH-1-REPORT.md`
+- Cluster ledger:
+  - `Readability/Tests/ReadabilityTests/Resources/realworld-pages/ISSUE-CLUSTERS.md`
 
 ### 7.1 Performance Optimization
 - [ ] Large document handling (>1MB)

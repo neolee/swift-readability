@@ -68,9 +68,16 @@ public struct Readability {
             excerpt = try extractExcerpt(from: articleContent)
         }
 
-        // Add page wrapper attributes to article content directly
-        try articleContent.attr("id", "readability-page-1")
-        try articleContent.addClass("page")
+        // Keep Mozilla-compatible page wrapper shape under the article container.
+        // This guarantees the exported content starts with a page DIV wrapper.
+        let pageWrapper = try doc.createElement("div")
+        try pageWrapper.attr("id", "readability-page-1")
+        try pageWrapper.attr("class", "page")
+
+        while let firstChild = articleContent.getChildNodes().first {
+            try pageWrapper.appendChild(firstChild)
+        }
+        try articleContent.appendChild(pageWrapper)
 
         // Clean and serialize content
         let content = try cleanAndSerialize(articleContent)
@@ -725,7 +732,7 @@ public struct Readability {
 
         doc.outputSettings().prettyPrint(pretty: false)
 
-        return try cleaned.outerHtml()
+        return try cleaned.html()
     }
 
     private func cleanClasses(_ element: Element) throws {

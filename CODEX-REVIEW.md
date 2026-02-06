@@ -592,11 +592,14 @@ Legend:
 #### S3R-T2: Failure clustering and pattern-based remediation
 
 - Priority: `P1`
+- Status: `In Progress` (2026-02-06)
 - Scope:
   - parser + cleaner + extractor modules
   - issue tracking docs
 - Implementation:
   - Cluster failures by root-cause pattern (template noise, embed handling, metadata anomalies, locale artifacts).
+  - Batch 1 cluster ledger established:
+    - `Readability/Tests/ReadabilityTests/Resources/realworld-pages/ISSUE-CLUSTERS.md`
 - Acceptance method:
   - `Doc`: each cluster has owner, fix strategy, and regression tests.
 - Pass standard:

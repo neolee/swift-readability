@@ -7,7 +7,8 @@ Batch: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 
 - Total cases: 5
 - Strict pass: 0
-- Known issues: 5
+- Known issue instances: 8
+- Known issue clusters: 5
 
 ## Case Findings (first divergence)
 

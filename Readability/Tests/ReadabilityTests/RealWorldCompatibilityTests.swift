@@ -57,35 +57,35 @@ struct RealWorldCompatibilityTests {
     // Stage 3-R Batch 1 (initial baseline)
     @Test("realworld/wikipedia - content and metadata match")
     func testWikipedia() async throws {
-        withKnownIssue("S3R Batch 1 baseline: structural TOC/excerpt mismatch against Mozilla expected output.") {
+        withKnownIssue("S3R Batch 1 baseline [RW-C4, RW-C5]: structural TOC/excerpt mismatch against Mozilla expected output.") {
             try assertContentAndMetadataMatch("wikipedia")
         }
     }
 
     @Test("realworld/medium-1 - content and metadata match")
     func testMedium1() async throws {
-        withKnownIssue("S3R Batch 1 baseline: figure/caption structural mismatch against Mozilla expected output.") {
+        withKnownIssue("S3R Batch 1 baseline [RW-C3]: figure/caption structural mismatch against Mozilla expected output.") {
             try assertContentAndMetadataMatch("medium-1")
         }
     }
 
     @Test("realworld/nytimes-1 - content and metadata match")
     func testNYTimes1() async throws {
-        withKnownIssue("S3R Batch 1 baseline: page wrapper/id-class structural mismatch against Mozilla expected output.") {
+        withKnownIssue("S3R Batch 1 baseline [RW-C1]: page wrapper/id-class structural mismatch against Mozilla expected output.") {
             try assertContentAndMetadataMatch("nytimes-1")
         }
     }
 
     @Test("realworld/cnn - content and metadata match")
     func testCNN() async throws {
-        withKnownIssue("S3R Batch 1 baseline: leading content container and title whitespace mismatch against Mozilla expected output.") {
+        withKnownIssue("S3R Batch 1 baseline [RW-C1, RW-C5]: leading content container and title whitespace mismatch against Mozilla expected output.") {
             try assertContentAndMetadataMatch("cnn")
         }
     }
 
     @Test("realworld/wapo-1 - content and metadata match")
     func testWaPo1() async throws {
-        withKnownIssue("S3R Batch 1 baseline: embedded gallery handling and byline normalization mismatch against Mozilla expected output.") {
+        withKnownIssue("S3R Batch 1 baseline [RW-C2, RW-C5]: embedded gallery handling and byline normalization mismatch against Mozilla expected output.") {
             try assertContentAndMetadataMatch("wapo-1")
         }
     }
