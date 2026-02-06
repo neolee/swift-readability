@@ -444,6 +444,12 @@ final class ContentExtractor {
 
     private func shouldPreserveSingleParagraphWrapper(_ element: Element) -> Bool {
         guard hasContainerIdentity(element) else { return false }
+        let id = element.id().lowercased()
+        let className = ((try? element.className()) ?? "").lowercased()
+        let signature = "\(id) \(className)"
+        if signature.contains("story-continues") {
+            return true
+        }
         // Keep explicit container identity for embedded media blocks only.
         return ((try? element.select("iframe, embed, object, video").isEmpty()) == false)
     }

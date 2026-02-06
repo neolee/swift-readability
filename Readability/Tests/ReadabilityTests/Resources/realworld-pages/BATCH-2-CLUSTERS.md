@@ -6,9 +6,9 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Cases: 11
-- Strict pass: 5 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`)
-- Cases with known issues: 6
-- Known issue instances: 6
+- Strict pass: 6 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`)
+- Cases with known issues: 5
+- Known issue instances: 5
 
 ## Cluster Taxonomy
 
@@ -38,13 +38,14 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Signature:
   - expected `p/div`, actual `div/section` under comparable subtree
   - expected identity attributes retained/removed differently
+  - list wrapper boundaries drift (`ol > li` vs nested `div` inside item content)
 - Impacted cases:
-  - `nytimes-2`
   - `nytimes-5`
   - `seattletimes-1` - resolved in current branch
   - `yahoo-1` - resolved in current branch
   - `yahoo-2` - resolved in current branch
   - `bbc-1` - resolved in current branch
+  - `nytimes-2` - resolved in current branch
 - Priority: P1
 
 ### B2-C4: Figure/Inline Block Boundary Drift
@@ -62,7 +63,7 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - closed for current Batch 2 scope (`bbc-1`, `nytimes-5`, `yahoo-1`)
 
 2. B2-C3 (tag conversion parity)
-- shared mechanics across remaining core cases (`nytimes-2`, `nytimes-5`)
+- shared mechanics across remaining core cases (`nytimes-5`)
 - likely medium-impact changes, requires tight regression gating
 
 3. B2-C2 (container selection)

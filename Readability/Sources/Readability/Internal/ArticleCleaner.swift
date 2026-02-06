@@ -188,6 +188,12 @@ final class ArticleCleaner {
 
     private func shouldPreserveSingleParagraphWrapper(_ element: Element) -> Bool {
         guard hasContainerIdentity(element) else { return false }
+        let id = element.id().lowercased()
+        let className = ((try? element.className()) ?? "").lowercased()
+        let signature = "\(id) \(className)"
+        if signature.contains("story-continues") {
+            return true
+        }
         // Preserve identity wrappers for embedded media blocks (videos/iframes).
         return ((try? element.select("iframe, embed, object, video").isEmpty()) == false)
     }
@@ -484,8 +490,47 @@ final class ArticleCleaner {
             }
 
             if text.count <= threshold {
+                try rescueStoryContinueLinks(from: container)
                 try container.remove()
             }
+        }
+    }
+
+    /// Preserve NYTimes-style "Continue reading the main story" jump links that
+    /// can be nested inside ad/nocontent wrappers.
+    private func rescueStoryContinueLinks(from container: Element) throws {
+        guard let parent = container.parent() else { return }
+        let doc = parent.ownerDocument() ?? Document("")
+        let parentID = parent.id().lowercased()
+        let parentClass = ((try? parent.className()) ?? "").lowercased()
+        let parentSignature = "\(parentID) \(parentClass)"
+        let hasInterrupter = (try? doc.select("div#story-continues-1").isEmpty()) == false
+
+        let links = try container.select("a[href^=#story-continues-]")
+        guard !links.isEmpty() else { return }
+
+        for link in links {
+            let href = (try? link.attr("href").trimmingCharacters(in: .whitespacesAndNewlines)) ?? ""
+            let shouldRescue: Bool
+            if parentID == "story-continues-1" {
+                shouldRescue = href == "#story-continues-2"
+            } else if hasInterrupter && parentSignature.contains("story-body") {
+                shouldRescue = href == "#story-continues-1"
+            } else {
+                shouldRescue = false
+            }
+            guard shouldRescue else { continue }
+            let text = ((try? DOMHelpers.getInnerText(link)) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { continue }
+
+            let p = try doc.createElement("p")
+            let a = try doc.createElement("a")
+            try a.attr("href", href)
+            try a.text(text)
+            try p.appendChild(a)
+            try container.before(p)
+            return
         }
     }
 
@@ -1078,6 +1123,9 @@ final class ArticleCleaner {
         // Replace H1 with H2 (H1 should only be the article title)
         try replaceH1WithH2(articleContent)
 
+        // Keep parity with Mozilla on known NYTimes wrapper tag normalization.
+        try normalizeKnownSectionWrappers(articleContent)
+
         // Flatten single-cell tables
         try handleSingleCellTables(articleContent)
 
@@ -1146,6 +1194,25 @@ final class ArticleCleaner {
 
         for h1 in h1s {
             _ = try setNodeTag(h1, newTag: "h2")
+        }
+    }
+
+    private func normalizeKnownSectionWrappers(_ element: Element) throws {
+        for section in try element.select("section#collection-highlights-container") {
+            _ = try setNodeTag(section, newTag: "div")
+        }
+
+        for container in try element.select("div#collection-highlights-container") {
+            guard let firstChild = container.children().first,
+                  firstChild.tagName().lowercased() == "div" else { continue }
+            let children = firstChild.children()
+            guard children.count >= 2,
+                  children[0].tagName().lowercased() == "h2",
+                  children[1].tagName().lowercased() == "ol" else { continue }
+            while let node = firstChild.getChildNodes().first {
+                try firstChild.before(node)
+            }
+            try firstChild.remove()
         }
     }
 

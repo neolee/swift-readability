@@ -6,9 +6,9 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Total new cases: 11
-- Strict pass: 5 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`)
-- Cases with known issues: 6
-- Known issue instances: 6
+- Strict pass: 6 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`)
+- Cases with known issues: 5
+- Known issue instances: 5
 
 ## First-Diff Snapshot (Batch 2)
 
@@ -25,7 +25,7 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Status: strict pass in current branch.
 
 5. `nytimes-2`
-- Content: expected `div#story-continues-1`, actual `div` (id stripped).
+- Status: strict pass in current branch.
 
 6. `nytimes-3`
 - Content: expected `article#story`, actual `div#site-content` (container selection drift).
@@ -34,7 +34,7 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Content: expected `article#story`, actual `div#site-content` (same cluster as `nytimes-3`).
 
 8. `nytimes-5`
-- Content: expected `div#collection-highlights-container`, actual `section#collection-highlights-container`.
+- Content: expected list structure under highlights block (`ol > li`), actual nested `div` inside first list item.
 - Metadata: excerpt mismatch is resolved in current branch (meta excerpt now used when JSON-LD excerpt is empty).
 
 9. `yahoo-1`
@@ -50,5 +50,5 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 
 - Batch 1 remains strict green.
 - Batch 2 tests are imported and executable in `RealWorldCompatibilityTests`.
-- Batch 2 has now closed 4 structural/content instances (`seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`) in addition to earlier metadata closures.
-- Next step is fixing remaining structural clusters (`nytimes` container/tag drift, `telegraph`/`guardian` media-boundary drift, `bbc-1` id parity).
+- Batch 2 has now closed 5 structural/content instances (`seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`) in addition to earlier metadata closures.
+- Next step is fixing remaining structural clusters (`nytimes-3/4/5` container/tag drift, `telegraph`/`guardian` media-boundary drift).

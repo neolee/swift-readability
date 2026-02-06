@@ -29,8 +29,9 @@ enum DOMHelpers {
     static func setTagName(_ element: Element, newTag: String) throws -> Element {
         let doc = element.ownerDocument() ?? Document("")
         let replacement = try doc.createElement(newTag.lowercased())
-        for child in element.children() {
-            try replacement.appendChild(child)
+        try copyAttributes(from: element, to: replacement)
+        while let firstChild = element.getChildNodes().first {
+            try replacement.appendChild(firstChild)
         }
         try element.replaceWith(replacement)
         return replacement
