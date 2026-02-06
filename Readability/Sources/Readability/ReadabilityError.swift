@@ -17,6 +17,9 @@ public enum ReadabilityError: Error, CustomStringConvertible, Sendable {
     /// A required element was not found
     case elementNotFound(String)
 
+    /// parse() was called more than once on the same Readability instance
+    case alreadyParsed
+
     public var description: String {
         switch self {
         case .noContent:
@@ -29,6 +32,8 @@ public enum ReadabilityError: Error, CustomStringConvertible, Sendable {
             return "Invalid HTML input"
         case .elementNotFound(let selector):
             return "Required element not found: \(selector)"
+        case .alreadyParsed:
+            return "parse() can only be called once per Readability instance"
         }
     }
 }

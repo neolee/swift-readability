@@ -4,8 +4,13 @@ import SwiftSoup
 /// Swift implementation of Mozilla's Readability.js
 /// Extracts readable content from web pages
 public struct Readability {
+    private final class ParseLifecycleState {
+        var hasParsed = false
+    }
+
     private let doc: Document
     private let options: ReadabilityOptions
+    private let lifecycleState = ParseLifecycleState()
 
     /// Initialize with HTML string and optional configuration
     public init(html: String, baseURL: URL? = nil, options: ReadabilityOptions = .default) throws {
@@ -17,8 +22,14 @@ public struct Readability {
         self.options = options
     }
 
-    /// Parse the document and extract readable content
+    /// Parse the document and extract readable content.
+    /// This instance is single-use: calling `parse()` more than once throws `ReadabilityError.alreadyParsed`.
     public func parse() throws -> ReadabilityResult {
+        guard !lifecycleState.hasParsed else {
+            throw ReadabilityError.alreadyParsed
+        }
+        lifecycleState.hasParsed = true
+
         // Extract metadata BEFORE prepDocument() to preserve JSON-LD scripts
         let metadata = try extractMetadata()
 

@@ -26,7 +26,7 @@ Working assumptions applied:
 
 From local `cd Readability && swift test`:
 
-- Total: `230` tests
+- Total: `232` tests
 - Failed: `0`
 
 Imported Mozilla pages in this repo:
@@ -466,6 +466,7 @@ Legend:
 #### S2-T5: Define parse lifecycle semantics
 
 - Priority: `P2`
+- Status: `Completed` (2026-02-06)
 - Scope:
   - `Readability/Sources/Readability/Readability.swift`
   - integration tests
