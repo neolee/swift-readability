@@ -124,6 +124,14 @@ public struct Readability {
     private func extractMetadata() throws -> Metadata {
         var metadata = Metadata()
 
+        func nonEmpty(_ value: String?) -> String? {
+            guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !trimmed.isEmpty else {
+                return nil
+            }
+            return trimmed
+        }
+
         // Skip if JSON-LD is disabled
         if !options.disableJSONLD {
             let jsonldMetadata = try extractJSONLDMetadata()
@@ -136,11 +144,11 @@ public struct Readability {
 
         // Extract from meta tags
         let metaMetadata = try extractMetaMetadata()
-        metadata.title = metadata.title ?? metaMetadata.title
-        metadata.byline = metadata.byline ?? metaMetadata.byline
-        metadata.excerpt = metadata.excerpt ?? metaMetadata.excerpt
-        metadata.siteName = metadata.siteName ?? metaMetadata.siteName
-        metadata.publishedTime = metadata.publishedTime ?? metaMetadata.publishedTime
+        metadata.title = nonEmpty(metadata.title) ?? nonEmpty(metaMetadata.title)
+        metadata.byline = nonEmpty(metadata.byline) ?? nonEmpty(metaMetadata.byline)
+        metadata.excerpt = nonEmpty(metadata.excerpt) ?? nonEmpty(metaMetadata.excerpt)
+        metadata.siteName = nonEmpty(metadata.siteName) ?? nonEmpty(metaMetadata.siteName)
+        metadata.publishedTime = nonEmpty(metadata.publishedTime) ?? nonEmpty(metaMetadata.publishedTime)
 
         return metadata
     }
@@ -169,8 +177,9 @@ public struct Readability {
             for key in keysToCheck {
                 // Check if key matches the pattern OR is article:published_time
                 let isArticlePublishedTime = key == "article:published_time"
+                let isArticleAuthor = key == "article:author" || key == "og:article:author"
                 if let regex = try? NSRegularExpression(pattern: propertyPattern, options: [.caseInsensitive]),
-                   (regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil || isArticlePublishedTime),
+                   (regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil || isArticlePublishedTime || isArticleAuthor),
                    !content.isEmpty {
                     values[key] = content
                 }
@@ -195,7 +204,9 @@ public struct Readability {
         let socialByline = values["parsely-author"] ??
                           values["weibo:article:author"] ??
                           values["weibo:webpage:author"]
-        let ogByline = values["twitter:creator"] ??
+        let ogByline = values["article:author"] ??
+                      values["og:article:author"] ??
+                      values["twitter:creator"] ??
                       values["og:author"]
         metadata.byline = metaByline ?? socialByline ?? ogByline
 

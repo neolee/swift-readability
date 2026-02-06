@@ -124,4 +124,49 @@ struct ReadabilityTests {
         let result = try readability.parse()
         #expect(result.excerpt == firstParagraph)
     }
+
+    @Test("parse prefers og article author over social handle metadata")
+    func testParsePrefersOGArticleAuthorOverSocialHandle() throws {
+        let html = """
+        <html>
+        <head>
+          <meta property="og:article:author" content="BBC News">
+          <meta name="twitter:creator" content="@BBCWorld">
+        </head>
+        <body>
+          <article>
+            <p>This is a sufficiently long paragraph, with commas, to satisfy scoring and extraction behavior.</p>
+          </article>
+        </body>
+        </html>
+        """
+
+        let readability = try Readability(html: html)
+        let result = try readability.parse()
+        #expect(result.byline == "BBC News")
+    }
+
+    @Test("parse falls back to meta excerpt when JSON-LD excerpt is empty")
+    func testParseFallsBackToMetaExcerptWhenJSONLDEmpty() throws {
+        let metaDescription = "This meta description should be used when JSON-LD description is empty."
+        let html = """
+        <html>
+        <head>
+          <script type="application/ld+json">
+          {"@context":"https://schema.org","@type":"NewsArticle","description":""}
+          </script>
+          <meta property="og:description" content="\(metaDescription)">
+        </head>
+        <body>
+          <article>
+            <p>Paragraph content for extraction.</p>
+          </article>
+        </body>
+        </html>
+        """
+
+        let readability = try Readability(html: html)
+        let result = try readability.parse()
+        #expect(result.excerpt == metaDescription)
+    }
 }

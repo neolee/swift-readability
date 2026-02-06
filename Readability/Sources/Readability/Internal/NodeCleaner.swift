@@ -126,6 +126,8 @@ final class NodeCleaner {
         // Look for itemprop="name" child for more accurate author name
         if let nameNode = findItemPropNameNode(startingAt: node) {
             articleByline = try? nameNode.text().trimmingCharacters(in: .whitespacesAndNewlines)
+        } else if let authorLinkText = findAuthorLinkText(startingAt: node) {
+            articleByline = authorLinkText
         } else {
             articleByline = try? node.text().trimmingCharacters(in: .whitespacesAndNewlines)
         }
@@ -171,6 +173,27 @@ final class NodeCleaner {
             current = DOMTraversal.getNextNode(current)
         }
 
+        return nil
+    }
+
+    /// Prefer explicit author link text when byline containers also include role/title text.
+    private func findAuthorLinkText(startingAt node: Element) -> String? {
+        let selectors = [
+            "a[rel=author]",
+            "a.author-link",
+            "a[class*=author-link]",
+            "a[href*=\"/author/\"]"
+        ]
+
+        for selector in selectors {
+            guard let candidate = (try? node.select(selector).first()) ?? nil else {
+                continue
+            }
+            let text = (try? candidate.text().trimmingCharacters(in: .whitespacesAndNewlines)) ?? ""
+            if !text.isEmpty {
+                return text
+            }
+        }
         return nil
     }
 

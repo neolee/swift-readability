@@ -226,6 +226,24 @@ struct NodeCleanerTests {
         #expect(cleaner.getExtractedByline() == "Actual Author")
     }
 
+    @Test("checkAndExtractByline prefers author-link text over title suffix")
+    func testExtractBylinePrefersAuthorLinkText() throws {
+        let html = """
+        <div class="author">
+            <a class="author-link" href="/author/ben-silverman">Ben Silverman</a>
+            <div class="author-title">Games Editor</div>
+        </div>
+        """
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let div = try doc.select("div.author").first()!
+
+        let cleaner = NodeCleaner(options: .default)
+        let shouldRemove = cleaner.checkAndExtractByline(div, matchString: "author")
+
+        #expect(shouldRemove == true)
+        #expect(cleaner.getExtractedByline() == "Ben Silverman")
+    }
+
     @Test("checkAndExtractByline skips if too long")
     func testSkipLongByline() throws {
         let longName = String(repeating: "A", count: 101)

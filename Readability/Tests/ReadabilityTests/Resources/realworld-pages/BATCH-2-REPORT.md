@@ -8,13 +8,13 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Total new cases: 11
 - Strict pass: 1 (`wapo-2`)
 - Cases with known issues: 10
-- Known issue instances: 13
+- Known issue instances: 10
 
 ## First-Diff Snapshot (Batch 2)
 
 1. `bbc-1`
 - Content: expected `p`, actual `p#84457006` (id retention drift).
-- Metadata: byline mismatch (`@BBCWorld` vs `BBC News`).
+- Metadata: byline mismatch is resolved in current branch (`BBC News` now matches expected).
 
 2. `guardian-1`
 - Content: expected `figure#img-2`, actual `ul`.
@@ -36,11 +36,11 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 
 8. `nytimes-5`
 - Content: expected `div#collection-highlights-container`, actual `section#collection-highlights-container`.
-- Metadata: excerpt mismatch (`""` vs expected non-empty Spanish excerpt).
+- Metadata: excerpt mismatch is resolved in current branch (meta excerpt now used when JSON-LD excerpt is empty).
 
 9. `yahoo-1`
 - Content: expected `figure > p`, actual `figure > div`.
-- Metadata: byline mismatch (`Ben Silverman Games Editor` vs `Ben Silverman`).
+- Metadata: byline mismatch is resolved in current branch (`Ben Silverman` now matches expected).
 
 10. `yahoo-2`
 - Content: expected `p`, actual `div` in article wrapper.
@@ -52,4 +52,5 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 
 - Batch 1 remains strict green.
 - Batch 2 tests are imported and executable in `RealWorldCompatibilityTests`.
-- Next step is clustering these 13 known-issue instances, then fixing in priority order with Mozilla suite gating.
+- Batch 2 first metadata fix pass closed 3 known-issue instances (`bbc-1` byline, `nytimes-5` excerpt, `yahoo-1` byline).
+- Next step is fixing remaining structural clusters first (`DIV/P/SECTION` conversion and container selection).
