@@ -28,7 +28,7 @@ From local `cd Readability && swift test`:
 
 - Total: `280` tests
 - Failed: `0`
-- Known issues: `2` (`lazy-image-1`, `lazy-image-2` content assertions)
+- Known issues: `0`
 
 Imported Mozilla pages in this repo:
 
@@ -519,7 +519,7 @@ Legend:
   - Current imported batches:
     - URL/base: `base-url`, `base-url-base-element`, `base-url-base-element-relative`, `js-link-replacement`
     - I18N/entities: `005-unescape-html-entities`, `rtl-1..4`, `mathjax` (content passing)
-    - Media/SVG: `data-url-image`, `lazy-image-1`, `lazy-image-2`, `lazy-image-3`, `embedded-videos`, `videos-1`, `videos-2`, `svg-parsing` (content known issues currently: `lazy-image-1`, `lazy-image-2`)
+    - Media/SVG: `data-url-image`, `lazy-image-1`, `lazy-image-2`, `lazy-image-3`, `embedded-videos`, `videos-1`, `videos-2`, `svg-parsing` (all currently passing in local compatibility run)
 
 #### S3F-T2: Implement/validate `dir`/`lang` parity path for functional RTL scope
 

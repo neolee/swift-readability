@@ -343,11 +343,7 @@ struct MozillaCompatibilityTests {
     func testDataURLImageTitle() async throws { try assertMetadataFieldMatches(.title, for: "data-url-image") }
 
     @Test("lazy-image-1 - Content matches expected")
-    func testLazyImage1Content() async throws {
-        withKnownIssue("Paragraph ID cleanup differs; Swift output keeps an extra paragraph id that Mozilla drops.") {
-            try assertContentMatches("lazy-image-1")
-        }
-    }
+    func testLazyImage1Content() async throws { try assertContentMatches("lazy-image-1") }
 
     @Test("lazy-image-1 - Title matches expected")
     func testLazyImage1Title() async throws { try assertMetadataFieldMatches(.title, for: "lazy-image-1") }
@@ -362,11 +358,7 @@ struct MozillaCompatibilityTests {
     func testLazyImage1PublishedTime() async throws { try assertMetadataFieldMatches(.publishedTime, for: "lazy-image-1") }
 
     @Test("lazy-image-2 - Content matches expected")
-    func testLazyImage2Content() async throws {
-        withKnownIssue("Lazy-image URL rewriting misses expected srcset preservation on extracted image.") {
-            try assertContentMatches("lazy-image-2")
-        }
-    }
+    func testLazyImage2Content() async throws { try assertContentMatches("lazy-image-2") }
 
     @Test("lazy-image-2 - Title matches expected")
     func testLazyImage2Title() async throws { try assertMetadataFieldMatches(.title, for: "lazy-image-2") }

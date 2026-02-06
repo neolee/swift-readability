@@ -24,6 +24,11 @@ final class ArticleCleaner {
         // Fix lazy images
         try fixLazyImages(articleContent)
 
+        // Match Mozilla prep for form controls.
+        try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
+        try removeShortLinkHeavyDivs(articleContent)
+        try removeEmptyContainerDivs(articleContent)
+
         // Convert DIVs to Ps where appropriate
         try convertDivsToParagraphs(articleContent)
     }
@@ -387,6 +392,187 @@ final class ArticleCleaner {
         try removeShareElements(element)
     }
 
+    private func cleanElementsByTag(_ element: Element, tags: [String]) throws {
+        let selector = tags.joined(separator: ", ")
+        try element.select(selector).remove()
+    }
+
+    /// Remove compact, link-heavy metadata/action blocks that commonly appear
+    /// near hero images (e.g. author/date/follow controls) and are not article body.
+    private func removeShortLinkHeavyDivs(_ root: Element) throws {
+        let divs = try root.select("div")
+        for div in divs.reversed() {
+            guard div.parent() != nil else { continue }
+
+            if hasAncestorTag(div, tag: "table") {
+                continue
+            }
+            if (try? div.select("img, picture, figure, video, iframe, object, embed, table, pre, code, ul, ol, blockquote").isEmpty()) == false {
+                continue
+            }
+
+            let text = try DOMHelpers.getInnerText(div).trimmingCharacters(in: .whitespacesAndNewlines)
+            if text.isEmpty || text.count > 90 {
+                continue
+            }
+
+            let paragraphCount = try div.select("p").count
+            if paragraphCount > 4 {
+                continue
+            }
+
+            let linkCount = try div.select("a").count
+            if linkCount < 2 {
+                continue
+            }
+
+            let linkDensity = try getLinkDensity(div)
+            if linkDensity < 0.2 {
+                continue
+            }
+
+            try div.remove()
+        }
+    }
+
+    private func removeEmptyContainerDivs(_ root: Element) throws {
+        let divs = try root.select("div")
+        for div in divs.reversed() {
+            guard div.parent() != nil else { continue }
+
+            let text = try DOMHelpers.getInnerText(div).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !text.isEmpty {
+                continue
+            }
+
+            if (try? div.select("img, picture, figure, video, iframe, object, embed, table").isEmpty()) == false {
+                continue
+            }
+
+            try div.remove()
+        }
+    }
+
+    private func cleanConditionally(_ root: Element, tag: String) throws {
+        let nodes = try root.select(tag)
+        for node in nodes.reversed() {
+            guard node.parent() != nil else { continue }
+
+            if hasAncestorTag(node, tag: "code") {
+                continue
+            }
+
+            let weight = getClassWeight(node)
+            if weight < 0 {
+                try node.remove()
+                continue
+            }
+
+            if getCommaCount(node) >= 10 {
+                continue
+            }
+
+            let p = try node.select("p").count
+            let img = try node.select("img").count
+            let li = try node.select("li").count - 100
+            let input = try node.select("input").count
+            let headingDensity = try getTextDensity(node, tags: ["h1", "h2", "h3", "h4", "h5", "h6"])
+
+            var embedCount = 0
+            for embed in try node.select("object, embed, iframe") {
+                if isAllowedVideoEmbed(embed) {
+                    continue
+                }
+                embedCount += 1
+            }
+
+            let innerText = try DOMHelpers.getInnerText(node)
+            if isAdvertisementWord(innerText) || isLoadingWord(innerText) {
+                try node.remove()
+                continue
+            }
+
+            let contentLength = innerText.count
+            let linkDensity = try getLinkDensity(node)
+            let textDensity = try getTextDensity(
+                node,
+                tags: ["span", "li", "td"] + Configuration.divToPElements.map { $0.lowercased() }
+            )
+            let isFigureChild = hasAncestorTag(node, tag: "figure")
+
+            var shouldRemove = false
+            if !isFigureChild && img > 1 && Double(p) / Double(img) < 0.5 {
+                shouldRemove = true
+            } else if li > p {
+                shouldRemove = true
+            } else if input > p / 3 {
+                shouldRemove = true
+            } else if !isFigureChild && headingDensity < 0.9 && contentLength < 25 && (img == 0 || img > 2) && linkDensity > 0 {
+                shouldRemove = true
+            } else if weight < 25 && linkDensity > (0.2 + options.linkDensityModifier) {
+                shouldRemove = true
+            } else if weight >= 25 && linkDensity > (0.5 + options.linkDensityModifier) {
+                shouldRemove = true
+            } else if (embedCount == 1 && contentLength < 75) || embedCount > 1 {
+                shouldRemove = true
+            } else if img == 0 && textDensity == 0 {
+                shouldRemove = true
+            }
+
+            if shouldRemove {
+                try node.remove()
+            }
+        }
+    }
+
+    private func getCommaCount(_ element: Element) -> Int {
+        let text = (try? DOMHelpers.getInnerText(element)) ?? ""
+        let commaScalars = CharacterSet(charactersIn: ",\u{060C}\u{FE50}\u{FE10}\u{FE11}\u{2E41}\u{2E34}\u{2E32}\u{FF0C}")
+        return text.unicodeScalars.reduce(into: 0) { count, scalar in
+            if commaScalars.contains(scalar) {
+                count += 1
+            }
+        }
+    }
+
+    private func getTextDensity(_ element: Element, tags: [String]) throws -> Double {
+        let textLength = try DOMHelpers.getInnerText(element).count
+        if textLength == 0 {
+            return 0
+        }
+
+        var childrenLength = 0
+        let selector = tags.joined(separator: ", ")
+        for child in try element.select(selector) {
+            childrenLength += try DOMHelpers.getInnerText(child).count
+        }
+        return Double(childrenLength) / Double(textLength)
+    }
+
+    private func hasAncestorTag(_ element: Element, tag: String) -> Bool {
+        var current = element.parent()
+        let target = tag.lowercased()
+        while let node = current {
+            if node.tagName().lowercased() == target {
+                return true
+            }
+            current = node.parent()
+        }
+        return false
+    }
+
+    private func isAdvertisementWord(_ text: String) -> Bool {
+        let pattern = "^(ad(vertising|vertisement)?|pub(licité)?|werb(ung)?|广告|Реклама|Anuncio)$"
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    private func isLoadingWord(_ text: String) -> Bool {
+        let pattern = "^((loading|正在加载|Загрузка|chargement|cargando)(…|\\.\\.\\.)?)$"
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
     /// Remove iframe/object/embed nodes unless they match allowed video patterns.
     private func removeDisallowedEmbeds(_ element: Element) throws {
         let embeds = try element.select("iframe, object, embed")
@@ -576,8 +762,8 @@ final class ArticleCleaner {
             // Check if paragraph has no meaningful content
             let text = try p.text().trimmingCharacters(in: .whitespaces)
 
-            // Check if it has no content elements (img, embed, object, iframe)
-            let contentElements = try p.select("img, embed, object, iframe, video, audio").count
+            // Match Mozilla: treat only img/embed/object/iframe as paragraph content elements.
+            let contentElements = try p.select("img, embed, object, iframe").count
 
             if text.isEmpty && contentElements == 0 {
                 try p.remove()

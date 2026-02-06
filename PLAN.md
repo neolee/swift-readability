@@ -3,7 +3,7 @@
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
 **Current Status:** Phase 6 In Progress (Functional suite expansion and hardening)
-**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 280 tests, 0 failures (`MozillaCompatibilityTests` includes 2 known issues: `lazy-image-1`, `lazy-image-2` content assertions)
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 280 tests, 0 failures (`MozillaCompatibilityTests` 106/106 passing, 0 known issues)
 
 ### Stage 3-F Import Progress (S3F-T1)
 
@@ -21,8 +21,8 @@ This document outlines the phased implementation plan for porting Mozilla Readab
   - `mathjax` (content assertion passing)
 - [x] Media/SVG batch imported:
   - `data-url-image` (content assertion passing)
-  - `lazy-image-1` (content assertion currently tracked as known issue)
-  - `lazy-image-2` (content assertion currently tracked as known issue)
+  - `lazy-image-1` (content assertion passing)
+  - `lazy-image-2` (content assertion passing)
   - `lazy-image-3`
   - `embedded-videos` (content assertion passing)
   - `videos-1` (content assertion now passing)
@@ -546,8 +546,8 @@ Complete deferred issues from Phase 5 before proceeding.
 | Metric | Target | Status |
 |--------|--------|--------|
 | Standard tests imported | 49/49 | 30/49 (61%) |
-| Standard tests passing | 95%+ | 43/58 compatibility assertions after structural comparator migration |
-| Known issues | 0 | 15 compatibility gaps currently visible (`002` deferred + 14 additional structural mismatches) |
+| Standard tests passing | 95%+ | 106/106 `MozillaCompatibilityTests` assertions passing in current imported set |
+| Known issues | 0 | 0 active known issues |
 | Real-world tests | Phase 7 | 0/78 (0%) |
 
 ---
