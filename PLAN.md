@@ -3,7 +3,18 @@
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
 **Current Status:** Phase 6 In Progress (Functional suite expansion and hardening)
-**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 224 tests, 15 failures in `MozillaCompatibilityTests` after structural comparator migration (`002` deferred + additional structural gaps surfaced)
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 232 tests, 0 failures
+
+## Option Implementation Status (S2-T6)
+
+The following status is the current contract and must be kept in sync with `ReadabilityOptions.swift`.
+
+| Option | Status | Notes |
+|--------|--------|-------|
+| `maxElemsToParse` | Deferred / no-op | Exposed in API but not yet applied in extraction traversal limits. |
+| `useCustomSerializer` | Deferred / no-op | Current output always uses built-in serializer path. |
+| `allowedVideoRegex` | Deferred / no-op | Stored in options but not yet consumed in media-cleaning decisions. |
+| `debug` | Deferred / no-op | No pipeline logging behavior is currently gated by this flag. |
 
 ---
 

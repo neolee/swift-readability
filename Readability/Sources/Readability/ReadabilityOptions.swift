@@ -2,7 +2,8 @@ import Foundation
 
 /// Configuration options for Readability parsing
 public struct ReadabilityOptions: Sendable {
-    /// Maximum number of elements to parse (0 = no limit)
+    /// Maximum number of elements to parse (0 = no limit).
+    /// Status: deferred/no-op. This option is not wired into the extraction pipeline yet.
     public var maxElemsToParse: Int
 
     /// Number of top candidates to consider for article extraction
@@ -20,17 +21,19 @@ public struct ReadabilityOptions: Sendable {
     /// Classes to preserve in the output (in addition to defaults)
     public var classesToPreserve: [String]
 
-    /// Custom serializer function for HTML output (nil = use default)
-    /// Note: In Swift, we use a simpler approach - this is reserved for future use
+    /// Reserved custom serializer switch.
+    /// Status: deferred/no-op. The current implementation always uses built-in serialization.
     public var useCustomSerializer: Bool
 
-    /// Regex pattern for allowed video URLs
+    /// Regex pattern for allowed video URLs.
+    /// Status: deferred/no-op. Not yet consumed by cleaning/embedding logic.
     public var allowedVideoRegex: String
 
     /// Modifier for link density calculation
     public var linkDensityModifier: Double
 
-    /// Enable debug logging
+    /// Enable debug logging.
+    /// Status: deferred/no-op. The core pipeline currently does not emit debug logs from this flag.
     public var debug: Bool
 
     /// Creates a new ReadabilityOptions instance with default values

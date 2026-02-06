@@ -484,6 +484,7 @@ Legend:
 #### S2-T6: Mark unimplemented option status explicitly
 
 - Priority: `P2`
+- Status: `Completed` (2026-02-06)
 - Scope:
   - `Readability/Sources/Readability/ReadabilityOptions.swift`
   - `PLAN.md`
