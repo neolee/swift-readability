@@ -31,8 +31,8 @@ enum TestLoader {
         }
     }
 
-    /// Get the resources directory for test files
-    private static var resourcesDirectory: URL? {
+    /// Get the resources directory for a specific test group.
+    private static func resourcesDirectory(for group: String) -> URL? {
         // Try to find resources relative to the test executable
         let fileManager = FileManager.default
 
@@ -40,10 +40,10 @@ enum TestLoader {
         let thisFile = #file
         let thisDir = URL(fileURLWithPath: thisFile).deletingLastPathComponent()
 
-        // Navigate to the Resources directory
+        // Navigate to the selected Resources subdirectory.
         let resourcesURL = thisDir
             .appendingPathComponent("Resources")
-            .appendingPathComponent("test-pages")
+            .appendingPathComponent(group)
 
         if fileManager.fileExists(atPath: resourcesURL.path) {
             return resourcesURL
@@ -55,7 +55,7 @@ enum TestLoader {
             .appendingPathComponent("Tests")
             .appendingPathComponent("ReadabilityTests")
             .appendingPathComponent("Resources")
-            .appendingPathComponent("test-pages")
+            .appendingPathComponent(group)
 
         if fileManager.fileExists(atPath: cwdResources.path) {
             return cwdResources
@@ -100,9 +100,9 @@ enum TestLoader {
     }
 
     /// Load a specific test case
-    static func loadTestCase(named name: String) -> TestCase? {
-        guard let resourcesURL = resourcesDirectory else {
-            print("Failed to locate resources directory")
+    static func loadTestCase(named name: String, in group: String = "test-pages") -> TestCase? {
+        guard let resourcesURL = resourcesDirectory(for: group) else {
+            print("Failed to locate resources directory for group '\(group)'")
             return nil
         }
 
@@ -133,5 +133,10 @@ enum TestLoader {
             print("Failed to load test case '\(name)': \(error)")
             return nil
         }
+    }
+
+    /// Load a real-world test case from `Resources/realworld-pages`.
+    static func loadRealWorldTestCase(named name: String) -> TestCase? {
+        loadTestCase(named: name, in: "realworld-pages")
     }
 }

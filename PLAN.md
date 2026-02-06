@@ -2,8 +2,8 @@
 
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
-**Current Status:** Phase 6 Complete (functional/core parity baseline locked; preparing Phase 7)
-**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 293 tests, 0 failures (`MozillaCompatibilityTests` 119/119 passing, 0 known issues)
+**Current Status:** Phase 7 In Progress (Stage 3-R Batch 1 imported with quarantined known issues)
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 298 tests, 0 failures, 8 known issues (`MozillaCompatibilityTests` 119/119 passing)
 
 ### Stage 3-F Import Progress (S3F-T1)
 
@@ -554,7 +554,7 @@ Complete deferred issues from Phase 5 before proceeding.
 | Standard tests imported | 52/52 | 52/52 (100%) |
 | Standard tests passing | 95%+ | 119/119 `MozillaCompatibilityTests` tests passing |
 | Known issues | 0 | 0 active known issues |
-| Real-world tests | Phase 7 | 0/78 (0%) |
+| Real-world tests | Phase 7 | 5/78 (6.4%) imported, 8 known issues (quarantined) |
 
 ### Stage 3-F Gate Checkpoint (S3F-T4)
 
@@ -565,6 +565,21 @@ Complete deferred issues from Phase 5 before proceeding.
 ---
 
 ## Phase 7: Performance and Polish
+
+### 7.0 Stage 3-R Batch 1 Baseline [IN PROGRESS]
+
+- Imported fixtures (`Resources/realworld-pages`):
+  - `wikipedia`
+  - `medium-1`
+  - `nytimes-1`
+  - `cnn`
+  - `wapo-1`
+- Test suite:
+  - `Readability/Tests/ReadabilityTests/RealWorldCompatibilityTests.swift`
+- Baseline result:
+  - `swift test --filter RealWorldCompatibilityTests` -> 5 tests, 8 known issues (quarantined)
+- Report:
+  - `Readability/Tests/ReadabilityTests/Resources/realworld-pages/BATCH-1-REPORT.md`
 
 ### 7.1 Performance Optimization
 - [ ] Large document handling (>1MB)
@@ -603,12 +618,13 @@ Mozilla Readability has **130 test cases** total, divided into:
 | Phase 4 | Core Scoring | 100% | 16 | COMPLETE |
 | Phase 5 | Content Quality | 100% | 4 | COMPLETE |
 | **Phase 6** | **Standard Tests** | **95%+** | **52** | **COMPLETE (import + current baseline)** |
-| Phase 7 | Real-World Sites | 90%+ | 78 | PENDING |
+| Phase 7 | Real-World Sites | 90%+ | 78 | IN PROGRESS (Batch 1 imported) |
 
 ### Current Status
 
 **Standard Tests:** 52/52 imported (100%), currently passing in compatibility suite  
-**Known Issues:** 0 active known issues in imported set
+**Real-world Tests:** 5/78 imported in `Resources/realworld-pages` (Batch 1 baseline)  
+**Known Issues:** 0 active in functional suite; 8 active (quarantined) in real-world suite
 
 ### Phase 6 Detailed Progress
 

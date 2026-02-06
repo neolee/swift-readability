@@ -26,9 +26,9 @@ Working assumptions applied:
 
 From local `cd Readability && swift test`:
 
-- Total: `293` tests
+- Total: `298` tests
 - Failed: `0`
-- Known issues: `0`
+- Known issues: `8` (real-world suite quarantine)
 
 Imported Mozilla pages in this repo:
 
@@ -572,11 +572,18 @@ Legend:
 #### S3R-T1: Import real-world case corpus in manageable batches
 
 - Priority: `P1`
+- Status: `In Progress` (2026-02-06)
 - Scope:
-  - `Readability/Tests/ReadabilityTests/Resources/test-pages/*` (real-world subset)
+  - `Readability/Tests/ReadabilityTests/Resources/realworld-pages/*` (real-world subset)
   - compatibility tests
 - Implementation:
   - Import per source-family batches (news sites, blogs, forums, mixed templates).
+  - Batch 1 imported:
+    - `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
+  - Baseline test suite added:
+    - `Readability/Tests/ReadabilityTests/RealWorldCompatibilityTests.swift`
+  - Batch 1 report added:
+    - `Readability/Tests/ReadabilityTests/Resources/realworld-pages/BATCH-1-REPORT.md`
 - Acceptance method:
   - `Test`: full compatibility runs with per-batch reporting.
 - Pass standard:
