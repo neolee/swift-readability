@@ -69,10 +69,6 @@ final class CandidateSelector {
                 score *= (1.0 - linkDensity)
             }
 
-            // Update the score in the manager
-            let linkDensity = (try? scoringManager.getLinkDensity(for: element)) ?? 0
-            scoringManager.multiplyScore(by: (1.0 - linkDensity), for: element)
-
             // Add to top candidates
             if score > 0 {
                 topCandidates.add(Candidate(element: element, score: score))
@@ -208,8 +204,8 @@ final class CandidateSelector {
     private func createFallbackCandidate(from body: Element, in doc: Document) -> Element? {
         guard let div = try? doc.createElement("div") else { return nil }
 
-        // Move all children from body to the new div
-        while let child = body.children().first {
+        // Move all child nodes from body to the new div (including text nodes)
+        while let child = body.getChildNodes().first {
             do {
                 try div.appendChild(child)
             } catch {

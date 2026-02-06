@@ -113,6 +113,38 @@ struct CandidateSelectorTests {
         #expect(candidate.id() == "common")
     }
 
+    @Test("selectTopCandidate does not mutate stored scores during collection")
+    func testSelectTopCandidateDoesNotMutateStoredScores() throws {
+        let html = """
+        <div id="plain">Plain content with enough words, commas, and text for scoring.</div>
+        <div id="linked"><a href="https://example.com">link link link link</a> trailing text</div>
+        """
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let plain = try doc.select("#plain").first()!
+        let linked = try doc.select("#linked").first()!
+        let elements = [plain, linked]
+
+        let scoringManager = NodeScoringManager()
+        let options = ReadabilityOptions(nbTopCandidates: 5)
+        let selector = CandidateSelector(options: options, scoringManager: scoringManager)
+
+        scoringManager.initializeNode(plain)
+        scoringManager.initializeNode(linked)
+        scoringManager.addToScore(100, for: plain)
+        scoringManager.addToScore(100, for: linked)
+
+        let beforePlain = scoringManager.getContentScore(for: plain)
+        let beforeLinked = scoringManager.getContentScore(for: linked)
+
+        _ = try selector.selectTopCandidate(from: elements, in: doc)
+
+        let afterPlain = scoringManager.getContentScore(for: plain)
+        let afterLinked = scoringManager.getContentScore(for: linked)
+
+        #expect(afterPlain == beforePlain)
+        #expect(afterLinked == beforeLinked)
+    }
+
     // MARK: - Alternative Ancestor Analysis Tests
 
     @Test("findBetterTopCandidate finds common ancestor")
@@ -408,6 +440,23 @@ struct CandidateSelectorTests {
 
         // Should create fallback
         #expect(neededToCreate == true)
+    }
+
+    @Test("fallback candidate preserves body-level non-element nodes")
+    func testFallbackPreservesBodyLevelTextNodes() throws {
+        let html = "<html><body>Lead<span>inline</span>Tail<!--note--></body></html>"
+        let doc = try SwiftSoup.parse(html)
+
+        let scoringManager = NodeScoringManager()
+        let options = ReadabilityOptions()
+        let selector = CandidateSelector(options: options, scoringManager: scoringManager)
+
+        let (candidate, neededToCreate) = try selector.selectTopCandidate(from: [], in: doc)
+
+        #expect(neededToCreate == true)
+        #expect(candidate.tagName().lowercased() == "div")
+        #expect(candidate.getChildNodes().map { $0.nodeName() } == ["#text", "span", "#text", "#comment"])
+        #expect(try candidate.text() == "LeadinlineTail")
     }
 
     @Test("findBetterTopCandidate handles insufficient alternatives")

@@ -26,7 +26,7 @@ Working assumptions applied:
 
 From local `cd Readability && swift test`:
 
-- Total: `228` tests
+- Total: `230` tests
 - Failed: `0`
 
 Imported Mozilla pages in this repo:
@@ -436,6 +436,7 @@ Legend:
 #### S2-T3: Remove score-mutation side effects in candidate collection
 
 - Priority: `P1`
+- Status: `Completed` (2026-02-06)
 - Scope:
   - `Readability/Sources/Readability/Internal/CandidateSelector.swift`
   - selector/scoring tests
@@ -450,6 +451,7 @@ Legend:
 #### S2-T4: Preserve non-element nodes in fallback candidate construction
 
 - Priority: `P1`
+- Status: `Completed` (2026-02-06)
 - Scope:
   - `Readability/Sources/Readability/Internal/CandidateSelector.swift`
   - selector tests
