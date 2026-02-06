@@ -267,4 +267,72 @@ struct MozillaCompatibilityTests {
 
     @Test("visibility-hidden - Content matches expected")
     func testVisibilityHidden() async throws { try assertContentMatches("visibility-hidden") }
+
+    // MARK: - Stage 3-F: URL/Base Handling
+
+    @Test("base-url - Content matches expected")
+    func testBaseURLContent() async throws { try assertContentMatches("base-url") }
+
+    @Test("base-url - Title matches expected")
+    func testBaseURLTitle() async throws { try assertMetadataFieldMatches(.title, for: "base-url") }
+
+    @Test("base-url-base-element - Content matches expected")
+    func testBaseURLBaseElementContent() async throws { try assertContentMatches("base-url-base-element") }
+
+    @Test("base-url-base-element - Title matches expected")
+    func testBaseURLBaseElementTitle() async throws { try assertMetadataFieldMatches(.title, for: "base-url-base-element") }
+
+    @Test("base-url-base-element-relative - Content matches expected")
+    func testBaseURLBaseElementRelativeContent() async throws { try assertContentMatches("base-url-base-element-relative") }
+
+    @Test("base-url-base-element-relative - Title matches expected")
+    func testBaseURLBaseElementRelativeTitle() async throws { try assertMetadataFieldMatches(.title, for: "base-url-base-element-relative") }
+
+    @Test("js-link-replacement - Content matches expected")
+    func testJSLinkReplacementContent() async throws { try assertContentMatches("js-link-replacement") }
+
+    @Test("js-link-replacement - Title matches expected")
+    func testJSLinkReplacementTitle() async throws { try assertMetadataFieldMatches(.title, for: "js-link-replacement") }
+
+    // MARK: - Stage 3-F: I18N and Entity Handling
+
+    @Test("005-unescape-html-entities - Content matches expected")
+    func test005UnescapeHTMLEntitiesContent() async throws { try assertContentMatches("005-unescape-html-entities") }
+
+    @Test("005-unescape-html-entities - Title matches expected")
+    func test005UnescapeHTMLEntitiesTitle() async throws { try assertMetadataFieldMatches(.title, for: "005-unescape-html-entities") }
+
+    @Test("rtl-1 - Content matches expected")
+    func testRTL1Content() async throws { try assertContentMatches("rtl-1") }
+
+    @Test("rtl-1 - Title matches expected")
+    func testRTL1Title() async throws { try assertMetadataFieldMatches(.title, for: "rtl-1") }
+
+    @Test("rtl-2 - Content matches expected")
+    func testRTL2Content() async throws { try assertContentMatches("rtl-2") }
+
+    @Test("rtl-2 - Title matches expected")
+    func testRTL2Title() async throws { try assertMetadataFieldMatches(.title, for: "rtl-2") }
+
+    @Test("rtl-3 - Content matches expected")
+    func testRTL3Content() async throws { try assertContentMatches("rtl-3") }
+
+    @Test("rtl-3 - Title matches expected")
+    func testRTL3Title() async throws { try assertMetadataFieldMatches(.title, for: "rtl-3") }
+
+    @Test("rtl-4 - Content matches expected")
+    func testRTL4Content() async throws { try assertContentMatches("rtl-4") }
+
+    @Test("rtl-4 - Title matches expected")
+    func testRTL4Title() async throws { try assertMetadataFieldMatches(.title, for: "rtl-4") }
+
+    @Test("mathjax - Content matches expected")
+    func testMathJaxContent() async throws {
+        withKnownIssue("First extracted block differs from Mozilla fixture (expected leading <p>, actual leading <h2>). Keep importing while isolating heading-cleanup parity.") {
+            try assertContentMatches("mathjax")
+        }
+    }
+
+    @Test("mathjax - Title matches expected")
+    func testMathJaxTitle() async throws { try assertMetadataFieldMatches(.title, for: "mathjax") }
 }

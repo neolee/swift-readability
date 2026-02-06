@@ -3,7 +3,22 @@
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
 **Current Status:** Phase 6 In Progress (Functional suite expansion and hardening)
-**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 232 tests, 0 failures
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 252 tests, 0 failures (`MozillaCompatibilityTests` includes 1 known issue: `mathjax - Content matches expected`)
+
+### Stage 3-F Import Progress (S3F-T1)
+
+- [x] URL/base handling batch imported:
+  - `base-url`
+  - `base-url-base-element`
+  - `base-url-base-element-relative`
+  - `js-link-replacement`
+- [x] I18N/entity batch imported:
+  - `005-unescape-html-entities`
+  - `rtl-1`
+  - `rtl-2`
+  - `rtl-3`
+  - `rtl-4`
+  - `mathjax` (content assertion currently tracked as known issue)
 
 ## Option Implementation Status (S2-T6)
 

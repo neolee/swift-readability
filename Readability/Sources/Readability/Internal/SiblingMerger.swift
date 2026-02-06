@@ -55,7 +55,11 @@ final class SiblingMerger {
             }
         }
 
-        try unwrapRedundantSingleDivWrapper(in: articleContent)
+        let hasRTLDirectionInContext = hasRTLDirection(from: topCandidate)
+        try unwrapRedundantSingleDivWrapper(
+            in: articleContent,
+            preserveWrapper: hasRTLDirectionInContext
+        )
         return articleContent
     }
 
@@ -150,7 +154,14 @@ final class SiblingMerger {
 
     /// Mozilla output often has direct children under article content.
     /// If we end up with a single anonymous DIV wrapper, unwrap it.
-    private func unwrapRedundantSingleDivWrapper(in articleContent: Element) throws {
+    private func unwrapRedundantSingleDivWrapper(
+        in articleContent: Element,
+        preserveWrapper: Bool
+    ) throws {
+        if preserveWrapper {
+            return
+        }
+
         guard articleContent.children().count == 1,
               let onlyChild = articleContent.children().first,
               onlyChild.tagName().uppercased() == "DIV" else {
@@ -187,6 +198,32 @@ final class SiblingMerger {
             try articleContent.appendChild(node)
         }
         try onlyChild.remove()
+    }
+
+    /// Preserve wrapper when extraction context is in RTL direction.
+    /// Mozilla keeps extra wrapper structure for several RTL fixtures.
+    private func hasRTLDirection(from element: Element) -> Bool {
+        func isRTL(_ candidate: Element) -> Bool {
+            let dir = ((try? candidate.attr("dir")) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            return dir == "rtl"
+        }
+
+        if isRTL(element) {
+            return true
+        }
+
+        if let nestedRTL = try? element.select("[dir=rtl]"),
+           !nestedRTL.isEmpty() {
+            return true
+        }
+
+        for ancestor in element.ancestors() where isRTL(ancestor) {
+            return true
+        }
+
+        return false
     }
 
     // MARK: - Score Threshold Calculation

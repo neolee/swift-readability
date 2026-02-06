@@ -478,7 +478,7 @@ public struct Readability {
             if let h1 = try doc.select("h1").first() {
                 return try h1.text().trimmingCharacters(in: .whitespaces)
             }
-            return "Untitled"
+            return ""
         }
 
         var titleHadHierarchicalSeparators = false
@@ -638,15 +638,34 @@ public struct Readability {
     }
 
     private func fixRelativeURIs(_ articleContent: Element) throws {
+        let documentURL = URL(string: doc.location())
+        let effectiveBaseURL: URL? = {
+            guard let baseElement = try? doc.select("base[href]").first(),
+                  let rawBaseHref = try? baseElement.attr("href") else {
+                return documentURL
+            }
+
+            let trimmedBaseHref = rawBaseHref.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedBaseHref.isEmpty else { return documentURL }
+
+            if let docURL = documentURL,
+               let resolved = URL(string: trimmedBaseHref, relativeTo: docURL)?.absoluteURL {
+                return resolved
+            }
+
+            return URL(string: trimmedBaseHref) ?? documentURL
+        }()
+        let baseMatchesDocument = effectiveBaseURL?.absoluteString == documentURL?.absoluteString
+
         func toAbsoluteURI(_ rawURI: String) -> String {
             let uri = rawURI.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !uri.isEmpty else { return rawURI }
 
-            if uri.hasPrefix("#") {
+            if uri.hasPrefix("#"), baseMatchesDocument {
                 return uri
             }
 
-            if let base = URL(string: doc.location()),
+            if let base = effectiveBaseURL,
                let resolved = URL(string: uri, relativeTo: base)?.absoluteURL {
                 if var components = URLComponents(url: resolved, resolvingAgainstBaseURL: false),
                    components.path.isEmpty {

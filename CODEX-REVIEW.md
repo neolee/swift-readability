@@ -26,12 +26,13 @@ Working assumptions applied:
 
 From local `cd Readability && swift test`:
 
-- Total: `232` tests
+- Total: `252` tests
 - Failed: `0`
+- Known issues: `1` (`mathjax - Content matches expected`)
 
 Imported Mozilla pages in this repo:
 
-- Current local resources: `30` test pages
+- Current local resources: `40` test pages
 - Mozilla upstream test pages in local ref: `130`
 
 Test taxonomy alignment for planning:
@@ -501,6 +502,7 @@ Legend:
 #### S3F-T1: Import remaining functional Mozilla pages in batches
 
 - Priority: `P1`
+- Status: `In Progress` (2026-02-06)
 - Scope:
   - `Readability/Tests/ReadabilityTests/Resources/test-pages/*`
   - `Readability/Tests/ReadabilityTests/MozillaCompatibilityTests.swift`
@@ -514,6 +516,9 @@ Legend:
   - `Test`: `cd Readability && swift test --filter MozillaCompatibilityTests`
 - Pass standard:
   - Each imported case has content + metadata assertions with no relaxed matching.
+  - Current imported batches:
+    - URL/base: `base-url`, `base-url-base-element`, `base-url-base-element-relative`, `js-link-replacement`
+    - I18N/entities: `005-unescape-html-entities`, `rtl-1..4`, `mathjax` (content currently marked as known issue)
 
 #### S3F-T2: Implement/validate `dir`/`lang` parity path for functional RTL scope
 
