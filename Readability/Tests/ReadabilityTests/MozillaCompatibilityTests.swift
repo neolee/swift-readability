@@ -46,7 +46,12 @@ struct MozillaCompatibilityTests {
             let maxCount = max(actualNodes.count, expectedNodes.count)
             for index in 0..<maxCount {
                 guard index < actualNodes.count, index < expectedNodes.count else {
-                    return (false, "DOM node count mismatch at index \(index). Expected \(expectedNodes.count) nodes, got \(actualNodes.count) nodes.")
+                    let actualTail = actualNodes.suffix(3).map { "\(nodeDescription($0)) @ \(nodePath($0))" }.joined(separator: " | ")
+                    let expectedTail = expectedNodes.suffix(3).map { "\(nodeDescription($0)) @ \(nodePath($0))" }.joined(separator: " | ")
+                    return (
+                        false,
+                        "DOM node count mismatch at index \(index). Expected \(expectedNodes.count) nodes, got \(actualNodes.count) nodes. Expected tail: \(expectedTail). Actual tail: \(actualTail)."
+                    )
                 }
 
                 let actualNode = actualNodes[index]

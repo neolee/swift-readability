@@ -173,9 +173,10 @@ final class ArticleCleaner {
 
     /// Check if element has any block-level children
     func hasChildBlockElement(_ element: Element) throws -> Bool {
-        let blockElements = Set(["div", "blockquote", "ol", "ul", "li", "p", "pre", "table", "td", "th", "article", "section", "h1", "h2", "h3", "h4", "h5", "h6"])
+        let blockElements = Set(Configuration.divToPElements.map { $0.lowercased() })
 
-        for child in element.children() {
+        for childNode in element.getChildNodes() {
+            guard let child = childNode as? Element else { continue }
             if blockElements.contains(child.tagName().lowercased()) {
                 return true
             }
@@ -527,47 +528,39 @@ final class ArticleCleaner {
         let brs = try element.select("br")
 
         for br in brs {
-            // Check if next sibling is a paragraph
-            if let next = try br.nextElementSibling(),
-               next.tagName().lowercased() == "p" {
-                try br.remove()
-                continue
-            }
-
-            // Check if this BR is at the end of its parent (before closing)
-            // by checking if all following siblings are BRs or whitespace text nodes
-            var shouldRemove = false
-            var nextNode = br.nextSibling()
-
-            // If no next sibling, we're at the end
-            if nextNode == nil {
-                shouldRemove = true
-            } else {
-                // Check if all remaining siblings are BRs or whitespace
-                var allWhitespaceOrBR = true
-                while let node = nextNode {
-                    if let el = node as? Element {
-                        if el.tagName().lowercased() != "br" {
-                            allWhitespaceOrBR = false
-                            break
-                        }
-                    } else if let text = node as? TextNode {
-                        if !text.text().trimmingCharacters(in: .whitespaces).isEmpty {
-                            allWhitespaceOrBR = false
-                            break
-                        }
-                    }
-                    nextNode = node.nextSibling()
-                }
-                if allWhitespaceOrBR && nextNode == nil {
-                    shouldRemove = true
-                }
-            }
-
-            if shouldRemove {
+            if shouldRemoveBRBeforeParagraph(br) {
                 try br.remove()
             }
         }
+    }
+
+    /// Remove BR only when it is part of a BR chain that leads into a paragraph.
+    /// Keep trailing BRs that are not followed by paragraph content.
+    private func shouldRemoveBRBeforeParagraph(_ br: Element) -> Bool {
+        var cursor = br.nextSibling()
+
+        while let node = cursor {
+            if let text = node as? TextNode {
+                if text.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    cursor = node.nextSibling()
+                    continue
+                }
+                return false
+            }
+
+            if let el = node as? Element {
+                let tag = el.tagName().lowercased()
+                if tag == "br" {
+                    cursor = node.nextSibling()
+                    continue
+                }
+                return tag == "p"
+            }
+
+            cursor = node.nextSibling()
+        }
+
+        return false
     }
 
     /// Remove empty paragraph elements

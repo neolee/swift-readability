@@ -41,6 +41,7 @@ public struct Readability {
         let cleaner = ArticleCleaner(options: options)
         try cleaner.prepArticle(articleContent)
         try cleaner.postProcessArticle(articleContent)
+        try removeTitleMatchedHeaders(from: articleContent, title: title)
 
         // Get text content
         let textContent = try articleContent.text()
@@ -590,6 +591,28 @@ public struct Readability {
         return nil
     }
 
+    private func removeTitleMatchedHeaders(from element: Element, title: String) throws {
+        let normalizedTitle = title
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .lowercased()
+
+        guard !normalizedTitle.isEmpty else { return }
+
+        let headers = try element.select("h1, h2")
+        for header in headers {
+            let text = (try? header.text()) ?? ""
+            let normalizedHeader = text
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                .lowercased()
+
+            if normalizedHeader == normalizedTitle {
+                try header.remove()
+            }
+        }
+    }
+
     // MARK: - Content Serialization
 
     private func cleanAndSerialize(_ element: Element) throws -> String {
@@ -668,8 +691,13 @@ public struct Readability {
 
             if normalizedHref.lowercased().hasPrefix("javascript:") {
                 if link.getChildNodes().count == 1, link.getChildNodes().first is TextNode {
-                    let text = try link.text()
-                    let replacement = TextNode(text, nil)
+                    let text: String
+                    if let textNode = link.getChildNodes().first as? TextNode {
+                        text = textNode.text()
+                    } else {
+                        text = try link.text()
+                    }
+                    let replacement = TextNode(text, doc.location())
                     try link.replaceWith(replacement)
                 } else {
                     let span = try doc.createElement("span")

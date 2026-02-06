@@ -55,6 +55,7 @@ final class SiblingMerger {
             }
         }
 
+        try unwrapRedundantSingleDivWrapper(in: articleContent)
         return articleContent
     }
 
@@ -90,6 +91,11 @@ final class SiblingMerger {
         // Special handling for P tags
         if sibling.tagName().uppercased() == "P" {
             return try shouldAppendParagraph(sibling)
+        }
+
+        // Preserve trailing BR nodes that follow included content.
+        if sibling.tagName().uppercased() == "BR" && (try? sibling.nextElementSibling()) == nil {
+            return true
         }
 
         return false
@@ -159,6 +165,47 @@ final class SiblingMerger {
         }
 
         return div
+    }
+
+    /// Mozilla output often has direct children under article content.
+    /// If we end up with a single anonymous DIV wrapper, unwrap it.
+    private func unwrapRedundantSingleDivWrapper(in articleContent: Element) throws {
+        guard articleContent.children().count == 1,
+              let onlyChild = articleContent.children().first,
+              onlyChild.tagName().uppercased() == "DIV" else {
+            return
+        }
+
+        var attrCount = 0
+        if let attrs = onlyChild.getAttributes() {
+            for _ in attrs {
+                attrCount += 1
+            }
+        }
+
+        guard onlyChild.id().isEmpty,
+              ((try? onlyChild.className()) ?? "").isEmpty,
+              attrCount == 0 else {
+            return
+        }
+
+        // Keep wrappers that contain only paragraph children.
+        let elementChildren = onlyChild.children()
+        if !elementChildren.isEmpty,
+           elementChildren.allSatisfy({ $0.tagName().uppercased() == "P" }) {
+            return
+        }
+
+        // Do not unwrap wrappers that only contain tabular structure.
+        if try onlyChild.select("table").count > 0 && onlyChild.children().count == 1 {
+            return
+        }
+
+        let children = onlyChild.getChildNodes()
+        for node in children {
+            try articleContent.appendChild(node)
+        }
+        try onlyChild.remove()
     }
 
     // MARK: - Score Threshold Calculation

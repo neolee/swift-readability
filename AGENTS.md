@@ -248,6 +248,37 @@ When a test fails:
 5. If limitation: mark with `withKnownIssue()` and document
 6. If unsure: discuss before proceeding
 
+### Compatibility Debugging Playbook
+
+When working on `MozillaCompatibilityTests`, use this workflow to keep iterations small and verifiable:
+
+1. Reproduce with a single test first:
+   - `cd Readability && swift test --filter testLinksInTables`
+   - Only run full `MozillaCompatibilityTests` after the targeted case is stable.
+
+2. Diagnose structurally, not by string output:
+   - Capture the exact failing DOM path (`/html/body/...`) for both expected and actual nodes.
+   - Compare node type, tag, and attributes at that path before changing implementation.
+
+3. Identify mechanism-level root cause:
+   - Trace where the mismatched node/attribute is introduced (`setNodeTag`, wrapper insertion, sibling merge, post-cleaning, serialization).
+   - Avoid attribute-level patches unless the structural decision point is proven correct.
+
+4. Port Mozilla control flow before local heuristics:
+   - For `DIV -> P` behavior, keep Mozilla’s two-stage sequence:
+     - wrap consecutive phrasing fragments in `<p>`
+     - then apply `_hasSingleTagInsideElement("P")` + `linkDensity < 0.25` decision
+   - Validate with tests that are sensitive to table/link density behavior (e.g., `links-in-tables`).
+
+5. Keep temporary diagnostics if they improve future iterations:
+   - Enhanced diff output (attribute maps + node paths) is allowed in tests.
+   - Do not weaken assertions or relax matching rules.
+
+6. Verify no regression after each fix:
+   - Run the targeted test(s)
+   - Then run `cd Readability && swift test --filter MozillaCompatibilityTests`
+   - Track failure count deltas explicitly (e.g., `10 -> 9`).
+
 ---
 
 ## Quick Reference
