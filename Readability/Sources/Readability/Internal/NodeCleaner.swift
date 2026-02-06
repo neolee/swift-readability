@@ -73,6 +73,12 @@ final class NodeCleaner {
             return false
         }
 
+        // Keep explicit schema.org article body containers.
+        let itemprop = ((try? element.attr("itemprop")) ?? "").lowercased()
+        if itemprop.contains("articlebody") {
+            return false
+        }
+
         // Check for unlikely candidate patterns
         if matchesUnlikelyCandidate(matchString) &&
            !matchesOkMaybeItsACandidate(matchString) &&

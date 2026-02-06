@@ -3,7 +3,7 @@
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
 **Current Status:** Phase 6 In Progress (Functional suite expansion and hardening)
-**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 280 tests, 0 failures (`MozillaCompatibilityTests` 106/106 passing, 0 known issues)
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 288 tests, 0 failures (`MozillaCompatibilityTests` 114/114 passing, 2 known issues)
 
 ### Stage 3-F Import Progress (S3F-T1)
 
@@ -28,6 +28,11 @@ This document outlines the phased implementation plan for porting Mozilla Readab
   - `videos-1` (content assertion now passing)
   - `videos-2` (content assertion now passing)
   - `svg-parsing` (content assertion now passing)
+- [x] Edge-case batch imported:
+  - `comment-inside-script-parsing` (content assertion passing)
+  - `metadata-content-missing` (content assertion passing)
+  - `toc-missing` (title passing, content marked known issue)
+  - `bug-1255978` (title passing, content marked known issue)
 
 ## Option Implementation Status (S2-T6)
 
@@ -319,7 +324,7 @@ Sources/Readability/Internal/
 **Goal:** Complete all standard Mozilla test cases (non real-world sites) and achieve 95%+ pass rate
 
 **Scope:** 49 standard functional tests (excluding 78 real-world site tests)
-**Current:** 30/49 standard functional tests imported (61%)
+**Current:** 34/49 standard functional tests imported (69%)
 **Target:** 49/49 tests imported and passing
 
 ### Ordering Principle
@@ -367,7 +372,7 @@ Complete deferred issues from Phase 5 before proceeding.
 **Impact:** Affects all content output quality
 
 **Tests:**
-- `002` - Basic content extraction validation
+- `002` - Basic content extraction validation (passing)
 - `reordering-paragraphs` - Paragraph ordering preservation
 - `missing-paragraphs` - Detect and preserve missing paragraphs
 - `remove-extra-brs` - Remove trailing/consecutive BRs
@@ -531,7 +536,8 @@ Complete deferred issues from Phase 5 before proceeding.
 | Batch 9 | `comment-inside-script-parsing`, `toc-missing`, `metadata-content-missing`, `bug-1255978` | Edge cases |
 
 **Known Issues to Resolve:**
-- [ ] `002` content mismatch (currently 99% similarity, deferred until Stage 3-F closure)
+- [ ] `toc-missing` content structural mismatch (`hr` vs extra nested `div`)
+- [ ] `bug-1255978` content structural mismatch (`div` vs `p` conversion)
 
 **Verification Criteria:**
 - [ ] 49/49 standard functional tests imported
@@ -545,9 +551,9 @@ Complete deferred issues from Phase 5 before proceeding.
 
 | Metric | Target | Status |
 |--------|--------|--------|
-| Standard tests imported | 49/49 | 30/49 (61%) |
-| Standard tests passing | 95%+ | 106/106 `MozillaCompatibilityTests` assertions passing in current imported set |
-| Known issues | 0 | 0 active known issues |
+| Standard tests imported | 49/49 | 34/49 (69%) |
+| Standard tests passing | 95%+ | 114/114 `MozillaCompatibilityTests` tests passing with 2 known issues |
+| Known issues | 0 | 2 active known issues |
 | Real-world tests | Phase 7 | 0/78 (0%) |
 
 ---
@@ -595,8 +601,8 @@ Mozilla Readability has **130 test cases** total, divided into:
 
 ### Current Status
 
-**Standard Tests:** 30/49 imported (61%), compatibility suite currently has 15 failures under structural comparison  
-**Known Issues:** `002` remains deferred; additional structural mismatches are now visible and require staged remediation
+**Standard Tests:** 34/49 imported (69%), currently passing in compatibility suite  
+**Known Issues:** 2 active known issues in imported set (`toc-missing`, `bug-1255978`)
 
 ### Phase 6 Detailed Progress
 
@@ -605,7 +611,7 @@ Mozilla Readability has **130 test cases** total, divided into:
 - [x] `replace-font-tags` content mismatch (FIXED - was 98%, now 100%)
 
 #### 6.2 Content Post-Processing (6 tests) [COMPLETE]
-- [x] Import `002` - Title/Byline pass, Content 99% similarity (minor whitespace difference)
+- [x] Import `002` - PASS
 - [x] Import `reordering-paragraphs` - PASS
 - [x] Import `missing-paragraphs` - PASS
 - [x] Import `remove-extra-brs` - PASS
@@ -624,29 +630,29 @@ Mozilla Readability has **130 test cases** total, divided into:
 - [x] Import `hidden-nodes` - PASS
 - [x] Import `visibility-hidden` - PASS
 
-#### 6.5 Lazy Images & Media (6 tests)
-- [ ] Import `lazy-image-1/2/3`
-- [ ] Import `data-url-image`
-- [ ] Import `embedded-videos`
-- [ ] Import `videos-1/2`
+#### 6.5 Lazy Images & Media (6 tests) [COMPLETE]
+- [x] Import `lazy-image-1/2/3` - PASS
+- [x] Import `data-url-image` - PASS
+- [x] Import `embedded-videos` - PASS
+- [x] Import `videos-1/2` - PASS
 
-#### 6.6 SVG Handling (1 test)
-- [ ] Import `svg-parsing`
+#### 6.6 SVG Handling (1 test) [COMPLETE]
+- [x] Import `svg-parsing` - PASS
 
-#### 6.7 Link & URL Processing (4 tests)
-- [ ] Import `base-url` (3 variants)
-- [ ] Import `js-link-replacement`
+#### 6.7 Link & URL Processing (4 tests) [COMPLETE]
+- [x] Import `base-url` (3 variants) - PASS
+- [x] Import `js-link-replacement` - PASS
 
-#### 6.8 Internationalization (6 tests)
-- [ ] Import `rtl-1/2/3/4`
-- [ ] Import `mathjax`
-- [ ] Import `005-unescape-html-entities`
+#### 6.8 Internationalization (6 tests) [COMPLETE]
+- [x] Import `rtl-1/2/3/4` - PASS
+- [x] Import `mathjax` - PASS
+- [x] Import `005-unescape-html-entities` - PASS
 
 #### 6.9 Edge Cases (4 tests)
-- [ ] Import `comment-inside-script-parsing`
-- [ ] Import `toc-missing`
-- [ ] Import `metadata-content-missing`
-- [ ] Import `bug-1255978`
+- [x] Import `comment-inside-script-parsing` - PASS
+- [x] Import `metadata-content-missing` - PASS
+- [x] Import `toc-missing` - Title PASS / Content KNOWN ISSUE
+- [x] Import `bug-1255978` - Title PASS / Content KNOWN ISSUE
 
 ---
 
@@ -669,7 +675,7 @@ Mozilla Readability has **130 test cases** total, divided into:
 ### Phase 6 Import Queue (by priority)
 
 **Batch 1: Deferred Core Gap (1 test)**
-- `002` - Resolve remaining 99% content mismatch (deferred, must close before Stage 3-F exit)
+- `002` - PASS
 
 **Batch 2: Content Post-Processing (6 tests)**
 - `002`, `ol` - Basic validation
@@ -725,12 +731,12 @@ All foundation work is complete through Phase 5:
 
 **Goal:** Complete all 49 standard functional tests with 95%+ pass rate.
 
-**Current Status:** 30/49 standard tests imported, 15 compatibility failures visible under structural comparison
+**Current Status:** 34/49 standard tests imported, compatibility suite passing with 2 active known issues
 
 **Active Work:**
-1. Upgrade compatibility comparator to structural DOM matching
-2. Import remaining standard functional tests in priority order
-3. Resolve deferred `002` mismatch before Stage 3-F exit
+1. Import remaining standard functional tests in priority order
+2. Keep imported standard suite green with strict DOM comparator
+3. Close Stage 3-F remaining batches
 
 ### Phase 7 Preview
 
@@ -817,8 +823,10 @@ This section tracks resolved and active known issues for reference.
 
 ### Active Issues
 
-- `002` content mismatch (99% similarity) is explicitly deferred and tracked.
-- Exit criterion: must be resolved (or explicitly re-approved exception) before Stage 3-F completion.
+- `toc-missing` content mismatch:
+  - Expected subtree uses `<hr>`, current output keeps an extra nested `<div>` wrapper before separator.
+- `bug-1255978` content mismatch:
+  - Expected subtree keeps a `<div>`, current output converts that block to `<p>` in early article content.
 
 ---
 

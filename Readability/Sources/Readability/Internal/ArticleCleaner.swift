@@ -31,6 +31,7 @@ final class ArticleCleaner {
 
         // Convert DIVs to Ps where appropriate
         try convertDivsToParagraphs(articleContent)
+        try collapseSingleDivWrappers(articleContent)
     }
 
     // MARK: - DIV to P Conversion
@@ -104,6 +105,9 @@ final class ArticleCleaner {
 
             // Otherwise, if no block children remain, convert DIV to P.
             if !(try hasChildBlockElement(div)) {
+                if hasContainerIdentity(div) {
+                    continue
+                }
                 _ = try setNodeTag(div, newTag: "p")
             }
         }
@@ -614,7 +618,28 @@ final class ArticleCleaner {
         if !selectors.isEmpty {
             let combinedSelector = selectors.joined(separator: ", ")
             let found = try element.select(combinedSelector)
-            try found.remove()
+            for node in found {
+                let textLength = (try? DOMHelpers.getInnerText(node).count) ?? 0
+                if textLength < options.charThreshold {
+                    try node.remove()
+                }
+            }
+        }
+    }
+
+    private func collapseSingleDivWrappers(_ root: Element) throws {
+        let divs = try root.select("div")
+        for div in divs.reversed() {
+            guard div.parent() != nil else { continue }
+            if hasContainerIdentity(div) {
+                continue
+            }
+            guard hasSingleTagInsideElement(div, tag: "DIV"),
+                  try getLinkDensity(div) < 0.25,
+                  let child = div.children().first else {
+                continue
+            }
+            try div.replaceWith(child)
         }
     }
 

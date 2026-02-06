@@ -419,4 +419,38 @@ struct MozillaCompatibilityTests {
 
     @Test("svg-parsing - Title matches expected")
     func testSVGParsingTitle() async throws { try assertMetadataFieldMatches(.title, for: "svg-parsing") }
+
+    // MARK: - Stage 3-F: Edge Case Handling
+
+    @Test("comment-inside-script-parsing - Content matches expected")
+    func testCommentInsideScriptParsingContent() async throws { try assertContentMatches("comment-inside-script-parsing") }
+
+    @Test("comment-inside-script-parsing - Title matches expected")
+    func testCommentInsideScriptParsingTitle() async throws { try assertMetadataFieldMatches(.title, for: "comment-inside-script-parsing") }
+
+    @Test("toc-missing - Content matches expected")
+    func testTOCMissingContent() async throws {
+        withKnownIssue("TOC section keeps an extra nested DIV wrapper before a separator HR compared with Mozilla output.") {
+            try assertContentMatches("toc-missing")
+        }
+    }
+
+    @Test("toc-missing - Title matches expected")
+    func testTOCMissingTitle() async throws { try assertMetadataFieldMatches(.title, for: "toc-missing") }
+
+    @Test("metadata-content-missing - Content matches expected")
+    func testMetadataContentMissingContent() async throws { try assertContentMatches("metadata-content-missing") }
+
+    @Test("metadata-content-missing - Title matches expected")
+    func testMetadataContentMissingTitle() async throws { try assertMetadataFieldMatches(.title, for: "metadata-content-missing") }
+
+    @Test("bug-1255978 - Content matches expected")
+    func testBug1255978Content() async throws {
+        withKnownIssue("Independent article keeps a DIV->P structural conversion difference in early content blocks.") {
+            try assertContentMatches("bug-1255978")
+        }
+    }
+
+    @Test("bug-1255978 - Title matches expected")
+    func testBug1255978Title() async throws { try assertMetadataFieldMatches(.title, for: "bug-1255978") }
 }

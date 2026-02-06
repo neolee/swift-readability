@@ -274,6 +274,10 @@ final class ContentExtractor {
                         continue
                     }
                 } else if !hasChildBlockElement(current, blockTags: blockTags) {
+                    if hasContainerIdentity(current) {
+                        node = DOMTraversal.getNextNode(current)
+                        continue
+                    }
                     let newNode = try setNodeTag(current, newTag: "p")
                     elements.append(newNode)
                     node = DOMTraversal.getNextNode(newNode)
