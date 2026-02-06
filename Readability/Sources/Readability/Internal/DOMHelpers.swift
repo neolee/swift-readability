@@ -15,17 +15,7 @@ enum DOMHelpers {
 
     /// Determine if a node should be considered for content extraction
     static func isProbablyVisible(_ element: Element) -> Bool {
-        // Check for display:none or visibility:hidden
-        if let style = try? element.attr("style").lowercased() {
-            if style.contains("display:none") || style.contains("visibility:hidden") {
-                return false
-            }
-        }
-        // Check for aria-hidden="true"
-        if let ariaHidden = try? element.attr("aria-hidden").lowercased(), ariaHidden == "true" {
-            return false
-        }
-        return true
+        return VisibilityRules.isProbablyVisibleForScoring(element)
     }
 
     /// Get the class name and id as a single string for pattern matching

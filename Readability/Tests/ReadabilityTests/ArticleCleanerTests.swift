@@ -186,6 +186,20 @@ struct ArticleCleanerTests {
         #expect(paragraphs.count == 1)
     }
 
+    @Test("prepArticle strictly removes aria-hidden fallback-image elements")
+    func testRemoveHiddenFallbackImageInCleanup() throws {
+        let html = "<article><p>Text</p><p aria-hidden='true' class='fallback-image'>Math</p></article>"
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let article = try doc.select("article").first()!
+
+        let cleaner = ArticleCleaner(options: .default)
+        try cleaner.prepArticle(article)
+
+        let paragraphs = try article.select("p")
+        #expect(paragraphs.count == 1)
+        #expect(try paragraphs.first()?.text() == "Text")
+    }
+
     @Test("prepArticle converts divs without block children to p")
     func testConvertDivsToP() throws {
         let html = "<article><div>Just text content</div></article>"

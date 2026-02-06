@@ -190,27 +190,7 @@ final class NodeCleaner {
     /// - Parameter node: Element to check
     /// - Returns: True if element is visible
     func isProbablyVisible(_ node: Element) -> Bool {
-        // Check style attribute
-        if let style = try? node.attr("style").lowercased() {
-            if style.contains("display:none") || style.contains("visibility:hidden") {
-                return false
-            }
-        }
-
-        // Check hidden attribute
-        if node.hasAttr("hidden") {
-            return false
-        }
-
-        // Check aria-hidden (but allow fallback-image class for wikimedia math images)
-        if let ariaHidden = try? node.attr("aria-hidden").lowercased(), ariaHidden == "true" {
-            let className = (try? node.className()) ?? ""
-            if !className.contains("fallback-image") {
-                return false
-            }
-        }
-
-        return true
+        return VisibilityRules.isProbablyVisibleForScoring(node)
     }
 
     // MARK: - Modal Dialog Check

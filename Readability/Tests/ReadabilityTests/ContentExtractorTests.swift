@@ -211,6 +211,28 @@ struct ContentExtractorTests {
         #expect(text.contains("Visible content"))
     }
 
+    @Test("extract ignores content hidden by hidden attribute")
+    func testHiddenAttributeContent() throws {
+        let html = """
+        <html><body>
+        <div hidden>
+            <p>This hidden attribute content should not be considered.</p>
+        </div>
+        <div>
+            <p>Visible content remains candidate text, with enough words and commas.</p>
+        </div>
+        </body></html>
+        """
+        let doc = try SwiftSoup.parse(html)
+
+        let extractor = ContentExtractor(doc: doc, options: .default)
+        let result = try extractor.extract()
+
+        let text = try result.content.text()
+        #expect(!text.contains("hidden attribute content"))
+        #expect(text.contains("Visible content"))
+    }
+
     @Test("extract preserves structure during fallback")
     func testPreservesStructure() throws {
         let html = """

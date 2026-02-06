@@ -279,22 +279,7 @@ final class ArticleCleaner {
         try element.select("footer, aside, object, embed, link").remove()
 
         // Remove elements with hidden attribute
-        try element.select("[hidden]").remove()
-
-        // Remove elements with aria-hidden="true"
-        try element.select("[aria-hidden=true]").remove()
-
-        // Remove elements with display:none or visibility:hidden in style
-        let allElements = try element.select("*[style]")
-        for el in allElements {
-            if let style = try? el.attr("style").lowercased() {
-                // Remove whitespace and check
-                let normalized = style.replacingOccurrences(of: " ", with: "")
-                if normalized.contains("display:none") || normalized.contains("visibility:hidden") {
-                    try el.remove()
-                }
-            }
-        }
+        try VisibilityRules.removeHiddenElements(from: element)
 
         // Remove share/social elements
         try removeShareElements(element)

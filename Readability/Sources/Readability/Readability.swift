@@ -310,24 +310,7 @@ public struct Readability {
     /// Remove hidden elements from the document
     /// Handles aria-hidden, hidden attribute, display:none, and visibility:hidden
     private func removeHiddenElements() throws {
-        // Remove elements with aria-hidden="true"
-        let ariaHiddenElements = try doc.select("[aria-hidden=true]")
-        try ariaHiddenElements.remove()
-
-        // Remove elements with hidden attribute
-        let hiddenElements = try doc.select("[hidden]")
-        try hiddenElements.remove()
-
-        // Remove elements with display:none or visibility:hidden in style
-        let styledElements = try doc.select("*[style]")
-        for el in styledElements {
-            if let style = try? el.attr("style").lowercased() {
-                let normalized = style.replacingOccurrences(of: " ", with: "")
-                if normalized.contains("display:none") || normalized.contains("visibility:hidden") {
-                    try el.remove()
-                }
-            }
-        }
+        try VisibilityRules.removeHiddenElements(from: doc)
     }
 
     /// Replaces 2 or more successive <br> elements with a single <p>.
