@@ -37,7 +37,9 @@ final class CandidateSelector {
             topCandidate = try findBetterTopCandidate(from: candidate, topCandidates: topCandidates)
 
             // If top candidate is the only child, use parent instead
-            topCandidate = try promoteSingleChildCandidate(candidate)
+            if let updatedCandidate = topCandidate {
+                topCandidate = try promoteSingleChildCandidate(updatedCandidate)
+            }
 
             // Ensure the candidate is initialized
             scoringManager.initializeNodeIfNeeded(topCandidate!)

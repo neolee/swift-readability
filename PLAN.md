@@ -2,8 +2,8 @@
 
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
-**Current Status:** Phase 4 Complete (Core Scoring Algorithm with A-H sub-phases)
-**See TESTS.md for detailed testing progress.**
+**Current Status:** Phase 6 In Progress (Functional suite expansion and hardening)
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 224 tests, 1 failure (`002` content, deferred)
 
 ---
 
@@ -187,7 +187,7 @@ Implemented Mozilla's exact priority order:
 - [x] All modules integrated into `Readability.swift`
 - [x] DOM context safety fixes (no more "Object must not be null")
 - [x] Content wrapper with `id="readability-page-1" class="page"`
-- [x] 87.5% test pass rate (28/32 tests)
+- [x] Historical snapshot at end of Phase 4: 87.5% test pass rate (28/32 tests)
 
 ### Key Implementation Details
 
@@ -213,7 +213,7 @@ Sources/Readability/Internal/
 - [x] `title-and-h1-discrepancy`: Title vs H1 discrepancy handling
 - [x] `keep-images`: Image preservation in content
 - [x] `keep-tabular-data`: Table data preservation
-- [x] 28/32 tests passing (87.5%)
+- [x] Historical snapshot at end of Phase 4: 28/32 tests passing (87.5%)
 
 ### Key Implementation Details
 
@@ -239,7 +239,7 @@ Sources/Readability/Internal/
 - [x] `title-and-h1-discrepancy`: Title vs H1 discrepancy handling
 - [x] `keep-images`: Image preservation in content
 - [x] `keep-tabular-data`: Table data preservation
-- [x] 28/32 tests passing (87.5%)
+- [x] Historical snapshot at end of Phase 4: 28/32 tests passing (87.5%)
 
 ---
 
@@ -284,7 +284,7 @@ Sources/Readability/Internal/
 **Goal:** Complete all standard Mozilla test cases (non real-world sites) and achieve 95%+ pass rate
 
 **Scope:** 49 standard functional tests (excluding 78 real-world site tests)
-**Current:** 16/49 tests imported (33%)
+**Current:** 30/49 standard functional tests imported (61%)
 **Target:** 49/49 tests imported and passing
 
 ### Ordering Principle
@@ -303,7 +303,7 @@ This ensures foundational improvements are in place before adding specialized ha
 Complete deferred issues from Phase 5 before proceeding.
 
 #### 6.1.1 BR to Paragraph Conversion
-**Tests:** `replace-brs` (currently has known issue, 92% similarity)
+**Tests:** `replace-brs` (fixed)
 
 **Issues:**
 - BR tag to paragraph conversion differs from Mozilla
@@ -316,7 +316,7 @@ Complete deferred issues from Phase 5 before proceeding.
 - [ ] Proper paragraph boundary detection
 
 #### 6.1.2 Font Tag Conversion Refinement
-**Tests:** `replace-font-tags` (currently has known issue, 98% similarity)
+**Tests:** `replace-font-tags` (fixed)
 
 **Issues:**
 - Minor structural differences in output
@@ -496,8 +496,7 @@ Complete deferred issues from Phase 5 before proceeding.
 | Batch 9 | `comment-inside-script-parsing`, `toc-missing`, `metadata-content-missing`, `bug-1255978` | Edge cases |
 
 **Known Issues to Resolve:**
-- [ ] `replace-brs` content mismatch (92% similarity)
-- [ ] `replace-font-tags` content mismatch (98% similarity)
+- [ ] `002` content mismatch (currently 99% similarity, deferred until Stage 3-F closure)
 
 **Verification Criteria:**
 - [ ] 49/49 standard functional tests imported
@@ -511,8 +510,8 @@ Complete deferred issues from Phase 5 before proceeding.
 
 | Metric | Target | Status |
 |--------|--------|--------|
-| Standard tests imported | 49/49 | 24/49 (49%) |
-| Standard tests passing | 95%+ | 50/51 (98%) |
+| Standard tests imported | 49/49 | 30/49 (61%) |
+| Standard tests passing | 95%+ | 57/58 compatibility assertions on imported cases (1 deferred issue) |
 | Known issues | 0 | 1 (002 - 99% similarity) |
 | Real-world tests | Phase 7 | 0/78 (0%) |
 
@@ -561,8 +560,8 @@ Mozilla Readability has **130 test cases** total, divided into:
 
 ### Current Status
 
-**Standard Tests:** 16/49 imported (33%), 28/32 assertions passing (87.5%)  
-**Known Issues:** 2 (`replace-brs`, `replace-font-tags`)
+**Standard Tests:** 30/49 imported (61%), compatibility suite has 1 deferred failure (`002`)  
+**Known Issues:** 1 deferred (`002` content mismatch, Stage 3-F closure item)
 
 ### Phase 6 Detailed Progress
 
@@ -629,14 +628,13 @@ Mozilla Readability has **130 test cases** total, divided into:
 **Phase 5 (Content Quality):**
 - [x] `001` - Byline extraction from HTML
 - [x] `basic-tags-cleaning`, `remove-script-tags` - Basic cleaning
-- [x] `replace-brs`, `replace-font-tags` - Tag conversion (with known issues)
+- [x] `replace-brs`, `replace-font-tags` - Tag conversion (resolved)
 - [x] `remove-aria-hidden`, `style-tags-removal`, `normalize-spaces` - Preprocessing
 
 ### Phase 6 Import Queue (by priority)
 
-**Batch 1: Legacy Issues (2 tests)**
-- `replace-brs` - Fix 92% similarity
-- `replace-font-tags` - Fix 98% similarity
+**Batch 1: Deferred Core Gap (1 test)**
+- `002` - Resolve remaining 99% content mismatch (deferred, must close before Stage 3-F exit)
 
 **Batch 2: Content Post-Processing (6 tests)**
 - `002`, `ol` - Basic validation
@@ -692,13 +690,12 @@ All foundation work is complete through Phase 5:
 
 **Goal:** Complete all 49 standard functional tests with 95%+ pass rate.
 
-**Current Status:** 16/49 tests imported, 28/32 assertions passing (87.5%)
+**Current Status:** 30/49 standard tests imported, 1 deferred compatibility failure (`002`)
 
 **Active Work:**
-1. Resolve legacy issues (replace-brs, replace-font-tags)
-2. Implement content post-processing (_prepArticle enhancements)
-3. Complete conditional cleaning
-4. Import remaining tests in priority order
+1. Upgrade compatibility comparator to structural DOM matching
+2. Import remaining standard functional tests in priority order
+3. Resolve deferred `002` mismatch before Stage 3-F exit
 
 ### Phase 7 Preview
 
@@ -785,7 +782,8 @@ This section tracks resolved and active known issues for reference.
 
 ### Active Issues
 
-None - All known issues from previous phases have been resolved.
+- `002` content mismatch (99% similarity) is explicitly deferred and tracked.
+- Exit criterion: must be resolved (or explicitly re-approved exception) before Stage 3-F completion.
 
 ---
 

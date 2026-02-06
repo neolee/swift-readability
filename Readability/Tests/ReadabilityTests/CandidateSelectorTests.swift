@@ -81,6 +81,38 @@ struct CandidateSelectorTests {
         #expect(neededToCreate == true)
     }
 
+    @Test("selectTopCandidate uses improved top candidate for promotion")
+    func testSelectTopCandidateUsesImprovedCandidate() throws {
+        let html = """
+        <html><body>
+        <div id="common">
+            <section id="sec1"><p>Content one with enough text, and commas, and words</p></section>
+            <section id="sec2"><p>Content two with enough text, and commas, and words</p></section>
+            <section id="sec3"><p>Content three with enough text, and commas, and words</p></section>
+            <section id="sec4"><p>Content four with enough text, and commas, and words</p></section>
+        </div>
+        </body></html>
+        """
+        let doc = try SwiftSoup.parse(html)
+        let body = doc.body()!
+        let sections = try body.select("section").array()
+        #expect(sections.count == 4)
+
+        let scoringManager = NodeScoringManager()
+        let options = ReadabilityOptions(nbTopCandidates: 5)
+        let selector = CandidateSelector(options: options, scoringManager: scoringManager)
+
+        for (index, section) in sections.enumerated() {
+            scoringManager.initializeNode(section)
+            scoringManager.addToScore(Double(100 - index * 5), for: section) // 100, 95, 90, 85
+        }
+
+        let (candidate, neededToCreate) = try selector.selectTopCandidate(from: sections, in: doc)
+
+        #expect(neededToCreate == false)
+        #expect(candidate.id() == "common")
+    }
+
     // MARK: - Alternative Ancestor Analysis Tests
 
     @Test("findBetterTopCandidate finds common ancestor")
