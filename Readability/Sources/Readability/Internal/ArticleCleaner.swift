@@ -58,11 +58,11 @@ final class ArticleCleaner {
                     }
 
                     // Trim surrounding whitespace / <br> from the fragment.
-                    while let first = fragment.first, isWhitespace(first) {
+                    while let first = fragment.first, DOMTraversal.isWhitespace(first) {
                         try first.remove()
                         fragment.removeFirst()
                     }
-                    while let last = fragment.last, isWhitespace(last) {
+                    while let last = fragment.last, DOMTraversal.isWhitespace(last) {
                         try last.remove()
                         fragment.removeLast()
                     }
@@ -99,55 +99,6 @@ final class ArticleCleaner {
             if !(try hasChildBlockElement(div)) {
                 _ = try setNodeTag(div, newTag: "p")
             }
-        }
-    }
-
-    /// Wrap consecutive phrasing content nodes in paragraph tags
-    private func wrapPhrasingContentInParagraphs(_ element: Element) throws {
-        let childNodes = element.getChildNodes()
-        var currentFragment: [Node] = []
-
-        for child in childNodes {
-            // Skip nodes that were already moved by previous wrapping.
-            guard let parent = child.parent(), parent === element else { continue }
-
-            if isPhrasingContent(child) {
-                currentFragment.append(child)
-            } else if !currentFragment.isEmpty {
-                try wrapNodesInParagraph(currentFragment, parent: element)
-                currentFragment.removeAll()
-            }
-        }
-
-        if !currentFragment.isEmpty {
-            try wrapNodesInParagraph(currentFragment, parent: element)
-        }
-    }
-
-    /// Wrap a collection of nodes in a paragraph
-    private func wrapNodesInParagraph(_ nodes: [Node], parent: Element) throws {
-        guard !nodes.isEmpty else { return }
-
-        // Get document context from parent
-        let doc = parent.ownerDocument() ?? Document("")
-        let p = try doc.createElement("p")
-
-        // Keep original node order by inserting before the first node,
-        // then moving the original nodes into the new paragraph.
-        if let first = nodes.first {
-            try first.before(p)
-        } else {
-            try parent.appendChild(p)
-        }
-
-        for node in nodes {
-            guard node.parent() != nil else { continue }
-            try p.appendChild(node)
-        }
-
-        // Drop empty paragraphs created from whitespace-only fragments.
-        if try p.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            try p.remove()
         }
     }
 
@@ -207,16 +158,6 @@ final class ArticleCleaner {
         return linkLength / Double(textLength)
     }
 
-    private func isWhitespace(_ node: Node) -> Bool {
-        if let textNode = node as? TextNode {
-            return textNode.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-        if let element = node as? Element {
-            return element.tagName().lowercased() == "br"
-        }
-        return false
-    }
-
     /// Check if node is phrasing content (inline content)
     func isPhrasingContent(_ node: Node) -> Bool {
         // Text nodes are phrasing content
@@ -257,26 +198,8 @@ final class ArticleCleaner {
         let doc = element.ownerDocument() ?? Document("")
         let newElement = try doc.createElement(newTag.lowercased())
 
-        // Copy attributes
-        if let attributes = element.getAttributes() {
-            for attr in attributes {
-                try newElement.attr(attr.getKey(), attr.getValue())
-            }
-        }
-
-        // Clone all child nodes in their original order
-        // Use getChildNodes() to preserve mixed element/text order
-        for node in element.getChildNodes() {
-            if let childElement = node as? Element {
-                // Recursively clone element children
-                let clone = try DOMHelpers.cloneElement(childElement, in: doc)
-                try newElement.appendChild(clone)
-            } else if let textNode = node as? TextNode {
-                // Preserve original whitespace; TextNode.text() normalizes spaces.
-                let textClone = TextNode(textNode.getWholeText(), doc.location())
-                try newElement.appendChild(textClone)
-            }
-        }
+        try DOMHelpers.copyAttributes(from: element, to: newElement)
+        try DOMHelpers.cloneChildNodes(from: element, to: newElement, in: doc)
 
         // Replace in DOM
         try element.replaceWith(newElement)
@@ -391,47 +314,6 @@ final class ArticleCleaner {
             let combinedSelector = selectors.joined(separator: ", ")
             let found = try element.select(combinedSelector)
             try found.remove()
-        }
-    }
-
-    // MARK: - Nested Element Simplification
-
-    /// Simplify nested elements (e.g., div > div > p becomes just p)
-    private func simplifyNestedElements(_ element: Element) throws {
-        let divsAndSections = try element.select("div, section")
-
-        for node in divsAndSections {
-            // Check if element has no content
-            if DOMTraversal.isElementWithoutContent(node) {
-                try node.remove()
-                continue
-            }
-
-            // Check for single nested div/section
-            if hasSingleTagInsideElement(node, tag: "DIV") ||
-               hasSingleTagInsideElement(node, tag: "SECTION") {
-                let child = node.children().first!
-
-                // Get document context - skip if no owner document
-                guard let doc = node.ownerDocument() else {
-                    continue
-                }
-
-                // Clone the child with document context before replacing
-                let clonedChild = try DOMHelpers.cloneElement(child, in: doc)
-
-                // Copy attributes from parent to cloned child
-                if let attributes = node.getAttributes() {
-                    for attr in attributes {
-                        let key = attr.getKey()
-                        if !clonedChild.hasAttr(key) {
-                            try clonedChild.attr(key, attr.getValue())
-                        }
-                    }
-                }
-
-                try node.replaceWith(clonedChild)
-            }
         }
     }
 

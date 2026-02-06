@@ -381,7 +381,7 @@ public struct Readability {
                 // Remove trailing whitespace from the paragraph.
                 // Use all child nodes to include trailing text nodes.
                 while let lastChild = p.getChildNodes().last {
-                    if isWhitespace(lastChild) {
+                    if DOMTraversal.isWhitespace(lastChild) {
                         try lastChild.remove()
                     } else {
                         break
@@ -445,17 +445,6 @@ public struct Readability {
             return true
         }
 
-        return false
-    }
-
-    /// Check if node is whitespace
-    private func isWhitespace(_ node: Node) -> Bool {
-        if let textNode = node as? TextNode {
-            return textNode.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-        if let element = node as? Element {
-            return element.tagName().lowercased() == "br"
-        }
         return false
     }
 

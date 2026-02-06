@@ -142,27 +142,8 @@ final class SiblingMerger {
 
         // Create new DIV and move children using document context
         let div = try doc.createElement("div")
-
-        // Copy attributes
-        if let attributes = element.getAttributes() {
-            for attr in attributes {
-                try div.attr(attr.getKey(), attr.getValue())
-            }
-        }
-
-        // Clone all child nodes in their original order
-        // Use getChildNodes() to preserve mixed element/text order
-        for node in element.getChildNodes() {
-            if let childElement = node as? Element {
-                // Recursively clone element children
-                let clone = try DOMHelpers.cloneElement(childElement, in: doc)
-                try div.appendChild(clone)
-            } else if let textNode = node as? TextNode {
-                // Preserve original whitespace; TextNode.text() normalizes spaces.
-                let textClone = TextNode(textNode.getWholeText(), doc.location())
-                try div.appendChild(textClone)
-            }
-        }
+        try DOMHelpers.copyAttributes(from: element, to: div)
+        try DOMHelpers.cloneChildNodes(from: element, to: div, in: doc)
 
         return div
     }
