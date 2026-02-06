@@ -36,7 +36,7 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
   - Figure descendants converted to different block tags than expected.
   - Example: expected `figure > div`, actual `figure > p`.
 - Impacted cases:
-  - `medium-1`
+  - None (closed for current Batch 1 scope: `medium-1`)
 - Priority: P1
 - Candidate areas:
   - DIV-to-P conversion and phrasing-wrapper rules around media containers.
@@ -70,14 +70,12 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 
 | Case | First Divergence | Secondary Divergence | Clusters |
 |------|------------------|----------------------|----------|
-| `medium-1` | `figure > div` vs `figure > p` | - | `RW-C3` |
 | `wikipedia` | `p#toctitle` vs `div#toctitle` | excerpt mismatch | `RW-C4`, `RW-C5` |
 
 ## Suggested Fix Order
 
 1. `RW-C1` (wrapper identity drift): broadest structural leverage with low ambiguity.
-2. `RW-C3` (figure/caption conversion): medium risk, currently isolated to one case.
-3. `RW-C4`/`RW-C5` (TOC/excerpt parity): medium-high risk; validate against functional suite after each change.
+2. `RW-C4`/`RW-C5` (TOC/excerpt parity): medium-high risk; validate against functional suite after each change.
 
 ## Current Execution Plan (Approved)
 
@@ -111,6 +109,7 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 Status update (2026-02-06):
 - Step 2 byline normalization target for `wapo-1` is closed.
 - Step 3 gallery/media target for `wapo-1` is closed.
+- RW-C3 figure/caption target for `medium-1` is closed.
 
 ## Acceptance Standard Per Cluster
 

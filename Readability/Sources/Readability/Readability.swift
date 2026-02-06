@@ -748,6 +748,7 @@ public struct Readability {
         if !options.keepClasses {
             try cleanClasses(cleaned)
         }
+        try restoreFigureWrapperMetadataAttributes(cleaned)
 
         doc.outputSettings().prettyPrint(pretty: false)
 
@@ -928,6 +929,20 @@ public struct Readability {
             }
 
             node = next
+        }
+    }
+
+    private func restoreFigureWrapperMetadataAttributes(_ articleContent: Element) throws {
+        let wrappers = try articleContent.select("figure[contenteditable=false] > div")
+        for wrapper in wrappers {
+            let hasImage = ((try? wrapper.select("img").isEmpty()) == false)
+            guard hasImage else { continue }
+            if ((try? wrapper.attr("contenteditable")) ?? "").isEmpty {
+                try wrapper.attr("contenteditable", "false")
+            }
+            if ((try? wrapper.attr("data-syndicationrights")) ?? "").isEmpty {
+                try wrapper.attr("data-syndicationrights", "false")
+            }
         }
     }
 }

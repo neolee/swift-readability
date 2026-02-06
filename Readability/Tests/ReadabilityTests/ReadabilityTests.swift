@@ -1,4 +1,5 @@
 import Testing
+import SwiftSoup
 @testable import Readability
 
 @Suite("Readability Lifecycle Tests")
@@ -74,5 +75,31 @@ struct ReadabilityTests {
         let readability = try Readability(html: html)
         let result = try readability.parse()
         #expect(result.byline == "By Erin Cunningham")
+    }
+
+    @Test("parse preserves figure inner div wrapper")
+    func testParsePreservesFigureInnerDivWrapper() throws {
+        let html = """
+        <html>
+        <body>
+          <article>
+            <figure>
+              <div contenteditable="false" data-syndicationrights="false"><p><img src="https://example.com/photo.jpg"></p></div>
+              <figcaption>Caption text</figcaption>
+            </figure>
+            <p>This is a sufficiently long paragraph, with commas, to satisfy scoring and extraction behavior.</p>
+          </article>
+        </body>
+        </html>
+        """
+
+        let readability = try Readability(html: html)
+        let result = try readability.parse()
+        let doc = try SwiftSoup.parseBodyFragment(result.content)
+        #expect((try doc.select("figure > div > p > img").isEmpty()) == false)
+        let wrapper = try doc.select("figure > div").first()
+        #expect(wrapper != nil)
+        #expect((try wrapper?.attr("contenteditable")) == "false")
+        #expect((try wrapper?.attr("data-syndicationrights")) == "false")
     }
 }

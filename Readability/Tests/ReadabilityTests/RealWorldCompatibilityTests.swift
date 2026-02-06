@@ -64,9 +64,7 @@ struct RealWorldCompatibilityTests {
 
     @Test("realworld/medium-1 - content and metadata match")
     func testMedium1() async throws {
-        withKnownIssue("S3R Batch 1 baseline [RW-C3]: figure/caption structural mismatch against Mozilla expected output.") {
-            try assertContentAndMetadataMatch("medium-1")
-        }
+        try assertContentAndMetadataMatch("medium-1")
     }
 
     @Test("realworld/nytimes-1 - content and metadata match")

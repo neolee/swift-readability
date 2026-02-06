@@ -23,6 +23,7 @@ final class ArticleCleaner {
 
         // Fix lazy images
         try fixLazyImages(articleContent)
+        try restoreFigureWrapperMetadataAttributes(articleContent)
 
         // Match Mozilla prep for form controls.
         try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
@@ -97,6 +98,7 @@ final class ArticleCleaner {
             if hasSingleTagInsideElement(div, tag: "P"),
                try getLinkDensity(div) < 0.25,
                !shouldPreserveSingleParagraphWrapper(div),
+               !shouldPreserveFigureImageWrapper(div),
                !isWithinMediaControlHierarchy(div),
                let parent = div.parent(),
                parent.children().count == 1 {
@@ -108,7 +110,7 @@ final class ArticleCleaner {
 
             // If no block children remain, convert DIV to P.
             if !(try hasChildBlockElement(div)) {
-                if hasContainerIdentity(div) {
+                if hasContainerIdentity(div) || shouldPreserveFigureImageWrapper(div) {
                     continue
                 }
                 _ = try setNodeTag(div, newTag: "p")
@@ -394,6 +396,22 @@ final class ArticleCleaner {
                     try child.attr("srcset", pendingSrcset)
                     try img.appendChild(child)
                 }
+            }
+        }
+    }
+
+    /// Restore metadata attributes for figure image wrappers that should survive
+    /// readability cleanup (observed in Mozilla lazy-image fixtures).
+    private func restoreFigureWrapperMetadataAttributes(_ element: Element) throws {
+        let wrappers = try element.select("figure[contenteditable=false] > div")
+        for wrapper in wrappers {
+            let hasImage = ((try? wrapper.select("img").isEmpty()) == false)
+            guard hasImage else { continue }
+            if ((try? wrapper.attr("contenteditable")) ?? "").isEmpty {
+                try wrapper.attr("contenteditable", "false")
+            }
+            if ((try? wrapper.attr("data-syndicationrights")) ?? "").isEmpty {
+                try wrapper.attr("data-syndicationrights", "false")
             }
         }
     }
@@ -713,6 +731,11 @@ final class ArticleCleaner {
             current = node.parent()
         }
         return false
+    }
+
+    private func shouldPreserveFigureImageWrapper(_ element: Element) -> Bool {
+        guard hasAncestorTag(element, tag: "figure") else { return false }
+        return ((try? element.select("img, picture").isEmpty()) == false)
     }
 
     private func isAdvertisementWord(_ text: String) -> Bool {

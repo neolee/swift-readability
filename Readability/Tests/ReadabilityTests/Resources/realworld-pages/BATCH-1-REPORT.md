@@ -6,9 +6,9 @@ Batch: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 ## Summary
 
 - Total cases: 5
-- Strict pass: 3 (`nytimes-1`, `cnn`, `wapo-1`)
-- Known issue instances: 3
-- Known issue clusters: 3
+- Strict pass: 4 (`nytimes-1`, `cnn`, `wapo-1`, `medium-1`)
+- Known issue instances: 2
+- Known issue clusters: 2
 
 ## Case Findings (first divergence)
 
@@ -29,8 +29,9 @@ Batch: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 - Cluster: `RW-C2` and `RW-C5` (closed for this case).
 
 4. `medium-1`
-- Content: expected `figure > div`, actual `figure > p` at first divergence.
-- Cluster: figure/caption structural conversion parity.
+- Status: resolved in current branch.
+- Content: figure/caption wrapper structure now matches expected under strict comparison.
+- Cluster: `RW-C3` (closed for this case).
 
 5. `wikipedia`
 - Content: expected `p#toctitle`, actual `div#toctitle`.
@@ -46,3 +47,4 @@ Batch: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 - Step-1 closure update (2026-02-06): additional cleanup of feedback/supplemental modules removed remaining residual nodes; `nytimes-1` now passes without `withKnownIssue`.
 - Step-1 cnn closure update (2026-02-06): removing legacy wrappers plus targeted in-read ad shell cleanup (`ADVERTISING inRead invented by Teads`) closed the remaining structural residual; `cnn` now passes without `withKnownIssue`.
 - Step-2/3 wapo closure update (2026-02-06): metadata byline precedence now prefers extracted byline over social handle metadata, and gallery promo residuals (`gallery-embed_*`, `View Graphic` blocks) are removed; `wapo-1` now passes without `withKnownIssue`.
+- Step-4 medium closure update (2026-02-06): `figure`-context wrapper conversion was aligned in both extraction and cleaning paths, preserving `figure > div > p` structure; `medium-1` now passes without `withKnownIssue`.

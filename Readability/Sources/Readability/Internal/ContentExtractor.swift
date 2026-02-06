@@ -316,7 +316,8 @@ final class ContentExtractor {
 
                 if hasSingleTagInsideElement(current, tag: "P"),
                    try getLinkDensity(current) < 0.25,
-                   !shouldPreserveSingleParagraphWrapper(current) {
+                   !shouldPreserveSingleParagraphWrapper(current),
+                   !shouldPreserveFigureImageWrapper(current) {
                     if let newNode = current.children().first {
                         try current.replaceWith(newNode)
                         elements.append(newNode)
@@ -324,7 +325,7 @@ final class ContentExtractor {
                         continue
                     }
                 } else if !hasChildBlockElement(current, blockTags: blockTags) {
-                    if hasContainerIdentity(current) {
+                    if hasContainerIdentity(current) || shouldPreserveFigureImageWrapper(current) {
                         node = DOMTraversal.getNextNode(current)
                         continue
                     }
@@ -431,6 +432,23 @@ final class ContentExtractor {
         guard hasContainerIdentity(element) else { return false }
         // Keep explicit container identity for embedded media blocks only.
         return ((try? element.select("iframe, embed, object, video").isEmpty()) == false)
+    }
+
+    private func hasAncestorTag(_ element: Element, tag: String) -> Bool {
+        var current = element.parent()
+        let target = tag.lowercased()
+        while let node = current {
+            if node.tagName().lowercased() == target {
+                return true
+            }
+            current = node.parent()
+        }
+        return false
+    }
+
+    private func shouldPreserveFigureImageWrapper(_ element: Element) -> Bool {
+        guard hasAncestorTag(element, tag: "figure") else { return false }
+        return ((try? element.select("img, picture").isEmpty()) == false)
     }
 
     // MARK: - Element Scoring
