@@ -83,9 +83,7 @@ struct RealWorldCompatibilityTests {
     // Stage 3-R Batch 2 (baseline import)
     @Test("realworld/bbc-1 - content and metadata match")
     func testBBC1() async throws {
-        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
-            try assertContentAndMetadataMatch("bbc-1")
-        }
+        try assertContentAndMetadataMatch("bbc-1")
     }
 
     @Test("realworld/guardian-1 - content and metadata match")

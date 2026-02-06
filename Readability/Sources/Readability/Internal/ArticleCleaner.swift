@@ -29,6 +29,7 @@ final class ArticleCleaner {
         try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
         try removeShortLinkHeavyDivs(articleContent)
         try removeRelatedLinkCollectionDivs(articleContent)
+        try removeSingleItemPromoLists(articleContent)
         try removeEmptyContainerDivs(articleContent)
         try removeShortRoleNoteCallouts(articleContent)
 
@@ -253,6 +254,15 @@ final class ArticleCleaner {
             let idValue = element.id().trimmingCharacters(in: .whitespacesAndNewlines)
             if idValue.range(of: "^[0-9]{6,}$", options: [.regularExpression]) != nil {
                 try newElement.removeAttr("id")
+            }
+
+            // Media placeholders can be retagged into paragraphs.
+            // Strip non-content media metadata attributes to match Mozilla output.
+            let hasMediaType = element.hasAttr("data-media-type")
+            let hasMediaMeta = element.hasAttr("data-media-meta")
+            if hasMediaType || hasMediaMeta {
+                try newElement.removeAttr("data-media-type")
+                try newElement.removeAttr("data-media-meta")
             }
         }
         // Match Mozilla semantics: move nodes instead of cloning to avoid any
@@ -527,6 +537,8 @@ final class ArticleCleaner {
         try element.select("div[id^=gallery-embed_]").remove()
         // Yahoo slideshow modal chrome is non-article UI.
         try element.select("div[id^=modal-slideshow-]").remove()
+        // BBC media placeholders are JS video chrome and should not remain as article body.
+        try element.select("div.media-placeholder[data-media-type=video], div[data-media-type=video][class*=media-placeholder]").remove()
         // Remove residual "View Graphic" promo blocks left by gallery embed extraction.
         for candidate in try element.select("div").reversed() {
             let hasGraphicLink = ((try? candidate.select("a[href*=_graphic.html]"))?.isEmpty()) == false
@@ -692,6 +704,42 @@ final class ArticleCleaner {
                textLength <= 1200,
                linkDensity >= 0.2 {
                 try div.remove()
+            }
+        }
+    }
+
+    /// Remove short single-item promo lists embedded between article paragraphs.
+    private func removeSingleItemPromoLists(_ root: Element) throws {
+        let lists = try root.select("ul, ol")
+        for list in lists.reversed() {
+            guard list.parent() != nil else { continue }
+            if hasAncestorTag(list, tag: "figure") || hasAncestorTag(list, tag: "table") {
+                continue
+            }
+
+            let items = list.children()
+            guard items.count == 1,
+                  items.first?.tagName().lowercased() == "li" else {
+                continue
+            }
+
+            let linkCount = try list.select("a").count
+            if linkCount != 1 {
+                continue
+            }
+
+            let text = try DOMHelpers.getInnerText(list)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if text.isEmpty || text.count > 90 {
+                continue
+            }
+
+            // Only drop if list is sandwiched by paragraphs, which strongly
+            // suggests a promo/related link insert rather than core list content.
+            let previous = ((try? list.previousElementSibling()?.tagName().lowercased()) ?? "") == "p"
+            let next = ((try? list.nextElementSibling()?.tagName().lowercased()) ?? "") == "p"
+            if previous && next {
+                try list.remove()
             }
         }
     }

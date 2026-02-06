@@ -6,15 +6,14 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Total new cases: 11
-- Strict pass: 4 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`)
-- Cases with known issues: 7
-- Known issue instances: 7
+- Strict pass: 5 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`)
+- Cases with known issues: 6
+- Known issue instances: 6
 
 ## First-Diff Snapshot (Batch 2)
 
 1. `bbc-1`
-- Content: expected plain `p`, actual `p` retains `data-media-type` / `data-media-meta` from removed media placeholder.
-- Metadata: byline mismatch is resolved in current branch (`BBC News` now matches expected).
+- Status: strict pass in current branch.
 
 2. `guardian-1`
 - Content: expected `figure#img-2`, actual `ul`.
@@ -51,5 +50,5 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 
 - Batch 1 remains strict green.
 - Batch 2 tests are imported and executable in `RealWorldCompatibilityTests`.
-- Batch 2 has now closed 3 structural/content instances (`seattletimes-1`, `yahoo-1`, `yahoo-2`) in addition to earlier metadata closures.
+- Batch 2 has now closed 4 structural/content instances (`seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`) in addition to earlier metadata closures.
 - Next step is fixing remaining structural clusters (`nytimes` container/tag drift, `telegraph`/`guardian` media-boundary drift, `bbc-1` id parity).

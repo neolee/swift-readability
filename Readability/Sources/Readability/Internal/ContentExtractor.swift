@@ -418,6 +418,13 @@ final class ContentExtractor {
             if idValue.range(of: "^[0-9]{6,}$", options: [.regularExpression]) != nil {
                 try newElement.removeAttr("id")
             }
+
+            let hasMediaType = element.hasAttr("data-media-type")
+            let hasMediaMeta = element.hasAttr("data-media-meta")
+            if hasMediaType || hasMediaMeta {
+                try newElement.removeAttr("data-media-type")
+                try newElement.removeAttr("data-media-meta")
+            }
         }
         while let firstChild = element.getChildNodes().first {
             try newElement.appendChild(firstChild)
