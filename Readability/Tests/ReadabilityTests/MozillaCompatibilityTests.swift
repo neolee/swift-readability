@@ -430,9 +430,7 @@ struct MozillaCompatibilityTests {
 
     @Test("toc-missing - Content matches expected")
     func testTOCMissingContent() async throws {
-        withKnownIssue("TOC section keeps an extra nested DIV wrapper before a separator HR compared with Mozilla output.") {
-            try assertContentMatches("toc-missing")
-        }
+        try assertContentMatches("toc-missing")
     }
 
     @Test("toc-missing - Title matches expected")
@@ -446,9 +444,7 @@ struct MozillaCompatibilityTests {
 
     @Test("bug-1255978 - Content matches expected")
     func testBug1255978Content() async throws {
-        withKnownIssue("Independent article keeps a DIV->P structural conversion difference in early content blocks.") {
-            try assertContentMatches("bug-1255978")
-        }
+        try assertContentMatches("bug-1255978")
     }
 
     @Test("bug-1255978 - Title matches expected")

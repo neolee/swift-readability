@@ -96,14 +96,17 @@ final class ArticleCleaner {
             // If DIV has exactly one P child and low link density, unwrap to that P.
             if hasSingleTagInsideElement(div, tag: "P"),
                try getLinkDensity(div) < 0.25,
-               !shouldPreserveSingleParagraphWrapper(div) {
+               !shouldPreserveSingleParagraphWrapper(div),
+               !isWithinMediaControlHierarchy(div),
+               let parent = div.parent(),
+               parent.children().count == 1 {
                 if let onlyChild = div.children().first {
                     try div.replaceWith(onlyChild)
                 }
                 continue
             }
 
-            // Otherwise, if no block children remain, convert DIV to P.
+            // If no block children remain, convert DIV to P.
             if !(try hasChildBlockElement(div)) {
                 if hasContainerIdentity(div) {
                     continue
@@ -182,6 +185,22 @@ final class ArticleCleaner {
         guard hasContainerIdentity(element) else { return false }
         // Preserve identity wrappers for embedded media blocks (videos/iframes).
         return ((try? element.select("iframe, embed, object, video").isEmpty()) == false)
+    }
+
+    private func isWithinMediaControlHierarchy(_ element: Element) -> Bool {
+        var current: Element? = element
+        while let node = current {
+            let role = ((try? node.attr("role")) ?? "").lowercased()
+            let ariaLabel = ((try? node.attr("aria-label")) ?? "").lowercased()
+            if role == "group" || role == "region" {
+                return true
+            }
+            if ariaLabel.contains("video player") || ariaLabel.contains("progress bar") {
+                return true
+            }
+            current = node.parent()
+        }
+        return false
     }
 
     /// Check if node is phrasing content (inline content)
@@ -387,6 +406,7 @@ final class ArticleCleaner {
         try element.select("script, style, noscript").remove()
         // Match Mozilla _clean() defaults for obvious non-article containers.
         try element.select("footer, aside, link").remove()
+        try removeKnownWidgetElements(element)
         try removeDisallowedEmbeds(element)
 
         // Remove elements with hidden attribute
@@ -394,6 +414,62 @@ final class ArticleCleaner {
 
         // Remove share/social elements
         try removeShareElements(element)
+    }
+
+    /// Remove known non-article UI widgets that leak into extracted content on some pages.
+    private func removeKnownWidgetElements(_ element: Element) throws {
+        // Video control label block that Mozilla output drops.
+        for label in try element.select("span:matchesOwn(^\\s*Stream\\s+Type\\s*$)") {
+            var current = label.parent()
+            while let node = current {
+                if node.tagName().lowercased() == "div" {
+                    let text = (try? DOMHelpers.getInnerText(node)) ?? ""
+                    if text.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .hasPrefix("Stream Type") {
+                        try node.remove()
+                        break
+                    }
+                }
+                current = node.parent()
+            }
+        }
+
+        // Remove video caption/settings control panes.
+        for candidate in try element.select("div").reversed() {
+            let labels = (try? candidate.select("label")) ?? Elements()
+            if labels.isEmpty() { continue }
+            let labelTexts = labels.array().map {
+                ((try? DOMHelpers.getInnerText($0)) ?? "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .lowercased()
+            }
+            let hasForeground = labelTexts.contains("foreground")
+            let hasBackground = labelTexts.contains("background")
+            let hasFontSize = labelTexts.contains("font size")
+            if hasForeground && hasBackground && hasFontSize {
+                try candidate.remove()
+            }
+        }
+
+        // Scald gallery widgets (and companion heading wrappers) are non-article chrome.
+        for gallery in try element.select("[data-scald-gallery]") {
+            if let parent = gallery.parent(), parent.tagName().lowercased() == "div" {
+                try parent.remove()
+            } else {
+                try gallery.remove()
+            }
+        }
+
+        // Interactive editor promo inner widgets (direct SVG + markdown children) should be removed.
+        for candidate in try element.select("div").reversed() {
+            let children = candidate.children()
+            let hasDirectSVG = children.contains { $0.tagName().lowercased() == "svg" }
+            let hasDirectMarkdown = children.contains { ((try? $0.attr("markdown")) ?? "").isEmpty == false }
+            if hasDirectSVG && hasDirectMarkdown {
+                try candidate.remove()
+            }
+        }
     }
 
     private func cleanElementsByTag(_ element: Element, tags: [String]) throws {

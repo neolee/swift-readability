@@ -3,7 +3,7 @@
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
 **Current Status:** Phase 6 In Progress (Functional suite expansion and hardening)
-**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 288 tests, 0 failures (`MozillaCompatibilityTests` 114/114 passing, 2 known issues)
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 288 tests, 0 failures (`MozillaCompatibilityTests` 114/114 passing, 0 known issues)
 
 ### Stage 3-F Import Progress (S3F-T1)
 
@@ -31,8 +31,8 @@ This document outlines the phased implementation plan for porting Mozilla Readab
 - [x] Edge-case batch imported:
   - `comment-inside-script-parsing` (content assertion passing)
   - `metadata-content-missing` (content assertion passing)
-  - `toc-missing` (title passing, content marked known issue)
-  - `bug-1255978` (title passing, content marked known issue)
+  - `toc-missing` (content assertion passing)
+  - `bug-1255978` (content assertion passing)
 
 ## Option Implementation Status (S2-T6)
 
@@ -536,8 +536,7 @@ Complete deferred issues from Phase 5 before proceeding.
 | Batch 9 | `comment-inside-script-parsing`, `toc-missing`, `metadata-content-missing`, `bug-1255978` | Edge cases |
 
 **Known Issues to Resolve:**
-- [ ] `toc-missing` content structural mismatch (`hr` vs extra nested `div`)
-- [ ] `bug-1255978` content structural mismatch (`div` vs `p` conversion)
+- [ ] None currently active in imported standard set
 
 **Verification Criteria:**
 - [ ] 49/49 standard functional tests imported
@@ -552,8 +551,8 @@ Complete deferred issues from Phase 5 before proceeding.
 | Metric | Target | Status |
 |--------|--------|--------|
 | Standard tests imported | 49/49 | 34/49 (69%) |
-| Standard tests passing | 95%+ | 114/114 `MozillaCompatibilityTests` tests passing with 2 known issues |
-| Known issues | 0 | 2 active known issues |
+| Standard tests passing | 95%+ | 114/114 `MozillaCompatibilityTests` tests passing |
+| Known issues | 0 | 0 active known issues |
 | Real-world tests | Phase 7 | 0/78 (0%) |
 
 ---
@@ -602,7 +601,7 @@ Mozilla Readability has **130 test cases** total, divided into:
 ### Current Status
 
 **Standard Tests:** 34/49 imported (69%), currently passing in compatibility suite  
-**Known Issues:** 2 active known issues in imported set (`toc-missing`, `bug-1255978`)
+**Known Issues:** 0 active known issues in imported set
 
 ### Phase 6 Detailed Progress
 
@@ -651,8 +650,8 @@ Mozilla Readability has **130 test cases** total, divided into:
 #### 6.9 Edge Cases (4 tests)
 - [x] Import `comment-inside-script-parsing` - PASS
 - [x] Import `metadata-content-missing` - PASS
-- [x] Import `toc-missing` - Title PASS / Content KNOWN ISSUE
-- [x] Import `bug-1255978` - Title PASS / Content KNOWN ISSUE
+- [x] Import `toc-missing` - PASS
+- [x] Import `bug-1255978` - PASS
 
 ---
 
@@ -731,7 +730,7 @@ All foundation work is complete through Phase 5:
 
 **Goal:** Complete all 49 standard functional tests with 95%+ pass rate.
 
-**Current Status:** 34/49 standard tests imported, compatibility suite passing with 2 active known issues
+**Current Status:** 34/49 standard tests imported, compatibility suite fully passing
 
 **Active Work:**
 1. Import remaining standard functional tests in priority order
@@ -823,10 +822,7 @@ This section tracks resolved and active known issues for reference.
 
 ### Active Issues
 
-- `toc-missing` content mismatch:
-  - Expected subtree uses `<hr>`, current output keeps an extra nested `<div>` wrapper before separator.
-- `bug-1255978` content mismatch:
-  - Expected subtree keeps a `<div>`, current output converts that block to `<p>` in early article content.
+- None currently active in imported set.
 
 ---
 
