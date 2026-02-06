@@ -24,7 +24,7 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
   - Embedded gallery container kept/placed differently from Mozilla output.
   - Byline source/normalization diverges (`@handle` vs `By Name`).
 - Impacted cases:
-  - `wapo-1`
+  - None (closed for current Batch 1 scope: `wapo-1`)
 - Priority: P1
 - Candidate areas:
   - Conditional cleaner media rules.
@@ -59,7 +59,6 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
   - Byline format mismatch (`By X` vs `@x`).
   - Excerpt truncation/selection mismatch.
 - Impacted cases:
-  - `wapo-1` (byline normalization)
   - `wikipedia` (excerpt behavior)
 - Priority: P1
 - Candidate areas:
@@ -71,16 +70,14 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 
 | Case | First Divergence | Secondary Divergence | Clusters |
 |------|------------------|----------------------|----------|
-| `wapo-1` | gallery `div` vs expected `p` | byline format mismatch | `RW-C2`, `RW-C5` |
 | `medium-1` | `figure > div` vs `figure > p` | - | `RW-C3` |
 | `wikipedia` | `p#toctitle` vs `div#toctitle` | excerpt mismatch | `RW-C4`, `RW-C5` |
 
 ## Suggested Fix Order
 
 1. `RW-C1` (wrapper identity drift): broadest structural leverage with low ambiguity.
-2. `RW-C5` (metadata normalization): low-risk parity polish, likely unlocks multiple cases.
-3. `RW-C2` (embedded media/gallery): medium risk, site-template specific.
-4. `RW-C3`/`RW-C4` (tag-conversion edge paths): medium-high risk; validate against functional suite after each change.
+2. `RW-C3` (figure/caption conversion): medium risk, currently isolated to one case.
+3. `RW-C4`/`RW-C5` (TOC/excerpt parity): medium-high risk; validate against functional suite after each change.
 
 ## Current Execution Plan (Approved)
 
@@ -110,6 +107,10 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 - Acceptance:
   - `wapo-1` structural first-diff cluster cleared
   - `MozillaCompatibilityTests` remains `119/119` pass
+
+Status update (2026-02-06):
+- Step 2 byline normalization target for `wapo-1` is closed.
+- Step 3 gallery/media target for `wapo-1` is closed.
 
 ## Acceptance Standard Per Cluster
 

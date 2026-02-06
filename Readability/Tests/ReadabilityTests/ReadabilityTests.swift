@@ -54,4 +54,25 @@ struct ReadabilityTests {
             Issue.record("Expected alreadyParsed, got: \(error)")
         }
     }
+
+    @Test("parse prefers extracted byline over social handle metadata")
+    func testBylinePrefersExtractedNameOverSocialHandle() throws {
+        let html = """
+        <html>
+        <head>
+          <meta property="twitter:creator" content="@erinmcunningham">
+        </head>
+        <body>
+          <article>
+            <div class="byline">By Erin Cunningham</div>
+            <p>This is a sufficiently long paragraph, with commas, to satisfy scoring and extraction for article content.</p>
+          </article>
+        </body>
+        </html>
+        """
+
+        let readability = try Readability(html: html)
+        let result = try readability.parse()
+        #expect(result.byline == "By Erin Cunningham")
+    }
 }

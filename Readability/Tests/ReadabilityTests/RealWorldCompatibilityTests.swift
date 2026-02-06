@@ -81,8 +81,6 @@ struct RealWorldCompatibilityTests {
 
     @Test("realworld/wapo-1 - content and metadata match")
     func testWaPo1() async throws {
-        withKnownIssue("S3R Batch 1 baseline [RW-C2, RW-C5]: embedded gallery handling and byline normalization mismatch against Mozilla expected output.") {
-            try assertContentAndMetadataMatch("wapo-1")
-        }
+        try assertContentAndMetadataMatch("wapo-1")
     }
 }

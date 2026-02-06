@@ -82,9 +82,20 @@ public struct Readability {
         // Clean and serialize content
         let content = try cleanAndSerialize(articleContent)
 
-        // Use byline from metadata if available, otherwise from content extraction
-        // This matches Mozilla's behavior: metadata.byline || this._articleByline
-        let byline = metadata.byline ?? extractedByline
+        // Prefer metadata byline by default (Mozilla behavior), but avoid
+        // low-quality social handles when richer extracted byline exists.
+        let byline: String?
+        if let metadataByline = metadata.byline {
+            if isSocialHandleByline(metadataByline),
+               let extractedByline,
+               !extractedByline.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                byline = extractedByline
+            } else {
+                byline = metadataByline
+            }
+        } else {
+            byline = extractedByline
+        }
 
         return ReadabilityResult(
             title: title,
@@ -300,6 +311,11 @@ public struct Readability {
         }
 
         return metadata
+    }
+
+    private func isSocialHandleByline(_ byline: String) -> Bool {
+        let trimmed = byline.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.hasPrefix("@") && trimmed.count > 1
     }
 
     private func extractAuthorFromJSONLD(_ author: Any?) -> String? {

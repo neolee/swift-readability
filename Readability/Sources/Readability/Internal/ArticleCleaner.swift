@@ -496,6 +496,20 @@ final class ArticleCleaner {
                 try gallery.remove()
             }
         }
+        // Washington Post gallery embeds are interactive chrome; Mozilla output drops them.
+        try element.select("div[id^=gallery-embed_]").remove()
+        // Remove residual "View Graphic" promo blocks left by gallery embed extraction.
+        for candidate in try element.select("div").reversed() {
+            let hasGraphicLink = ((try? candidate.select("a[href*=_graphic.html]"))?.isEmpty()) == false
+            let hasImage = ((try? candidate.select("img"))?.isEmpty()) == false
+            guard hasGraphicLink && hasImage else { continue }
+            let text = ((try? DOMHelpers.getInnerText(candidate)) ?? "")
+                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                .lowercased()
+            if text.contains("view graphic") {
+                try candidate.remove()
+            }
+        }
 
         // Interactive editor promo inner widgets (direct SVG + markdown children) should be removed.
         for candidate in try element.select("div").reversed() {

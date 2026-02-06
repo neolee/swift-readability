@@ -282,6 +282,47 @@ struct ArticleCleanerTests {
         #expect((try article.text().lowercased().contains("invented by teads")) == false)
     }
 
+    @Test("prepArticle removes Washington Post gallery embeds")
+    func testPrepArticleRemovesGalleryEmbedWrappers() throws {
+        let html = """
+        <article>
+            <div id="gallery-embed_1417452270618_709">interactive gallery</div>
+            <p>Body paragraph</p>
+        </article>
+        """
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let article = try doc.select("article").first()!
+
+        let cleaner = ArticleCleaner(options: .default)
+        try cleaner.prepArticle(article)
+
+        #expect(try article.select("div[id^=gallery-embed_]").isEmpty())
+        #expect(try article.text().contains("Body paragraph"))
+    }
+
+    @Test("prepArticle removes view-graphic promo block after gallery cleanup")
+    func testPrepArticleRemovesViewGraphicPromoBlock() throws {
+        let html = """
+        <article>
+            <div>
+                <p>
+                    <a href="http://www.washingtonpost.com/world/example_graphic.html"><img src="https://example.com/a.jpg"></a>
+                    <a href="http://www.washingtonpost.com/world/example_graphic.html">View Graphic</a>
+                </p>
+            </div>
+            <p><span>Map: Flow of foreign fighters to Syria</span></p>
+        </article>
+        """
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let article = try doc.select("article").first()!
+
+        let cleaner = ArticleCleaner(options: .default)
+        try cleaner.prepArticle(article)
+
+        #expect((try article.text().lowercased().contains("view graphic")) == false)
+        #expect(try article.text().contains("Map: Flow of foreign fighters to Syria"))
+    }
+
     // MARK: - cleanStyles Tests
 
     @Test("cleanStyles removes presentational attributes")
