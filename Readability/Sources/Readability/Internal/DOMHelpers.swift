@@ -96,8 +96,8 @@ enum DOMHelpers {
                 let childClone = try cloneElement(childElement, in: doc)
                 try clone.appendChild(childClone)
             } else if let textNode = node as? TextNode {
-                // Clone text nodes in their original position
-                let textClone = TextNode(textNode.text(), doc.location())
+                // Preserve original whitespace; TextNode.text() normalizes spaces.
+                let textClone = TextNode(textNode.getWholeText(), doc.location())
                 try clone.appendChild(textClone)
             }
         }

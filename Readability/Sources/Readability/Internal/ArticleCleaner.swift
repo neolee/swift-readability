@@ -38,6 +38,8 @@ final class ArticleCleaner {
         for div in divs {
             // Skip if already converted
             guard div.tagName().lowercased() == "div" else { continue }
+            // Skip detached top-level container created after extraction.
+            guard div.parent() != nil else { continue }
 
             // Put consecutive phrasing content into paragraphs.
             var childNode = div.getChildNodes().first
@@ -270,8 +272,8 @@ final class ArticleCleaner {
                 let clone = try DOMHelpers.cloneElement(childElement, in: doc)
                 try newElement.appendChild(clone)
             } else if let textNode = node as? TextNode {
-                // Clone text nodes in their original position
-                let textClone = TextNode(textNode.text(), doc.location())
+                // Preserve original whitespace; TextNode.text() normalizes spaces.
+                let textClone = TextNode(textNode.getWholeText(), doc.location())
                 try newElement.appendChild(textClone)
             }
         }
@@ -350,6 +352,8 @@ final class ArticleCleaner {
     private func removeUnwantedElements(_ element: Element) throws {
         // Remove script and style tags
         try element.select("script, style, noscript").remove()
+        // Match Mozilla _clean() defaults for obvious non-article containers.
+        try element.select("footer, aside, object, embed, link").remove()
 
         // Remove elements with hidden attribute
         try element.select("[hidden]").remove()

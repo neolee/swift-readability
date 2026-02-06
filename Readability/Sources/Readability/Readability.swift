@@ -629,6 +629,8 @@ public struct Readability {
             try cleanClasses(cleaned)
         }
 
+        doc.outputSettings().prettyPrint(pretty: false)
+
         return try cleaned.outerHtml()
     }
 
@@ -693,7 +695,8 @@ public struct Readability {
                 if link.getChildNodes().count == 1, link.getChildNodes().first is TextNode {
                     let text: String
                     if let textNode = link.getChildNodes().first as? TextNode {
-                        text = textNode.text()
+                        // Preserve original whitespace around inline links.
+                        text = textNode.getWholeText()
                     } else {
                         text = try link.text()
                     }

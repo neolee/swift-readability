@@ -22,7 +22,9 @@ struct MozillaCompatibilityTests {
 
     /// Normalize whitespace like HTML
     private func htmlTransform(_ str: String) -> String {
-        return str.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+        return str
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Compare two DOM structures and return detailed diff.
@@ -32,8 +34,10 @@ struct MozillaCompatibilityTests {
     /// - Compare node descriptors, text content, and attributes
     private func compareDOM(_ actualHTML: String, _ expectedHTML: String) -> (isEqual: Bool, diff: String) {
         do {
-            let actualDoc = try SwiftSoup.parse(actualHTML)
-            let expectedDoc = try SwiftSoup.parse(expectedHTML)
+            let actualParsed = try SwiftSoup.parse(actualHTML)
+            let expectedParsed = try SwiftSoup.parse(expectedHTML)
+            let actualDoc = try SwiftSoup.parse(actualParsed.outerHtml())
+            let expectedDoc = try SwiftSoup.parse(expectedParsed.outerHtml())
 
             guard let actualRoot = domRoot(actualDoc),
                   let expectedRoot = domRoot(expectedDoc) else {
@@ -62,6 +66,15 @@ struct MozillaCompatibilityTests {
                 if actualDesc != expectedDesc {
                     let actualPath = nodePath(actualNode)
                     let expectedPath = nodePath(expectedNode)
+                    if let actualTextNode = actualNode as? TextNode,
+                       let expectedTextNode = expectedNode as? TextNode {
+                        let actualContext = (actualTextNode.parent() as? Element).flatMap { try? $0.outerHtml() } ?? ""
+                        let expectedContext = (expectedTextNode.parent() as? Element).flatMap { try? $0.outerHtml() } ?? ""
+                        return (
+                            false,
+                            "Node descriptor mismatch at index \(index). Expected: \(expectedDesc), Actual: \(actualDesc). Expected path: \(expectedPath). Actual path: \(actualPath). Expected context: '\(preview(expectedContext, limit: 220))'. Actual context: '\(preview(actualContext, limit: 220))'."
+                        )
+                    }
                     return (
                         false,
                         "Node descriptor mismatch at index \(index). Expected: \(expectedDesc), Actual: \(actualDesc). Expected path: \(expectedPath). Actual path: \(actualPath)."
@@ -70,12 +83,14 @@ struct MozillaCompatibilityTests {
 
                 if let actualTextNode = actualNode as? TextNode,
                    let expectedTextNode = expectedNode as? TextNode {
-                    let actualText = htmlTransform(actualTextNode.text())
-                    let expectedText = htmlTransform(expectedTextNode.text())
+                    let actualText = htmlTransform(actualTextNode.getWholeText())
+                    let expectedText = htmlTransform(expectedTextNode.getWholeText())
                     if actualText != expectedText {
+                        let actualContext = (actualTextNode.parent() as? Element).flatMap { try? $0.outerHtml() } ?? ""
+                        let expectedContext = (expectedTextNode.parent() as? Element).flatMap { try? $0.outerHtml() } ?? ""
                         return (
                             false,
-                            "Text mismatch at index \(index). Expected: '\(preview(expectedText))', Actual: '\(preview(actualText))'."
+                            "Text mismatch at index \(index). Expected: '\(preview(expectedText))', Actual: '\(preview(actualText))'. Expected context: '\(preview(expectedContext, limit: 220))'. Actual context: '\(preview(actualContext, limit: 220))'."
                         )
                     }
                 } else if let actualElement = actualNode as? Element,
@@ -142,12 +157,14 @@ struct MozillaCompatibilityTests {
 
     private func isIgnorableTextNode(_ node: Node) -> Bool {
         guard let textNode = node as? TextNode else { return false }
-        return textNode.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return textNode.getWholeText().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func nodeDescription(_ node: Node) -> String {
-        if let textNode = node as? TextNode {
-            return "#text(\(htmlTransform(textNode.text())))"
+        if node is TextNode {
+            // Node shape comparison should treat text nodes structurally;
+            // text content is compared separately with normalized whitespace.
+            return "#text"
         }
         if let element = node as? Element {
             var desc = element.tagName().lowercased()

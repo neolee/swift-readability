@@ -158,8 +158,8 @@ final class SiblingMerger {
                 let clone = try DOMHelpers.cloneElement(childElement, in: doc)
                 try div.appendChild(clone)
             } else if let textNode = node as? TextNode {
-                // Clone text nodes in their original position
-                let textClone = TextNode(textNode.text(), doc.location())
+                // Preserve original whitespace; TextNode.text() normalizes spaces.
+                let textClone = TextNode(textNode.getWholeText(), doc.location())
                 try div.appendChild(textClone)
             }
         }
