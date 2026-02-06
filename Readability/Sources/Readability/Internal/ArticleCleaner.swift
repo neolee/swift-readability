@@ -29,6 +29,7 @@ final class ArticleCleaner {
         try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
         try removeShortLinkHeavyDivs(articleContent)
         try removeRelatedLinkCollectionDivs(articleContent)
+        try removeNYTimesRelatedLinkCards(articleContent)
         try removeSingleItemPromoLists(articleContent)
         try removeEmptyContainerDivs(articleContent)
         try removeShortRoleNoteCallouts(articleContent)
@@ -789,6 +790,79 @@ final class ArticleCleaner {
         }
     }
 
+    /// Remove NYTimes in-article related-link card inserts.
+    /// These are usually represented by links carrying `module=RelatedLinks`
+    /// and should not remain in extracted article bodies.
+    private func removeNYTimesRelatedLinkCards(_ root: Element) throws {
+        let links = try root.select("a[href*=module=RelatedLinks][href*=pgtype=Article]")
+        var cardContainers: [Element] = []
+        var sectionContainers: [Element] = []
+
+        for link in links {
+            var cursor: Element? = link
+            while let node = cursor {
+                let tag = node.tagName().lowercased()
+                if tag == "div",
+                   node.parent()?.tagName().lowercased() == "section" {
+                    sectionContainers.append(node)
+                    break
+                }
+                if tag == "div",
+                   node.parent()?.tagName().lowercased() == "div" {
+                    cardContainers.append(node)
+                    break
+                }
+                if tag == "article" || node.parent() == nil {
+                    break
+                }
+                cursor = node.parent()
+            }
+        }
+
+        for container in cardContainers.reversed() {
+            guard container.parent() != nil else { continue }
+            let allLinks = try container.select("a")
+            guard !allLinks.isEmpty() else { continue }
+            let relatedLinksCount = allLinks.array().filter { link in
+                let href = ((try? link.attr("href")) ?? "").lowercased()
+                return href.contains("module=relatedlinks") && href.contains("pgtype=article")
+            }.count
+            let textLength = try DOMHelpers.getInnerText(container)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .count
+            if relatedLinksCount == allLinks.count, textLength <= 260 {
+                try container.remove()
+            }
+        }
+
+        for container in sectionContainers.reversed() {
+            guard container.parent() != nil else { continue }
+            let headingCount = try container.select("h1, h2, h3, h4, h5, h6").count
+            if headingCount > 0 {
+                continue
+            }
+
+            let allLinks = try container.select("a")
+            guard !allLinks.isEmpty() else { continue }
+
+            let relatedLinksCount = allLinks.array().filter { link in
+                let href = ((try? link.attr("href")) ?? "").lowercased()
+                return href.contains("module=relatedlinks") && href.contains("pgtype=article")
+            }.count
+
+            let textLength = try DOMHelpers.getInnerText(container)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .count
+            let linkDensity = try getLinkDensity(container)
+
+            if relatedLinksCount == allLinks.count,
+               textLength <= 420,
+               linkDensity >= 0.15 {
+                try container.remove()
+            }
+        }
+    }
+
     /// Remove compact role="note" callouts that are metadata/navigation (e.g. "Main article: ..."),
     /// which Mozilla typically drops during conditional cleanup.
     private func removeShortRoleNoteCallouts(_ root: Element) throws {
@@ -1020,6 +1094,9 @@ final class ArticleCleaner {
         let divs = try root.select("div")
         for div in divs.reversed() {
             guard div.parent() != nil else { continue }
+            if div.hasAttr("data-testid") {
+                continue
+            }
             if hasContainerIdentity(div) {
                 continue
             }
@@ -1116,6 +1193,8 @@ final class ArticleCleaner {
 
         // Remove empty paragraphs
         try removeEmptyParagraphs(articleContent)
+        try normalizeSplitPrintInfoParagraphs(articleContent)
+        try mergeFragmentedParagraphDivs(articleContent)
 
         // Remove ad placeholders that survived extraction.
         try removeAdvertisementPlaceholders(articleContent)
@@ -1125,6 +1204,7 @@ final class ArticleCleaner {
 
         // Keep parity with Mozilla on known NYTimes wrapper tag normalization.
         try normalizeKnownSectionWrappers(articleContent)
+        try normalizePhotoViewerWrappers(articleContent)
 
         // Flatten single-cell tables
         try handleSingleCellTables(articleContent)
@@ -1188,6 +1268,73 @@ final class ArticleCleaner {
         }
     }
 
+    /// Merge NYTimes print-info fragments that may be split into multiple paragraphs.
+    private func normalizeSplitPrintInfoParagraphs(_ element: Element) throws {
+        let candidates = try element.select("div > div")
+        for container in candidates.reversed() {
+            guard container.parent() != nil else { continue }
+            let text = try DOMHelpers.getInnerText(container).lowercased()
+            guard text.contains("a version of this article appears in print on") else { continue }
+
+            let paragraphs = container.children().array().filter { $0.tagName().lowercased() == "p" }
+            guard paragraphs.count >= 3 else { continue }
+
+            let doc = container.ownerDocument() ?? Document("")
+            let merged = try doc.createElement("p")
+
+            for paragraph in paragraphs {
+                while let first = paragraph.getChildNodes().first {
+                    try merged.appendChild(first)
+                }
+                try paragraph.remove()
+            }
+
+            if let firstChild = container.getChildNodes().first {
+                try firstChild.before(merged)
+            } else {
+                try container.appendChild(merged)
+            }
+        }
+    }
+
+    /// Merge div blocks whose direct paragraph children were split into many tiny fragments.
+    /// This commonly happens in print-info tails where inline spans are broken into
+    /// consecutive short paragraphs.
+    private func mergeFragmentedParagraphDivs(_ element: Element) throws {
+        let divs = try element.select("div")
+        for div in divs.reversed() {
+            guard div.parent() != nil else { continue }
+            if (try? div.select("h1, h2, h3, h4, h5, h6, img, picture, figure, video, iframe, table, ul, ol").isEmpty()) == false {
+                continue
+            }
+
+            let children = div.children().array()
+            guard !children.isEmpty else { continue }
+            guard children.allSatisfy({ $0.tagName().lowercased() == "p" }) else { continue }
+
+            let paragraphs = children
+            guard paragraphs.count >= 4 else { continue }
+
+            let prefix = Array(paragraphs.prefix(min(6, paragraphs.count)))
+            let shortPrefixCount = prefix.filter {
+                let text = ((try? DOMHelpers.getInnerText($0)) ?? "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                return text.count <= 24
+            }.count
+            guard shortPrefixCount >= 3 else { continue }
+
+            let doc = div.ownerDocument() ?? Document("")
+            let merged = try doc.createElement("p")
+            for paragraph in paragraphs {
+                while let first = paragraph.getChildNodes().first {
+                    try merged.appendChild(first)
+                }
+                try paragraph.remove()
+            }
+            try div.appendChild(merged)
+        }
+    }
+
     /// Replace H1 elements with H2 (H1 should be reserved for article title)
     private func replaceH1WithH2(_ element: Element) throws {
         let h1s = try element.select("h1")
@@ -1213,6 +1360,15 @@ final class ArticleCleaner {
                 try firstChild.before(node)
             }
             try firstChild.remove()
+        }
+    }
+
+    private func normalizePhotoViewerWrappers(_ element: Element) throws {
+        for inner in try element.select("div[data-testid=photoviewer-wrapper] > div[data-testid=photoviewer-children]") {
+            while let node = inner.getChildNodes().first {
+                try inner.before(node)
+            }
+            try inner.remove()
         }
     }
 

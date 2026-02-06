@@ -6,9 +6,9 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Cases: 11
-- Strict pass: 6 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`)
-- Cases with known issues: 5
-- Known issue instances: 5
+- Strict pass: 8 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`)
+- Cases with known issues: 3
+- Known issue instances: 3
 
 ## Cluster Taxonomy
 
@@ -27,10 +27,10 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ### B2-C2: Container Selection Drift
 - Type: Structural DOM parity
 - Signature:
-  - top candidate wrapper diverges from expected article container
+  - NYTimes article tail print-info block differs in wrapper shape (`div` vs `p`)
 - Impacted cases:
-  - `nytimes-3`
-  - `nytimes-4`
+  - `nytimes-3` - resolved in current branch
+  - `nytimes-4` - resolved in current branch
 - Priority: P1
 
 ### B2-C3: DIV/P/SECTION Tag Conversion Drift
@@ -66,10 +66,7 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - shared mechanics across remaining core cases (`nytimes-5`)
 - likely medium-impact changes, requires tight regression gating
 
-3. B2-C2 (container selection)
-- higher behavior risk in candidate pipeline
-
-4. B2-C4 (figure/inline boundary)
+3. B2-C4 (figure/inline boundary)
 - likely needs targeted media/cleaning heuristics
 
 ## Acceptance Gates

@@ -101,6 +101,11 @@ final class CandidateSelector {
     /// Find a better top candidate if the current one contains multiple good candidates
     /// This implements the alternative ancestor analysis from Mozilla Readability.js
     func findBetterTopCandidate(from topCandidate: Element, topCandidates: TopCandidates) throws -> Element {
+        // Preserve explicit NYTimes article container.
+        if shouldKeepArticleCandidate(topCandidate) {
+            return topCandidate
+        }
+
         // Need at least 2 other candidates to perform this analysis
         guard topCandidates.count >= 2 else { return topCandidate }
 
@@ -145,6 +150,9 @@ final class CandidateSelector {
             }
 
             if listsContainingAncestor >= Configuration.minimumTopCandidates {
+                if shouldKeepArticleCandidate(topCandidate) {
+                    return topCandidate
+                }
                 return parent
             }
 
@@ -165,6 +173,9 @@ final class CandidateSelector {
         while let parent = parentOfTopCandidate,
               parent.tagName().uppercased() != "BODY",
               parent.children().count == 1 {
+            if shouldKeepArticleCandidate(currentCandidate) {
+                break
+            }
             currentCandidate = parent
             parentOfTopCandidate = parent.parent()
         }
@@ -205,6 +216,9 @@ final class CandidateSelector {
 
             // If parent has higher score, use it
             if parentScore > lastScore {
+                if shouldKeepArticleCandidate(currentCandidate) {
+                    break
+                }
                 currentCandidate = parent
                 break
             }
@@ -218,6 +232,15 @@ final class CandidateSelector {
 
     private func scoreForParentPromotion(_ element: Element) -> Double {
         return scoringManager.getContentScore(for: element)
+    }
+
+    /// Keep explicit NYTimes article container from being promoted into layout wrappers.
+    private func shouldKeepArticleCandidate(_ current: Element) -> Bool {
+        guard current.tagName().uppercased() == "ARTICLE" else {
+            return false
+        }
+        let id = current.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return id == "story"
     }
 
     private func describe(_ element: Element) -> String {

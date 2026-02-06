@@ -6,9 +6,9 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Total new cases: 11
-- Strict pass: 6 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`)
-- Cases with known issues: 5
-- Known issue instances: 5
+- Strict pass: 8 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`)
+- Cases with known issues: 3
+- Known issue instances: 3
 
 ## First-Diff Snapshot (Batch 2)
 
@@ -28,10 +28,10 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Status: strict pass in current branch.
 
 6. `nytimes-3`
-- Content: expected `article#story`, actual `div#site-content` (container selection drift).
+- Status: strict pass in current branch.
 
 7. `nytimes-4`
-- Content: expected `article#story`, actual `div#site-content` (same cluster as `nytimes-3`).
+- Status: strict pass in current branch.
 
 8. `nytimes-5`
 - Content: expected list structure under highlights block (`ol > li`), actual nested `div` inside first list item.
@@ -50,5 +50,5 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 
 - Batch 1 remains strict green.
 - Batch 2 tests are imported and executable in `RealWorldCompatibilityTests`.
-- Batch 2 has now closed 5 structural/content instances (`seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`) in addition to earlier metadata closures.
-- Next step is fixing remaining structural clusters (`nytimes-3/4/5` container/tag drift, `telegraph`/`guardian` media-boundary drift).
+- Batch 2 has now closed 7 structural/content instances (`seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`) in addition to earlier metadata closures.
+- Next step is fixing remaining structural clusters (`nytimes-5` list structure drift, `telegraph`/`guardian-1` media-boundary drift).

@@ -112,16 +112,12 @@ struct RealWorldCompatibilityTests {
 
     @Test("realworld/nytimes-3 - content and metadata match")
     func testNYTimes3() async throws {
-        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
-            try assertContentAndMetadataMatch("nytimes-3")
-        }
+        try assertContentAndMetadataMatch("nytimes-3")
     }
 
     @Test("realworld/nytimes-4 - content and metadata match")
     func testNYTimes4() async throws {
-        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
-            try assertContentAndMetadataMatch("nytimes-4")
-        }
+        try assertContentAndMetadataMatch("nytimes-4")
     }
 
     @Test("realworld/nytimes-5 - content and metadata match")

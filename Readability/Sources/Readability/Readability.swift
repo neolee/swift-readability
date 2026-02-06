@@ -757,6 +757,7 @@ public struct Readability {
         // 3) optionally strip classes
         try fixRelativeURIs(cleaned)
         try simplifyNestedElements(cleaned)
+        try normalizeSplitPrintInfoInSerializedTree(cleaned)
         if !options.keepClasses {
             try cleanClasses(cleaned)
         }
@@ -922,11 +923,45 @@ public struct Readability {
             if let _ = current.parent(),
                (tagName == "DIV" || tagName == "SECTION"),
                !current.id().hasPrefix("readability") {
+                if tagName == "DIV",
+                   let parent = current.parent(),
+                   parent.tagName().lowercased() == "div",
+                   parent.parent()?.tagName().lowercased() == "article" {
+                    let children = current.children().array()
+                    if children.count >= 3,
+                       children.allSatisfy({ $0.tagName().lowercased() == "p" }) {
+                        let prefix = Array(children.prefix(min(6, children.count)))
+                        let shortPrefixCount = prefix.filter {
+                            let text = ((try? DOMHelpers.getInnerText($0)) ?? "")
+                                .trimmingCharacters(in: .whitespacesAndNewlines)
+                            return text.count <= 24
+                        }.count
+                        if shortPrefixCount >= 3 {
+                            let merged = try doc.createElement("p")
+                            for paragraph in children {
+                                while let first = paragraph.getChildNodes().first {
+                                    try merged.appendChild(first)
+                                }
+                            }
+                            try current.replaceWith(merged)
+                            node = merged
+                            continue
+                        }
+                    }
+                }
+
                 if DOMTraversal.isElementWithoutContent(current) {
                     try current.remove()
                 } else if cleaner.hasSingleTagInsideElement(current, tag: "DIV") ||
                             cleaner.hasSingleTagInsideElement(current, tag: "SECTION"),
                           let child = current.children().first {
+                    let marker = ((try? current.attr("data-testid")) ?? "")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .lowercased()
+                    if marker == "photoviewer-wrapper" {
+                        node = next
+                        continue
+                    }
                     if let attributes = current.getAttributes() {
                         for attr in attributes {
                             let key = attr.getKey().lowercased()
@@ -955,6 +990,33 @@ public struct Readability {
             if ((try? wrapper.attr("data-syndicationrights")) ?? "").isEmpty {
                 try wrapper.attr("data-syndicationrights", "false")
             }
+        }
+    }
+
+    private func normalizeSplitPrintInfoInSerializedTree(_ articleContent: Element) throws {
+        let candidates = try articleContent.select("article > div > div")
+        for container in candidates.reversed() {
+            let text = try DOMHelpers.getInnerText(container).lowercased()
+            guard text.contains("a version of this article appears in print on") else { continue }
+
+            let children = container.children().array()
+            let paragraphs = children.filter { $0.tagName().lowercased() == "p" }
+
+            if paragraphs.count == 1, children.count == 1, let onlyParagraph = paragraphs.first {
+                try container.replaceWith(onlyParagraph)
+                continue
+            }
+
+            guard paragraphs.count >= 3 else { continue }
+
+            let merged = try doc.createElement("p")
+            for paragraph in paragraphs {
+                while let first = paragraph.getChildNodes().first {
+                    try merged.appendChild(first)
+                }
+                try paragraph.remove()
+            }
+            try container.replaceWith(merged)
         }
     }
 }

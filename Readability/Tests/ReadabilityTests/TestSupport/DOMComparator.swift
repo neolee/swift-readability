@@ -51,9 +51,11 @@ enum DOMComparator {
                             "Node descriptor mismatch at index \(index). Expected: \(expectedDesc), Actual: \(actualDesc). Expected path: \(expectedPath). Actual path: \(actualPath). Expected context: '\(preview(expectedContext, limit: 220))'. Actual context: '\(preview(actualContext, limit: 220))'."
                         )
                     }
+                    let actualContext = (actualNode as? Element).flatMap { try? $0.outerHtml() } ?? ""
+                    let expectedContext = (expectedNode as? Element).flatMap { try? $0.outerHtml() } ?? ""
                     return (
                         false,
-                        "Node descriptor mismatch at index \(index). Expected: \(expectedDesc), Actual: \(actualDesc). Expected path: \(expectedPath). Actual path: \(actualPath)."
+                        "Node descriptor mismatch at index \(index). Expected: \(expectedDesc), Actual: \(actualDesc). Expected path: \(expectedPath). Actual path: \(actualPath). Expected context: '\(preview(expectedContext, limit: 220))'. Actual context: '\(preview(actualContext, limit: 220))'."
                     )
                 }
 
