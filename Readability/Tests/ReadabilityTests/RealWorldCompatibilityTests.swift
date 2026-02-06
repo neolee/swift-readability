@@ -79,4 +79,80 @@ struct RealWorldCompatibilityTests {
     func testWaPo1() async throws {
         try assertContentAndMetadataMatch("wapo-1")
     }
+
+    // Stage 3-R Batch 2 (baseline import)
+    @Test("realworld/bbc-1 - content and metadata match")
+    func testBBC1() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("bbc-1")
+        }
+    }
+
+    @Test("realworld/guardian-1 - content and metadata match")
+    func testGuardian1() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("guardian-1")
+        }
+    }
+
+    @Test("realworld/telegraph - content and metadata match")
+    func testTelegraph() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("telegraph")
+        }
+    }
+
+    @Test("realworld/seattletimes-1 - content and metadata match")
+    func testSeattleTimes1() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("seattletimes-1")
+        }
+    }
+
+    @Test("realworld/nytimes-2 - content and metadata match")
+    func testNYTimes2() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("nytimes-2")
+        }
+    }
+
+    @Test("realworld/nytimes-3 - content and metadata match")
+    func testNYTimes3() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("nytimes-3")
+        }
+    }
+
+    @Test("realworld/nytimes-4 - content and metadata match")
+    func testNYTimes4() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("nytimes-4")
+        }
+    }
+
+    @Test("realworld/nytimes-5 - content and metadata match")
+    func testNYTimes5() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("nytimes-5")
+        }
+    }
+
+    @Test("realworld/wapo-2 - content and metadata match")
+    func testWaPo2() async throws {
+        try assertContentAndMetadataMatch("wapo-2")
+    }
+
+    @Test("realworld/yahoo-1 - content and metadata match")
+    func testYahoo1() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("yahoo-1")
+        }
+    }
+
+    @Test("realworld/yahoo-2 - content and metadata match")
+    func testYahoo2() async throws {
+        withKnownIssue("S3R Batch 2 baseline: first-pass import for divergence clustering.") {
+            try assertContentAndMetadataMatch("yahoo-2")
+        }
+    }
 }
