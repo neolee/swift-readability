@@ -3,7 +3,7 @@
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
 **Current Status:** Phase 6 In Progress (Functional suite expansion and hardening)
-**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 224 tests, 1 failure (`002` content, deferred)
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 224 tests, 15 failures in `MozillaCompatibilityTests` after structural comparator migration (`002` deferred + additional structural gaps surfaced)
 
 ---
 
@@ -511,8 +511,8 @@ Complete deferred issues from Phase 5 before proceeding.
 | Metric | Target | Status |
 |--------|--------|--------|
 | Standard tests imported | 49/49 | 30/49 (61%) |
-| Standard tests passing | 95%+ | 57/58 compatibility assertions on imported cases (1 deferred issue) |
-| Known issues | 0 | 1 (002 - 99% similarity) |
+| Standard tests passing | 95%+ | 43/58 compatibility assertions after structural comparator migration |
+| Known issues | 0 | 15 compatibility gaps currently visible (`002` deferred + 14 additional structural mismatches) |
 | Real-world tests | Phase 7 | 0/78 (0%) |
 
 ---
@@ -560,8 +560,8 @@ Mozilla Readability has **130 test cases** total, divided into:
 
 ### Current Status
 
-**Standard Tests:** 30/49 imported (61%), compatibility suite has 1 deferred failure (`002`)  
-**Known Issues:** 1 deferred (`002` content mismatch, Stage 3-F closure item)
+**Standard Tests:** 30/49 imported (61%), compatibility suite currently has 15 failures under structural comparison  
+**Known Issues:** `002` remains deferred; additional structural mismatches are now visible and require staged remediation
 
 ### Phase 6 Detailed Progress
 
@@ -690,7 +690,7 @@ All foundation work is complete through Phase 5:
 
 **Goal:** Complete all 49 standard functional tests with 95%+ pass rate.
 
-**Current Status:** 30/49 standard tests imported, 1 deferred compatibility failure (`002`)
+**Current Status:** 30/49 standard tests imported, 15 compatibility failures visible under structural comparison
 
 **Active Work:**
 1. Upgrade compatibility comparator to structural DOM matching

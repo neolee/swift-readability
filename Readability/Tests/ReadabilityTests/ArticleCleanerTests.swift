@@ -198,8 +198,9 @@ struct ArticleCleanerTests {
         let divs = try article.select("div")
         let ps = try article.select("p")
 
-        // Div should be converted to p
-        #expect(divs.isEmpty() || ps.count > 0)
+        #expect(divs.isEmpty())
+        #expect(ps.count == 1)
+        #expect(try ps.first()?.text() == "Just text content")
     }
 
     // MARK: - cleanStyles Tests
@@ -227,8 +228,7 @@ struct ArticleCleanerTests {
         let cleaner = ArticleCleaner(options: options)
         try cleaner.prepArticle(p)
 
-        // Should preserve class when keepClasses is true
-        // Note: Our implementation may still clean classes
+        #expect(try p.className() == "content main")
     }
 
     // MARK: - fixLazyImages Tests

@@ -23,45 +23,152 @@ struct MozillaCompatibilityTests {
         return str.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
     }
 
-    /// Compare two DOM structures and return detailed diff
-    private func compareDOM(_ actualHTML: String, _ expectedHTML: String, similarityThreshold: Double = 1.0) -> (isEqual: Bool, diff: String) {
+    /// Compare two DOM structures and return detailed diff.
+    /// Mirrors Mozilla-style structural traversal:
+    /// - In-order node traversal
+    /// - Ignore empty text nodes
+    /// - Compare node descriptors, text content, and attributes
+    private func compareDOM(_ actualHTML: String, _ expectedHTML: String) -> (isEqual: Bool, diff: String) {
         do {
             let actualDoc = try SwiftSoup.parse(actualHTML)
             let expectedDoc = try SwiftSoup.parse(expectedHTML)
 
-            let actualText = try actualDoc.text()
-            let expectedText = try expectedDoc.text()
-
-            // First check: text content should be similar
-            let actualNormalized = htmlTransform(actualText).trimmingCharacters(in: .whitespaces)
-            let expectedNormalized = htmlTransform(expectedText).trimmingCharacters(in: .whitespaces)
-
-            // Calculate similarity ratio
-            let similarity = calculateSimilarity(actualNormalized, expectedNormalized)
-
-            if similarity < similarityThreshold {
-                return (false, "Text content differs (similarity: \(Int(similarity * 100))%). Expected \(expectedNormalized.count) chars, got \(actualNormalized.count) chars.")
+            guard let actualRoot = domRoot(actualDoc),
+                  let expectedRoot = domRoot(expectedDoc) else {
+                return (false, "DOM comparison error: missing root node")
             }
 
-            return (true, "DOM structures match (similarity: \(Int(similarity * 100))%)")
+            let actualNodes = flattenedDOMNodes(from: actualRoot)
+            let expectedNodes = flattenedDOMNodes(from: expectedRoot)
+
+            let maxCount = max(actualNodes.count, expectedNodes.count)
+            for index in 0..<maxCount {
+                guard index < actualNodes.count, index < expectedNodes.count else {
+                    return (false, "DOM node count mismatch at index \(index). Expected \(expectedNodes.count) nodes, got \(actualNodes.count) nodes.")
+                }
+
+                let actualNode = actualNodes[index]
+                let expectedNode = expectedNodes[index]
+
+                let actualDesc = nodeDescription(actualNode)
+                let expectedDesc = nodeDescription(expectedNode)
+                if actualDesc != expectedDesc {
+                    return (
+                        false,
+                        "Node descriptor mismatch at index \(index). Expected: \(expectedDesc), Actual: \(actualDesc)."
+                    )
+                }
+
+                if let actualTextNode = actualNode as? TextNode,
+                   let expectedTextNode = expectedNode as? TextNode {
+                    let actualText = htmlTransform(actualTextNode.text())
+                    let expectedText = htmlTransform(expectedTextNode.text())
+                    if actualText != expectedText {
+                        return (
+                            false,
+                            "Text mismatch at index \(index). Expected: '\(preview(expectedText))', Actual: '\(preview(actualText))'."
+                        )
+                    }
+                } else if let actualElement = actualNode as? Element,
+                          let expectedElement = expectedNode as? Element {
+                    let actualAttrs = attributesForNode(actualElement)
+                    let expectedAttrs = attributesForNode(expectedElement)
+                    if actualAttrs.count != expectedAttrs.count {
+                        return (
+                            false,
+                            "Attribute count mismatch at index \(index) for \(actualElement.tagName().lowercased()). Expected \(expectedAttrs.count), got \(actualAttrs.count)."
+                        )
+                    }
+                    for (key, expectedValue) in expectedAttrs {
+                        guard let actualValue = actualAttrs[key] else {
+                            return (
+                                false,
+                                "Missing attribute at index \(index): '\(key)' on \(actualElement.tagName().lowercased())."
+                            )
+                        }
+                        if actualValue != expectedValue {
+                            return (
+                                false,
+                                "Attribute mismatch at index \(index): '\(key)'. Expected '\(preview(expectedValue))', got '\(preview(actualValue))'."
+                            )
+                        }
+                    }
+                }
+            }
+
+            return (true, "DOM structures match")
         } catch {
             return (false, "DOM comparison error: \(error)")
         }
     }
 
-    /// Calculate similarity ratio between two strings (0.0 to 1.0)
-    private func calculateSimilarity(_ s1: String, _ s2: String) -> Double {
-        // Simple word-based similarity
-        let words1 = Set(s1.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty })
-        let words2 = Set(s2.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty })
+    private func domRoot(_ doc: Document) -> Node? {
+        if let root = doc.children().first {
+            return root
+        }
+        if let body = doc.body() {
+            return body
+        }
+        return nil
+    }
 
-        if words1.isEmpty && words2.isEmpty { return 1.0 }
-        if words1.isEmpty || words2.isEmpty { return 0.0 }
+    private func flattenedDOMNodes(from root: Node) -> [Node] {
+        var nodes: [Node] = []
+        collectNodesInOrder(root, into: &nodes)
+        return nodes.filter { !isIgnorableTextNode($0) }
+    }
 
-        let intersection = words1.intersection(words2)
-        let union = words1.union(words2)
+    private func collectNodesInOrder(_ node: Node, into nodes: inout [Node]) {
+        nodes.append(node)
+        for child in node.getChildNodes() {
+            collectNodesInOrder(child, into: &nodes)
+        }
+    }
 
-        return Double(intersection.count) / Double(union.count)
+    private func isIgnorableTextNode(_ node: Node) -> Bool {
+        guard let textNode = node as? TextNode else { return false }
+        return textNode.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func nodeDescription(_ node: Node) -> String {
+        if let textNode = node as? TextNode {
+            return "#text(\(htmlTransform(textNode.text())))"
+        }
+        if let element = node as? Element {
+            var desc = element.tagName().lowercased()
+            let id = element.id()
+            if !id.isEmpty {
+                desc += "#\(id)"
+            }
+            if let className = try? element.className(), !className.isEmpty {
+                desc += ".(\(className))"
+            }
+            return desc
+        }
+        return "node(\(node.nodeName()))"
+    }
+
+    private func attributesForNode(_ element: Element) -> [String: String] {
+        var attrs: [String: String] = [:]
+        guard let attributes = element.getAttributes() else { return attrs }
+
+        for attr in attributes {
+            let key = attr.getKey()
+            if isValidXMLAttributeName(key) {
+                attrs[key] = attr.getValue()
+            }
+        }
+        return attrs
+    }
+
+    private func isValidXMLAttributeName(_ name: String) -> Bool {
+        let pattern = "^[A-Za-z_][A-Za-z0-9._:-]*$"
+        return name.range(of: pattern, options: .regularExpression) != nil
+    }
+
+    private func preview(_ text: String, limit: Int = 80) -> String {
+        if text.count <= limit { return text }
+        return String(text.prefix(limit)) + "..."
     }
 
     // MARK: - 001 Test Case
