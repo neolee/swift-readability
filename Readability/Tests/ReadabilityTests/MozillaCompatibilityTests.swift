@@ -20,6 +20,8 @@ struct MozillaCompatibilityTests {
     private enum TestCaseField {
         case title
         case byline
+        case dir
+        case lang
         case excerpt
         case siteName
         case publishedTime
@@ -60,6 +62,12 @@ struct MozillaCompatibilityTests {
         case .byline:
             let expected = testCase.expectedMetadata.byline
             #expect(result.byline == expected, "Byline mismatch. Expected: '\(expected ?? "nil")', Actual: '\(result.byline ?? "nil")'")
+        case .dir:
+            let expected = testCase.expectedMetadata.dir
+            #expect(result.dir == expected, "Direction mismatch. Expected: '\(expected ?? "nil")', Actual: '\(result.dir ?? "nil")'")
+        case .lang:
+            let expected = testCase.expectedMetadata.lang
+            #expect(result.lang == expected, "Language mismatch. Expected: '\(expected ?? "nil")', Actual: '\(result.lang ?? "nil")'")
         case .excerpt:
             let expected = testCase.expectedMetadata.excerpt
             #expect(result.excerpt == expected, "Excerpt mismatch. Expected: '\(expected ?? "nil")', Actual: '\(result.excerpt ?? "nil")'")
@@ -99,6 +107,9 @@ struct MozillaCompatibilityTests {
 
     @Test("002 - Site name matches expected")
     func test002SiteName() async throws { try assertMetadataFieldMatches(.siteName, for: "002") }
+
+    @Test("002 - Language matches expected")
+    func test002Lang() async throws { try assertMetadataFieldMatches(.lang, for: "002") }
 
     // MARK: - Phase 6.2: Content Post-Processing Tests
 
@@ -236,6 +247,9 @@ struct MozillaCompatibilityTests {
     @Test("links-in-tables - Content matches expected")
     func testLinksInTables() async throws { try assertContentMatches("links-in-tables") }
 
+    @Test("links-in-tables - Direction matches expected")
+    func testLinksInTablesDirection() async throws { try assertMetadataFieldMatches(.dir, for: "links-in-tables") }
+
     @Test("social-buttons - Content matches expected")
     func testSocialButtons() async throws { try assertContentMatches("social-buttons") }
 
@@ -308,17 +322,26 @@ struct MozillaCompatibilityTests {
     @Test("rtl-1 - Title matches expected")
     func testRTL1Title() async throws { try assertMetadataFieldMatches(.title, for: "rtl-1") }
 
+    @Test("rtl-1 - Direction matches expected")
+    func testRTL1Direction() async throws { try assertMetadataFieldMatches(.dir, for: "rtl-1") }
+
     @Test("rtl-2 - Content matches expected")
     func testRTL2Content() async throws { try assertContentMatches("rtl-2") }
 
     @Test("rtl-2 - Title matches expected")
     func testRTL2Title() async throws { try assertMetadataFieldMatches(.title, for: "rtl-2") }
 
+    @Test("rtl-2 - Direction matches expected")
+    func testRTL2Direction() async throws { try assertMetadataFieldMatches(.dir, for: "rtl-2") }
+
     @Test("rtl-3 - Content matches expected")
     func testRTL3Content() async throws { try assertContentMatches("rtl-3") }
 
     @Test("rtl-3 - Title matches expected")
     func testRTL3Title() async throws { try assertMetadataFieldMatches(.title, for: "rtl-3") }
+
+    @Test("rtl-3 - Direction matches expected")
+    func testRTL3Direction() async throws { try assertMetadataFieldMatches(.dir, for: "rtl-3") }
 
     @Test("rtl-4 - Content matches expected")
     func testRTL4Content() async throws { try assertContentMatches("rtl-4") }

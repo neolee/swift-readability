@@ -26,7 +26,7 @@ Working assumptions applied:
 
 From local `cd Readability && swift test`:
 
-- Total: `288` tests
+- Total: `293` tests
 - Failed: `0`
 - Known issues: `0`
 
@@ -75,13 +75,12 @@ Reference:
 
 ### 1.3 Additional parity deltas beyond comparator
 
-1. Missing output fields for future Mozilla cases:
-   - Mozilla checks `dir` and `lang` when present.
-   - Local `TestLoader` already has these fields, but `ReadabilityResult` does not expose them.
-   - This will become a blocker when importing RTL/language-sensitive cases.
+1. `dir`/`lang` parity path is now implemented and validated:
+   - `ReadabilityResult` now exposes `dir` and `lang`.
+   - Compatibility tests now assert `dir`/`lang` on imported RTL/language cases.
    - References:
-     - `Readability/Tests/ReadabilityTests/TestLoader.swift:15`
      - `Readability/Sources/Readability/ReadabilityResult.swift:3`
+     - `Readability/Tests/ReadabilityTests/MozillaCompatibilityTests.swift:17`
      - `ref/mozilla-readability/test/test-readability.js:216`
 
 2. Coverage status update (must respect two-phase strategy):
@@ -92,7 +91,7 @@ Reference:
 
 ### 1.4 Bridging plan for Mozilla parity (recommended, functional-first)
 
-Priority update: comparator replacement and functional/core import are complete; current priority is **P1** for metadata parity (`dir`/`lang`) and Stage 3-R readiness.
+Priority update: comparator replacement, functional/core import, and `dir`/`lang` parity are complete; current priority is **P1** for Stage 3-R readiness.
 
 Phase A (high value, low-medium cost, 1-2 days):
 
@@ -101,8 +100,8 @@ Phase A (high value, low-medium cost, 1-2 days):
 
 Phase B (medium cost, 2-4 days):
 
-- Add missing metadata parity checks for `dir`/`lang` when those cases are imported.
-- Decide whether to add `dir`/`lang` to public result now or isolate in test-only extractor output.
+- Completed: metadata parity checks for `dir`/`lang` are active.
+- Completed: `dir`/`lang` are exposed in `ReadabilityResult` during internal development phase.
 
 Phase C-F (closure, Functional stage only):
 
@@ -525,6 +524,7 @@ Legend:
 #### S3F-T2: Implement/validate `dir`/`lang` parity path for functional RTL scope
 
 - Priority: `P1`
+- Status: `Complete` (2026-02-06)
 - Scope:
   - extraction pipeline + compatibility tests
 - Implementation:
@@ -538,6 +538,7 @@ Legend:
 #### S3F-T3: Resolve deferred `002` mismatch as stage-closing item
 
 - Priority: `P1` (stage gate critical)
+- Status: `Complete` (2026-02-06)
 - Scope:
   - extraction/cleanup path around `002`
   - compatibility test expectations
@@ -604,13 +605,9 @@ Legend:
 
 ## Decision Points
 
-1. `dir/lang` strategy:
-   - Add to `ReadabilityResult` now, or maintain internal-only parity checks first?
-2. `002` handling gate:
-   - Keep deferred until structural comparator lands (recommended), or attempt immediate fix?
-3. API option policy:
+1. API option policy:
    - Implement currently dead options now, or mark as intentionally unsupported and trim API surface?
-4. Functional vs real-world execution gate:
+2. Functional vs real-world execution gate:
    - Confirm exact completion criteria for switching from Stage 3-F to Stage 3-R.
 
 ## Decision Outcomes (Confirmed)

@@ -49,7 +49,7 @@ public struct Readability {
 
         // Extract article content using new ContentExtractor
         let extractor = ContentExtractor(doc: doc, options: options, articleTitle: title)
-        let (articleContent, extractedByline, _) = try extractor.extract()
+        let (articleContent, extractedByline, _, articleDir, articleLang) = try extractor.extract()
 
         // Post-process with ArticleCleaner
         let cleaner = ArticleCleaner(options: options)
@@ -82,6 +82,8 @@ public struct Readability {
         return ReadabilityResult(
             title: title,
             byline: byline,
+            dir: articleDir,
+            lang: articleLang,
             content: content,
             textContent: textContent,
             excerpt: excerpt,

@@ -15,6 +15,9 @@ final class ContentExtractor {
     /// Represents a single extraction attempt
     struct ExtractionAttempt {
         let articleContent: Element
+        let byline: String?
+        let dir: String?
+        let lang: String?
         let textLength: Int
         let flags: UInt32
     }
@@ -32,17 +35,19 @@ final class ContentExtractor {
     // MARK: - Main Extraction
 
     /// Extract article content with multi-attempt fallback
-    /// - Returns: Tuple of (article content element, byline, neededToCreate)
+    /// - Returns: Tuple of (article content element, byline, neededToCreate, dir, lang)
     /// - Throws: ReadabilityError if extraction fails
-    func extract() throws -> (content: Element, byline: String?, neededToCreate: Bool) {
+    func extract() throws -> (content: Element, byline: String?, neededToCreate: Bool, dir: String?, lang: String?) {
         guard let body = doc.body() else {
             throw ReadabilityError.elementNotFound("body")
         }
 
+        let articleLang = extractDocumentLanguage()
+
         // Cache original HTML for restoration
         pageCacheHtml = try body.html()
 
-        var result: (content: Element, byline: String?, neededToCreate: Bool)?
+        var result: (content: Element, byline: String?, neededToCreate: Bool, dir: String?, lang: String?)?
 
         // Multi-attempt loop
         while true {
@@ -66,7 +71,9 @@ final class ContentExtractor {
                 result = (
                     content: attemptResult.content,
                     byline: articleByline ?? attemptResult.byline,
-                    neededToCreate: attemptResult.neededToCreate
+                    neededToCreate: attemptResult.neededToCreate,
+                    dir: attemptResult.dir,
+                    lang: articleLang
                 )
                 break
             }
@@ -74,6 +81,9 @@ final class ContentExtractor {
             // Content too short, track attempt
             attempts.append(ExtractionAttempt(
                 articleContent: attemptResult.content,
+                byline: articleByline ?? attemptResult.byline,
+                dir: attemptResult.dir,
+                lang: articleLang,
                 textLength: textLength,
                 flags: flags
             ))
@@ -89,8 +99,10 @@ final class ContentExtractor {
                    bestAttempt.textLength > 0 {
                     result = (
                         content: bestAttempt.articleContent,
-                        byline: articleByline,
-                        neededToCreate: false
+                        byline: bestAttempt.byline,
+                        neededToCreate: false,
+                        dir: bestAttempt.dir,
+                        lang: bestAttempt.lang
                     )
                     break
                 } else {
@@ -115,7 +127,7 @@ final class ContentExtractor {
     private func performExtraction(
         from body: Element,
         scoringManager: NodeScoringManager
-    ) throws -> (content: Element, byline: String?, neededToCreate: Bool) {
+    ) throws -> (content: Element, byline: String?, neededToCreate: Bool, dir: String?) {
         let cleaner = NodeCleaner(options: options)
         cleaner.setArticleTitle(articleTitle)
         let selector = CandidateSelector(options: options, scoringManager: scoringManager)
@@ -165,7 +177,45 @@ final class ContentExtractor {
             in: doc
         )
 
-        return (content: articleContent, byline: articleByline, neededToCreate: neededToCreate)
+        let articleDir = extractArticleDirection(topCandidate: topCandidate)
+
+        return (content: articleContent, byline: articleByline, neededToCreate: neededToCreate, dir: articleDir)
+    }
+
+    private func extractDocumentLanguage() -> String? {
+        guard let htmlElement = try? doc.select("html").first() else {
+            return nil
+        }
+        guard let lang = try? htmlElement.attr("lang").trimmingCharacters(in: .whitespacesAndNewlines),
+              !lang.isEmpty else {
+            return nil
+        }
+        return lang
+    }
+
+    private func extractArticleDirection(topCandidate: Element) -> String? {
+        var nodesToCheck: [Element] = []
+
+        if let parent = topCandidate.parent() {
+            nodesToCheck.append(parent)
+
+            var ancestor: Element? = parent.parent()
+            while let currentAncestor = ancestor {
+                nodesToCheck.append(currentAncestor)
+                ancestor = currentAncestor.parent()
+            }
+        }
+
+        nodesToCheck.insert(topCandidate, at: min(1, nodesToCheck.count))
+
+        for node in nodesToCheck {
+            guard let dir = try? node.attr("dir").trimmingCharacters(in: .whitespacesAndNewlines),
+                  !dir.isEmpty else {
+                continue
+            }
+            return dir
+        }
+        return nil
     }
 
     // MARK: - Byline Extraction

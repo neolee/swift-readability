@@ -2,8 +2,8 @@
 
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
 
-**Current Status:** Phase 6 In Progress (Functional suite expansion and hardening)
-**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 288 tests, 0 failures (`MozillaCompatibilityTests` 114/114 passing, 0 known issues)
+**Current Status:** Phase 6 Complete (functional/core parity baseline locked; preparing Phase 7)
+**Verification Baseline (2026-02-06):** `cd Readability && swift test` -> 293 tests, 0 failures (`MozillaCompatibilityTests` 119/119 passing, 0 known issues)
 
 ### Stage 3-F Import Progress (S3F-T1)
 
@@ -493,8 +493,8 @@ Complete deferred issues from Phase 5 before proceeding.
 - `005-unescape-html-entities` - HTML entity decoding
 
 **Tasks:**
-- [ ] Preserve `dir` attribute for RTL content
-- [ ] Preserve `lang` attribute
+- [x] Preserve `dir` attribute for RTL content
+- [x] Preserve `lang` attribute
 - [ ] MathJax content handling
 - [ ] HTML entity unescaping in metadata
 
@@ -552,7 +552,7 @@ Complete deferred issues from Phase 5 before proceeding.
 | Metric | Target | Status |
 |--------|--------|--------|
 | Standard tests imported | 52/52 | 52/52 (100%) |
-| Standard tests passing | 95%+ | 114/114 `MozillaCompatibilityTests` tests passing |
+| Standard tests passing | 95%+ | 119/119 `MozillaCompatibilityTests` tests passing |
 | Known issues | 0 | 0 active known issues |
 | Real-world tests | Phase 7 | 0/78 (0%) |
 
