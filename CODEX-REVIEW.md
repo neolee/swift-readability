@@ -552,6 +552,7 @@ Legend:
 #### S3F-T4: Stage 3-F gate verification run
 
 - Priority: `P0` (release gate for Stage 3-R entry)
+- Status: `Complete` (2026-02-06)
 - Scope:
   - full `MozillaCompatibilityTests`
   - status docs
@@ -562,6 +563,9 @@ Legend:
   - `Doc`: gate checklist updated.
 - Pass standard:
   - Stage 3-F locked criteria all satisfied (see Stage Gate Criteria).
+  - Verification snapshot:
+    - `cd Readability && swift test --filter MozillaCompatibilityTests` -> `119/119` passed
+    - `cd Readability && swift test` -> `293` tests, `0` failures
 
 ### Stage 3-R: Real-world Hardening (Strictly After Stage 3-F)
 

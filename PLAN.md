@@ -556,6 +556,12 @@ Complete deferred issues from Phase 5 before proceeding.
 | Known issues | 0 | 0 active known issues |
 | Real-world tests | Phase 7 | 0/78 (0%) |
 
+### Stage 3-F Gate Checkpoint (S3F-T4)
+
+- [x] `cd Readability && swift test --filter MozillaCompatibilityTests` -> 119/119 passing (2026-02-06)
+- [x] `cd Readability && swift test` -> 293 tests, 0 failures (2026-02-06)
+- [x] Stage 3-F gate passed; Stage 3-R can begin under strict functional/real-world separation
+
 ---
 
 ## Phase 7: Performance and Polish
