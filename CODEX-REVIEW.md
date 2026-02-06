@@ -15,7 +15,7 @@ This review is reorganized around your three core concerns:
 Working assumptions applied:
 
 - `MozillaCompatibilityTests` is the final parity gate.
-- `002` mismatch is intentionally deferred for now.
+- `002` mismatch has been resolved under structural DOM comparison.
 - Immediate focus is risk reduction and forward-compatibility of the codebase.
 - Test import/execution strategy is explicitly two-phase:
   - Phase F (Functional): complete and pass all core functional Mozilla tests first.
@@ -26,13 +26,13 @@ Working assumptions applied:
 
 From local `cd Readability && swift test`:
 
-- Total: `280` tests
+- Total: `288` tests
 - Failed: `0`
 - Known issues: `0`
 
 Imported Mozilla pages in this repo:
 
-- Current local resources: `48` test pages
+- Current local resources: `52` functional/core test pages (non real-world set)
 - Mozilla upstream test pages in local ref: `130`
 
 Test taxonomy alignment for planning:
@@ -61,17 +61,17 @@ Reference:
 
 ### 1.2 What current Swift compatibility tests do
 
-Current `compareDOM()`:
+Current `DOMComparator.compare()`:
 
-- Parses actual/expected HTML
-- Flattens to text
-- Uses word-set similarity ratio
-- Treats high text overlap as pass, regardless of structural drift
+- Parses actual/expected HTML and normalizes through parser round-trip
+- Performs in-order DOM traversal while ignoring ignorable text nodes
+- Compares node descriptors, text content, and attributes
+- Emits first-divergence diagnostics with node path and mismatch detail
 
 Reference:
 
 - `Readability/Tests/ReadabilityTests/MozillaCompatibilityTests.swift:27`
-- `Readability/Tests/ReadabilityTests/MozillaCompatibilityTests.swift:53`
+- `Readability/Tests/ReadabilityTests/TestSupport/DOMComparator.swift:11`
 
 ### 1.3 Additional parity deltas beyond comparator
 
@@ -84,31 +84,30 @@ Reference:
      - `Readability/Sources/Readability/ReadabilityResult.swift:3`
      - `ref/mozilla-readability/test/test-readability.js:216`
 
-2. Coverage volume gap (must respect two-phase strategy):
-   - Local imported cases: `30`
+2. Coverage status update (must respect two-phase strategy):
+   - Local imported functional/core cases: `52`
    - Upstream total: `130`
-   - Functional-first import target should prioritize: `base-url*`, `rtl-*`, `mathjax`, `svg-parsing`, `lazy-image-*`, `videos-*`, `bug-1255978`.
+   - Remaining imports are now in the real-world phase only.
    - Real-world pages remain intentionally deferred to Phase R.
 
 ### 1.4 Bridging plan for Mozilla parity (recommended, functional-first)
 
-Priority: **P0** for comparator replacement, **P1** for broader import.
+Priority update: comparator replacement and functional/core import are complete; current priority is **P1** for metadata parity (`dir`/`lang`) and Stage 3-R readiness.
 
 Phase A (high value, low-medium cost, 1-2 days):
 
-- Replace text-similarity comparator with structural DOM comparator mirroring Mozilla traversal.
-- Keep similarity score as debug only.
-- Emit "first divergence path" diagnostics (node path + expected vs actual descriptor).
+- Completed: structural DOM comparator now mirrors Mozilla-style traversal checks.
+- Completed: first-divergence diagnostics are emitted with path + mismatch detail.
 
 Phase B (medium cost, 2-4 days):
 
 - Add missing metadata parity checks for `dir`/`lang` when those cases are imported.
 - Decide whether to add `dir`/`lang` to public result now or isolate in test-only extractor output.
 
-Phase C-F (ongoing, Functional stage only):
+Phase C-F (closure, Functional stage only):
 
-- Continue importing remaining standard cases in prioritized batches.
-- Keep `002` explicitly marked as deferred known issue until structural comparator is in place (otherwise diagnosis is noisy).
+- Functional/core import set is complete.
+- Keep functional baseline green under strict structural comparator.
 
 Phase C-R (separate later stage):
 
@@ -502,7 +501,7 @@ Legend:
 #### S3F-T1: Import remaining functional Mozilla pages in batches
 
 - Priority: `P1`
-- Status: `In Progress` (2026-02-06)
+- Status: `Complete` (2026-02-06)
 - Scope:
   - `Readability/Tests/ReadabilityTests/Resources/test-pages/*`
   - `Readability/Tests/ReadabilityTests/MozillaCompatibilityTests.swift`
@@ -514,12 +513,14 @@ Legend:
     - Edge behavior: `comment-inside-script-parsing`, `toc-missing`, `metadata-content-missing`, `bug-1255978`
 - Acceptance method:
   - `Test`: `cd Readability && swift test --filter MozillaCompatibilityTests`
- - Pass standard:
+- Pass standard:
   - Each imported case has content + metadata assertions with no relaxed matching.
   - Current imported batches:
     - URL/base: `base-url`, `base-url-base-element`, `base-url-base-element-relative`, `js-link-replacement`
     - I18N/entities: `005-unescape-html-entities`, `rtl-1..4`, `mathjax` (content passing)
     - Media/SVG: `data-url-image`, `lazy-image-1`, `lazy-image-2`, `lazy-image-3`, `embedded-videos`, `videos-1`, `videos-2`, `svg-parsing` (all currently passing in local compatibility run)
+    - Edge behavior: `comment-inside-script-parsing`, `toc-missing`, `metadata-content-missing`, `bug-1255978` (all currently passing in local compatibility run)
+  - Remaining standard functional imports: none.
 
 #### S3F-T2: Implement/validate `dir`/`lang` parity path for functional RTL scope
 
@@ -622,8 +623,8 @@ The following decisions are now fixed for the current development phase:
    - Final public API decision is deferred to pre-release hardening.
 
 2. `002` handling:
-   - Keep deferred for now.
-   - Treat `002` resolution as a closing condition of Stage 3-F.
+   - Resolved under structural DOM comparator.
+   - Keep as an explicit regression watch item (no defer state).
 
 3. Unimplemented/dead options policy:
    - Mark status explicitly in docs now.

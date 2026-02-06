@@ -33,6 +33,7 @@ This document outlines the phased implementation plan for porting Mozilla Readab
   - `metadata-content-missing` (content assertion passing)
   - `toc-missing` (content assertion passing)
   - `bug-1255978` (content assertion passing)
+- [x] Remaining standard functional pages to import: none (`52/52` covered in `MozillaCompatibilityTests`)
 
 ## Option Implementation Status (S2-T6)
 
@@ -323,9 +324,9 @@ Sources/Readability/Internal/
 
 **Goal:** Complete all standard Mozilla test cases (non real-world sites) and achieve 95%+ pass rate
 
-**Scope:** 49 standard functional tests (excluding 78 real-world site tests)
-**Current:** 34/49 standard functional tests imported (69%)
-**Target:** 49/49 tests imported and passing
+**Scope:** 52 standard functional tests (excluding 78 real-world site tests)
+**Current:** 52/52 standard functional tests imported (100%)
+**Target:** 52/52 tests imported and passing
 
 ### Ordering Principle
 
@@ -519,7 +520,7 @@ Complete deferred issues from Phase 5 before proceeding.
 
 ### 6.10 Test Suite Completion & Known Issues Resolution [P5 - Final]
 
-**Goal:** Import all remaining standard tests and resolve known issues
+**Goal:** Keep full standard set green and resolve any newly introduced issues
 
 **Import Queue:**
 
@@ -536,12 +537,12 @@ Complete deferred issues from Phase 5 before proceeding.
 | Batch 9 | `comment-inside-script-parsing`, `toc-missing`, `metadata-content-missing`, `bug-1255978` | Edge cases |
 
 **Known Issues to Resolve:**
-- [ ] None currently active in imported standard set
+- [x] None currently active in imported standard set
 
 **Verification Criteria:**
-- [ ] 49/49 standard functional tests imported
-- [ ] 0 known issues remaining
-- [ ] 95%+ test pass rate on standard tests
+- [x] 52/52 standard functional tests imported
+- [x] 0 known issues remaining
+- [x] 95%+ test pass rate on standard tests
 - [ ] Document any technical limitations with clear explanations
 
 ---
@@ -550,7 +551,7 @@ Complete deferred issues from Phase 5 before proceeding.
 
 | Metric | Target | Status |
 |--------|--------|--------|
-| Standard tests imported | 49/49 | 34/49 (69%) |
+| Standard tests imported | 52/52 | 52/52 (100%) |
 | Standard tests passing | 95%+ | 114/114 `MozillaCompatibilityTests` tests passing |
 | Known issues | 0 | 0 active known issues |
 | Real-world tests | Phase 7 | 0/78 (0%) |
@@ -582,9 +583,9 @@ Mozilla Readability has **130 test cases** total, divided into:
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| Standard Functional Tests | 49 | Feature-specific tests (replace-brs, lazy-images, etc.) |
+| Standard Functional Tests | 52 | Feature-specific tests (replace-brs, lazy-images, etc.) |
 | Real-World Site Tests | 78 | Tests from actual websites (wikipedia, nytimes, etc.) |
-| **Total** | **127** | (3 tests may be utilities/infrastructure) |
+| **Total** | **130** | |
 
 ### Phase Coverage Overview
 
@@ -595,12 +596,12 @@ Mozilla Readability has **130 test cases** total, divided into:
 | Phase 3 | Metadata | 100% | 12 | COMPLETE |
 | Phase 4 | Core Scoring | 100% | 16 | COMPLETE |
 | Phase 5 | Content Quality | 100% | 4 | COMPLETE |
-| **Phase 6** | **Standard Tests** | **95%+** | **49** | **IN PROGRESS** |
+| **Phase 6** | **Standard Tests** | **95%+** | **52** | **COMPLETE (import + current baseline)** |
 | Phase 7 | Real-World Sites | 90%+ | 78 | PENDING |
 
 ### Current Status
 
-**Standard Tests:** 34/49 imported (69%), currently passing in compatibility suite  
+**Standard Tests:** 52/52 imported (100%), currently passing in compatibility suite  
 **Known Issues:** 0 active known issues in imported set
 
 ### Phase 6 Detailed Progress
@@ -728,14 +729,14 @@ All foundation work is complete through Phase 5:
 
 ### Current Focus: Phase 6
 
-**Goal:** Complete all 49 standard functional tests with 95%+ pass rate.
+**Goal:** Maintain all 52 standard functional tests at 95%+ pass rate.
 
-**Current Status:** 34/49 standard tests imported, compatibility suite fully passing
+**Current Status:** 52/52 standard tests imported, compatibility suite fully passing
 
 **Active Work:**
-1. Import remaining standard functional tests in priority order
+1. Maintain functional/core baseline (`52/52`) while preventing regressions
 2. Keep imported standard suite green with strict DOM comparator
-3. Close Stage 3-F remaining batches
+3. Keep Stage 3-F baseline stable while preparing Stage 3-R
 
 ### Phase 7 Preview
 
