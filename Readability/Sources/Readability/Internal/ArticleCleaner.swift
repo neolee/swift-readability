@@ -26,9 +26,6 @@ final class ArticleCleaner {
 
         // Convert DIVs to Ps where appropriate
         try convertDivsToParagraphs(articleContent)
-
-        // Simplify nested elements
-        try simplifyNestedElements(articleContent)
     }
 
     // MARK: - DIV to P Conversion
@@ -42,15 +39,63 @@ final class ArticleCleaner {
             // Skip if already converted
             guard div.tagName().lowercased() == "div" else { continue }
 
-            // Check if div contains only phrasing content
-            let hasBlockChildren = try hasChildBlockElement(div)
+            // Put consecutive phrasing content into paragraphs.
+            var childNode = div.getChildNodes().first
+            while let current = childNode {
+                var nextSibling = current.nextSibling()
 
-            if !hasBlockChildren {
-                // Convert this div to a p
+                if isPhrasingContent(current) {
+                    var fragment: [Node] = []
+                    var cursor: Node? = current
+
+                    // Collect consecutive phrasing nodes.
+                    while let phrasingNode = cursor, isPhrasingContent(phrasingNode) {
+                        nextSibling = phrasingNode.nextSibling()
+                        fragment.append(phrasingNode)
+                        cursor = nextSibling
+                    }
+
+                    // Trim surrounding whitespace / <br> from the fragment.
+                    while let first = fragment.first, isWhitespace(first) {
+                        try first.remove()
+                        fragment.removeFirst()
+                    }
+                    while let last = fragment.last, isWhitespace(last) {
+                        try last.remove()
+                        fragment.removeLast()
+                    }
+
+                    // Wrap non-empty fragment with a <p>.
+                    if !fragment.isEmpty {
+                        let doc = div.ownerDocument() ?? Document("")
+                        let p = try doc.createElement("p")
+
+                        if let next = nextSibling {
+                            try next.before(p)
+                        } else {
+                            try div.appendChild(p)
+                        }
+
+                        for node in fragment where node.parent() != nil {
+                            try p.appendChild(node)
+                        }
+                    }
+                }
+
+                childNode = nextSibling
+            }
+
+            // If DIV has exactly one P child and low link density, unwrap to that P.
+            if hasSingleTagInsideElement(div, tag: "P"), try getLinkDensity(div) < 0.25 {
+                if let onlyChild = div.children().first {
+                    try div.replaceWith(onlyChild)
+                }
+                continue
+            }
+
+            // Otherwise, if no block children remain, convert DIV to P.
+            if !(try hasChildBlockElement(div)) {
                 _ = try setNodeTag(div, newTag: "p")
-            } else {
-                // Try to wrap consecutive phrasing content in p tags
-                try wrapPhrasingContentInParagraphs(div)
             }
         }
     }
@@ -139,6 +184,33 @@ final class ArticleCleaner {
             }
         }
 
+        return false
+    }
+
+    private func getLinkDensity(_ element: Element) throws -> Double {
+        let textLength = try DOMHelpers.getInnerText(element).count
+        if textLength == 0 {
+            return 0
+        }
+
+        let links = try element.select("a")
+        var linkLength = 0.0
+        for link in links {
+            let href = (try? link.attr("href")) ?? ""
+            let coefficient = href.hasPrefix("#") ? 0.3 : 1.0
+            linkLength += Double(try DOMHelpers.getInnerText(link).count) * coefficient
+        }
+
+        return linkLength / Double(textLength)
+    }
+
+    private func isWhitespace(_ node: Node) -> Bool {
+        if let textNode = node as? TextNode {
+            return textNode.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        if let element = node as? Element {
+            return element.tagName().lowercased() == "br"
+        }
         return false
     }
 
@@ -425,6 +497,9 @@ final class ArticleCleaner {
             let newTag = allPhrasing ? "p" : "div"
 
             let newElement = try setNodeTag(cell, newTag: newTag)
+            if newTag == "p" {
+                try newElement.removeAttr("dir")
+            }
             try table.replaceWith(newElement)
         }
     }

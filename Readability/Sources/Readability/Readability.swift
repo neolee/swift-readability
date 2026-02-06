@@ -716,6 +716,10 @@ public struct Readability {
                           let child = current.children().first {
                     if let attributes = current.getAttributes() {
                         for attr in attributes {
+                            let key = attr.getKey().lowercased()
+                            if child.tagName().lowercased() == "p" && key == "dir" {
+                                continue
+                            }
                             try child.attr(attr.getKey(), attr.getValue())
                         }
                     }

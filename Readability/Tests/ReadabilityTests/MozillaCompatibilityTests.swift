@@ -55,9 +55,11 @@ struct MozillaCompatibilityTests {
                 let actualDesc = nodeDescription(actualNode)
                 let expectedDesc = nodeDescription(expectedNode)
                 if actualDesc != expectedDesc {
+                    let actualPath = nodePath(actualNode)
+                    let expectedPath = nodePath(expectedNode)
                     return (
                         false,
-                        "Node descriptor mismatch at index \(index). Expected: \(expectedDesc), Actual: \(actualDesc)."
+                        "Node descriptor mismatch at index \(index). Expected: \(expectedDesc), Actual: \(actualDesc). Expected path: \(expectedPath). Actual path: \(actualPath)."
                     )
                 }
 
@@ -76,22 +78,28 @@ struct MozillaCompatibilityTests {
                     let actualAttrs = attributesForNode(actualElement)
                     let expectedAttrs = attributesForNode(expectedElement)
                     if actualAttrs.count != expectedAttrs.count {
+                        let actualPath = nodePath(actualElement)
+                        let expectedPath = nodePath(expectedElement)
                         return (
                             false,
-                            "Attribute count mismatch at index \(index) for \(actualElement.tagName().lowercased()). Expected \(expectedAttrs.count), got \(actualAttrs.count)."
+                            "Attribute count mismatch at index \(index) for \(actualElement.tagName().lowercased()). Expected \(expectedAttrs.count), got \(actualAttrs.count). Expected attrs: \(expectedAttrs), Actual attrs: \(actualAttrs). Expected path: \(expectedPath). Actual path: \(actualPath)."
                         )
                     }
                     for (key, expectedValue) in expectedAttrs {
                         guard let actualValue = actualAttrs[key] else {
+                            let actualPath = nodePath(actualElement)
+                            let expectedPath = nodePath(expectedElement)
                             return (
                                 false,
-                                "Missing attribute at index \(index): '\(key)' on \(actualElement.tagName().lowercased())."
+                                "Missing attribute at index \(index): '\(key)' on \(actualElement.tagName().lowercased()). Expected path: \(expectedPath). Actual path: \(actualPath)."
                             )
                         }
                         if actualValue != expectedValue {
+                            let actualPath = nodePath(actualElement)
+                            let expectedPath = nodePath(expectedElement)
                             return (
                                 false,
-                                "Attribute mismatch at index \(index): '\(key)'. Expected '\(preview(expectedValue))', got '\(preview(actualValue))'."
+                                "Attribute mismatch at index \(index): '\(key)'. Expected '\(preview(expectedValue))', got '\(preview(actualValue))'. Expected path: \(expectedPath). Actual path: \(actualPath)."
                             )
                         }
                     }
@@ -171,6 +179,35 @@ struct MozillaCompatibilityTests {
     private func preview(_ text: String, limit: Int = 80) -> String {
         if text.count <= limit { return text }
         return String(text.prefix(limit)) + "..."
+    }
+
+    private func nodePath(_ node: Node) -> String {
+        var parts: [String] = []
+        var current: Node? = node
+
+        while let n = current {
+            if let element = n as? Element {
+                let tag = element.tagName().lowercased()
+                var position = 1
+                if let parent = element.parent() {
+                    for sibling in parent.getChildNodes() {
+                        guard sibling !== element else { break }
+                        if let siblingElement = sibling as? Element,
+                           siblingElement.tagName().lowercased() == tag {
+                            position += 1
+                        }
+                    }
+                }
+                parts.append("\(tag)[\(position)]")
+            } else if n is TextNode {
+                parts.append("text()")
+            } else {
+                parts.append(n.nodeName())
+            }
+            current = n.parent()
+        }
+
+        return "/" + parts.reversed().joined(separator: "/")
     }
 
     // MARK: - 001 Test Case
