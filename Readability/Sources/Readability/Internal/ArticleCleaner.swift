@@ -92,7 +92,8 @@ final class ArticleCleaner {
                 try p.appendChild(clone)
             } else if let textNode = node as? TextNode {
                 // Clone text node
-                try p.appendText(textNode.text())
+                let textClone = TextNode(textNode.text(), doc.location())
+                try p.appendChild(textClone)
             }
         }
 
@@ -196,7 +197,8 @@ final class ArticleCleaner {
                 try newElement.appendChild(clone)
             } else if let textNode = node as? TextNode {
                 // Clone text nodes in their original position
-                try newElement.appendText(textNode.text())
+                let textClone = TextNode(textNode.text(), doc.location())
+                try newElement.appendChild(textClone)
             }
         }
 
@@ -391,18 +393,34 @@ final class ArticleCleaner {
         let tables = try element.select("table")
 
         for table in tables {
-            // Check for single row
-            let rows = try table.select("tr")
-            guard rows.count == 1 else { continue }
+            let tbody: Element
+            if hasSingleTagInsideElement(table, tag: "TBODY"), let firstChild = table.children().first {
+                tbody = firstChild
+            } else {
+                tbody = table
+            }
 
-            let row = rows.first!
-            let cells = try row.select("td, th")
-            guard cells.count == 1 else { continue }
+            guard hasSingleTagInsideElement(tbody, tag: "TR"), let row = tbody.children().first else {
+                continue
+            }
 
-            let cell = cells.first!
+            let cellTag: String
+            if hasSingleTagInsideElement(row, tag: "TD") {
+                cellTag = "TD"
+            } else if hasSingleTagInsideElement(row, tag: "TH") {
+                cellTag = "TH"
+            } else {
+                continue
+            }
+
+            guard row.children().count == 1,
+                  let cell = row.children().first,
+                  cell.tagName().uppercased() == cellTag else {
+                continue
+            }
 
             // Determine new tag based on content
-            let allPhrasing = cell.children().allSatisfy { isPhrasingContent($0) }
+            let allPhrasing = cell.getChildNodes().allSatisfy { isPhrasingContent($0) }
             let newTag = allPhrasing ? "p" : "div"
 
             let newElement = try setNodeTag(cell, newTag: newTag)

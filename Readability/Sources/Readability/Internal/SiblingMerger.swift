@@ -153,7 +153,8 @@ final class SiblingMerger {
                 try div.appendChild(clone)
             } else if let textNode = node as? TextNode {
                 // Clone text nodes in their original position
-                try div.appendText(textNode.text())
+                let textClone = TextNode(textNode.text(), doc.location())
+                try div.appendChild(textClone)
             }
         }
 

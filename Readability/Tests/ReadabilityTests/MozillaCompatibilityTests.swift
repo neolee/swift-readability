@@ -16,6 +16,8 @@ struct MozillaCompatibilityTests {
         classesToPreserve: ["caption"]
     )
 
+    private let testBaseURL = URL(string: "http://fakehost/test/index.html")!
+
     // MARK: - Helper Functions
 
     /// Normalize whitespace like HTML
@@ -180,7 +182,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -195,7 +197,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -212,7 +214,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedByline = testCase.expectedMetadata.byline
@@ -228,7 +230,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedExcerpt = testCase.expectedMetadata.excerpt
@@ -246,7 +248,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -261,7 +263,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedByline = testCase.expectedMetadata.byline
@@ -276,7 +278,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -290,7 +292,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedSiteName = testCase.expectedMetadata.siteName
@@ -307,7 +309,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -321,7 +323,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -335,7 +337,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -349,7 +351,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -364,7 +366,7 @@ struct MozillaCompatibilityTests {
         }
 
         // Test with default charThreshold to verify retry logic works
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -380,7 +382,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -394,7 +396,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -411,7 +413,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -425,7 +427,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -442,7 +444,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -456,7 +458,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -473,7 +475,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -487,7 +489,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -502,7 +504,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -516,7 +518,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -531,7 +533,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -546,7 +548,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -561,7 +563,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -576,7 +578,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -593,7 +595,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -608,7 +610,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedByline = testCase.expectedMetadata.byline
@@ -624,7 +626,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedPublishedTime = testCase.expectedMetadata.publishedTime
@@ -639,7 +641,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -654,7 +656,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedByline = testCase.expectedMetadata.byline
@@ -670,7 +672,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedExcerpt = testCase.expectedMetadata.excerpt
@@ -686,7 +688,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedPublishedTime = testCase.expectedMetadata.publishedTime
@@ -701,7 +703,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedSiteName = testCase.expectedMetadata.siteName
@@ -716,7 +718,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -731,7 +733,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedByline = testCase.expectedMetadata.byline
@@ -747,7 +749,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -764,7 +766,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -779,7 +781,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -794,7 +796,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -809,7 +811,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedByline = testCase.expectedMetadata.byline
@@ -824,7 +826,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedPublishedTime = testCase.expectedMetadata.publishedTime
@@ -839,7 +841,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedSiteName = testCase.expectedMetadata.siteName
@@ -854,7 +856,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -869,7 +871,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedSiteName = testCase.expectedMetadata.siteName
@@ -886,7 +888,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -900,7 +902,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -914,7 +916,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -928,7 +930,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -942,7 +944,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedByline = testCase.expectedMetadata.byline
@@ -957,7 +959,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedPublishedTime = testCase.expectedMetadata.publishedTime
@@ -972,7 +974,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedSiteName = testCase.expectedMetadata.siteName
@@ -987,7 +989,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -1001,7 +1003,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -1017,7 +1019,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)
@@ -1031,7 +1033,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let expectedTitle = testCase.expectedMetadata.title ?? ""
@@ -1046,7 +1048,7 @@ struct MozillaCompatibilityTests {
             return
         }
 
-        let readability = try Readability(html: testCase.sourceHTML, options: defaultOptions)
+        let readability = try Readability(html: testCase.sourceHTML, baseURL: testBaseURL, options: defaultOptions)
         let result = try readability.parse()
 
         let comparison = compareDOM(result.content, testCase.expectedHTML)

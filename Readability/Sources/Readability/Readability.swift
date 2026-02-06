@@ -8,8 +8,12 @@ public struct Readability {
     private let options: ReadabilityOptions
 
     /// Initialize with HTML string and optional configuration
-    public init(html: String, options: ReadabilityOptions = .default) throws {
-        self.doc = try SwiftSoup.parse(html)
+    public init(html: String, baseURL: URL? = nil, options: ReadabilityOptions = .default) throws {
+        if let baseURL {
+            self.doc = try SwiftSoup.parse(html, baseURL.absoluteString)
+        } else {
+            self.doc = try SwiftSoup.parse(html)
+        }
         self.options = options
     }
 
@@ -591,61 +595,134 @@ public struct Readability {
         // Clone element into document context for serialization
         let cleaned = try DOMHelpers.cloneElement(element, in: doc)
 
-        // Remove unwanted attributes
-        try removeUnwantedAttributes(cleaned)
-
-        // Remove junk elements that might have been missed
-        try removeJunkElements(cleaned)
+        // Match Mozilla post-processing order:
+        // 1) fix relative links/media URLs
+        // 2) simplify nested wrappers
+        // 3) optionally strip classes
+        try fixRelativeURIs(cleaned)
+        try simplifyNestedElements(cleaned)
+        if !options.keepClasses {
+            try cleanClasses(cleaned)
+        }
 
         return try cleaned.outerHtml()
     }
 
-    private func removeUnwantedAttributes(_ element: Element) throws {
-        if !options.keepClasses {
-            let unwantedAttrs = ["style", "onclick", "onload", "width", "height", "align", "border", "cellpadding", "cellspacing"]
-            for attr in unwantedAttrs {
-                try element.removeAttr(attr)
-            }
+    private func cleanClasses(_ element: Element) throws {
+        let preservedClasses = Set(Configuration.classesToPreserve + options.classesToPreserve)
+        let className = (try? element.className()) ?? ""
+        let newClasses = className
+            .split(separator: " ")
+            .map(String.init)
+            .filter { preservedClasses.contains($0) }
+            .joined(separator: " ")
 
-            // Handle class attribute - preserve "page" class
-            if let className = try? element.attr("class") {
-                let classes = className.split(separator: " ").map(String.init)
-                let preservedClasses = classes.filter { $0 == "page" }
-                if preservedClasses.isEmpty {
-                    try element.removeAttr("class")
-                } else {
-                    try element.attr("class", preservedClasses.joined(separator: " "))
-                }
-            }
-
-            // Handle id attribute - preserve "readability-page-*" and "readability-content" ids
-            if let id = try? element.attr("id") {
-                if !id.hasPrefix("readability-") {
-                    try element.removeAttr("id")
-                }
-            }
+        if newClasses.isEmpty {
+            try element.removeAttr("class")
+        } else {
+            try element.attr("class", newClasses)
         }
 
         for child in element.children() {
-            try removeUnwantedAttributes(child)
+            try cleanClasses(child)
         }
     }
 
-    private func removeJunkElements(_ element: Element) throws {
-        let junkSelectors = [
-            "script", "style", "noscript",
-            "[class*=comment]", "[id*=comment]",
-            "[class*=sidebar]", "[id*=sidebar]",
-            "[class*=footer]", "[id*=footer]",
-            "[class*=ad-]", "[id*=ad-]",
-            "[aria-hidden=true]"
-        ]
+    private func fixRelativeURIs(_ articleContent: Element) throws {
+        func toAbsoluteURI(_ rawURI: String) -> String {
+            let uri = rawURI.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !uri.isEmpty else { return rawURI }
 
-        for selector in junkSelectors {
-            let elements = try element.select(selector)
-            try elements.remove()
+            if uri.hasPrefix("#") {
+                return uri
+            }
+
+            if let base = URL(string: doc.location()),
+               let resolved = URL(string: uri, relativeTo: base)?.absoluteURL {
+                if var components = URLComponents(url: resolved, resolvingAgainstBaseURL: false),
+                   components.path.isEmpty {
+                    components.path = "/"
+                    return components.string ?? resolved.absoluteString
+                }
+                return resolved.absoluteString
+            }
+
+            if let resolved = URL(string: uri)?.absoluteURL {
+                if var components = URLComponents(url: resolved, resolvingAgainstBaseURL: false),
+                   components.path.isEmpty {
+                    components.path = "/"
+                    return components.string ?? resolved.absoluteString
+                }
+                return resolved.absoluteString
+            }
+
+            return uri
+        }
+
+        let links = try articleContent.select("a[href]")
+        for link in links {
+            let href = (try? link.attr("href")) ?? ""
+            guard !href.isEmpty else { continue }
+            let normalizedHref = href.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if normalizedHref.lowercased().hasPrefix("javascript:") {
+                if link.getChildNodes().count == 1, link.getChildNodes().first is TextNode {
+                    let text = try link.text()
+                    let replacement = TextNode(text, nil)
+                    try link.replaceWith(replacement)
+                } else {
+                    let span = try doc.createElement("span")
+                    for child in link.getChildNodes() {
+                        try span.appendChild(child)
+                    }
+                    try link.replaceWith(span)
+                }
+                continue
+            }
+
+            try link.attr("href", toAbsoluteURI(normalizedHref))
+        }
+
+        let mediaElements = try articleContent.select("img, picture, figure, video, audio, source")
+        for media in mediaElements {
+            let src = (try? media.attr("src")) ?? ""
+            if !src.isEmpty {
+                try media.attr("src", toAbsoluteURI(src))
+            }
+
+            let poster = (try? media.attr("poster")) ?? ""
+            if !poster.isEmpty {
+                try media.attr("poster", toAbsoluteURI(poster))
+            }
+        }
+    }
+
+    private func simplifyNestedElements(_ articleContent: Element) throws {
+        let cleaner = ArticleCleaner(options: options)
+        var node: Element? = articleContent
+
+        while let current = node {
+            let next = DOMTraversal.getNextNode(current)
+            let tagName = current.tagName().uppercased()
+
+            if let _ = current.parent(),
+               (tagName == "DIV" || tagName == "SECTION"),
+               !current.id().hasPrefix("readability") {
+                if DOMTraversal.isElementWithoutContent(current) {
+                    try current.remove()
+                } else if cleaner.hasSingleTagInsideElement(current, tag: "DIV") ||
+                            cleaner.hasSingleTagInsideElement(current, tag: "SECTION"),
+                          let child = current.children().first {
+                    if let attributes = current.getAttributes() {
+                        for attr in attributes {
+                            try child.attr(attr.getKey(), attr.getValue())
+                        }
+                    }
+                    try current.replaceWith(child)
+                }
+            }
+
+            node = next
         }
     }
 }
-
-
