@@ -6,14 +6,14 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Total new cases: 11
-- Strict pass: 1 (`wapo-2`)
-- Cases with known issues: 10
-- Known issue instances: 10
+- Strict pass: 4 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`)
+- Cases with known issues: 7
+- Known issue instances: 7
 
 ## First-Diff Snapshot (Batch 2)
 
 1. `bbc-1`
-- Content: expected `p`, actual `p#84457006` (id retention drift).
+- Content: expected plain `p`, actual `p` retains `data-media-type` / `data-media-meta` from removed media placeholder.
 - Metadata: byline mismatch is resolved in current branch (`BBC News` now matches expected).
 
 2. `guardian-1`
@@ -23,7 +23,7 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Content: expected inline `span`, actual `figure`.
 
 4. `seattletimes-1`
-- Content: expected `p`, actual `div`.
+- Status: strict pass in current branch.
 
 5. `nytimes-2`
 - Content: expected `div#story-continues-1`, actual `div` (id stripped).
@@ -39,11 +39,10 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Metadata: excerpt mismatch is resolved in current branch (meta excerpt now used when JSON-LD excerpt is empty).
 
 9. `yahoo-1`
-- Content: expected `figure > p`, actual `figure > div`.
-- Metadata: byline mismatch is resolved in current branch (`Ben Silverman` now matches expected).
+- Status: strict pass in current branch.
 
 10. `yahoo-2`
-- Content: expected `p`, actual `div` in article wrapper.
+- Status: strict pass in current branch.
 
 11. `wapo-2`
 - Status: strict pass in baseline import.
@@ -52,5 +51,5 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 
 - Batch 1 remains strict green.
 - Batch 2 tests are imported and executable in `RealWorldCompatibilityTests`.
-- Batch 2 first metadata fix pass closed 3 known-issue instances (`bbc-1` byline, `nytimes-5` excerpt, `yahoo-1` byline).
-- Next step is fixing remaining structural clusters first (`DIV/P/SECTION` conversion and container selection).
+- Batch 2 has now closed 3 structural/content instances (`seattletimes-1`, `yahoo-1`, `yahoo-2`) in addition to earlier metadata closures.
+- Next step is fixing remaining structural clusters (`nytimes` container/tag drift, `telegraph`/`guardian` media-boundary drift, `bbc-1` id parity).

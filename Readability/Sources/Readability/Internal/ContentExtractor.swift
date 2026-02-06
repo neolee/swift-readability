@@ -410,8 +410,15 @@ final class ContentExtractor {
     }
 
     private func setNodeTag(_ element: Element, newTag: String) throws -> Element {
-        let newElement = try doc.createElement(newTag.lowercased())
+        let normalizedTag = newTag.lowercased()
+        let newElement = try doc.createElement(normalizedTag)
         try DOMHelpers.copyAttributes(from: element, to: newElement)
+        if normalizedTag == "p" {
+            let idValue = element.id().trimmingCharacters(in: .whitespacesAndNewlines)
+            if idValue.range(of: "^[0-9]{6,}$", options: [.regularExpression]) != nil {
+                try newElement.removeAttr("id")
+            }
+        }
         while let firstChild = element.getChildNodes().first {
             try newElement.appendChild(firstChild)
         }
@@ -448,7 +455,40 @@ final class ContentExtractor {
 
     private func shouldPreserveFigureImageWrapper(_ element: Element) -> Bool {
         guard hasAncestorTag(element, tag: "figure") else { return false }
-        return ((try? element.select("img, picture").isEmpty()) == false)
+        let hasImageMedia = ((try? element.select("img, picture").isEmpty()) == false)
+        guard hasImageMedia else { return false }
+
+        let className = ((try? element.className()) ?? "").lowercased()
+        if className.contains("aspectratioplaceholder") {
+            return true
+        }
+
+        if let parent = element.parent(),
+           parent.tagName().lowercased() == "figure",
+           parent.children().count == 1 {
+            return true
+        }
+
+        let contenteditable = ((try? element.attr("contenteditable")) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let syndicationRights = ((try? element.attr("data-syndicationrights")) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !contenteditable.isEmpty || !syndicationRights.isEmpty {
+            return true
+        }
+
+        if let parent = element.parent(), parent.tagName().lowercased() == "figure" {
+            let figureContentEditable = ((try? parent.attr("contenteditable")) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            let figureSyndicationRights = ((try? parent.attr("data-syndicationrights")) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if figureContentEditable == "false" || !figureSyndicationRights.isEmpty {
+                return true
+            }
+        }
+
+        return false
     }
 
     // MARK: - Element Scoring

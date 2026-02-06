@@ -28,6 +28,7 @@ final class ArticleCleaner {
         // Match Mozilla prep for form controls.
         try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
         try removeShortLinkHeavyDivs(articleContent)
+        try removeRelatedLinkCollectionDivs(articleContent)
         try removeEmptyContainerDivs(articleContent)
         try removeShortRoleNoteCallouts(articleContent)
 
@@ -244,9 +245,16 @@ final class ArticleCleaner {
     func setNodeTag(_ element: Element, newTag: String) throws -> Element {
         // Get document context from element
         let doc = element.ownerDocument() ?? Document("")
-        let newElement = try doc.createElement(newTag.lowercased())
+        let normalizedTag = newTag.lowercased()
+        let newElement = try doc.createElement(normalizedTag)
 
         try DOMHelpers.copyAttributes(from: element, to: newElement)
+        if normalizedTag == "p" {
+            let idValue = element.id().trimmingCharacters(in: .whitespacesAndNewlines)
+            if idValue.range(of: "^[0-9]{6,}$", options: [.regularExpression]) != nil {
+                try newElement.removeAttr("id")
+            }
+        }
         // Match Mozilla semantics: move nodes instead of cloning to avoid any
         // possibility of duplicate/reordered child content during retagging.
         while let firstChild = element.getChildNodes().first {
@@ -517,6 +525,8 @@ final class ArticleCleaner {
         }
         // Washington Post gallery embeds are interactive chrome; Mozilla output drops them.
         try element.select("div[id^=gallery-embed_]").remove()
+        // Yahoo slideshow modal chrome is non-article UI.
+        try element.select("div[id^=modal-slideshow-]").remove()
         // Remove residual "View Graphic" promo blocks left by gallery embed extraction.
         for candidate in try element.select("div").reversed() {
             let hasGraphicLink = ((try? candidate.select("a[href*=_graphic.html]"))?.isEmpty()) == false
@@ -562,6 +572,19 @@ final class ArticleCleaner {
             if text == "advertising inread invented by teads" {
                 try candidate.remove()
             }
+        }
+
+        // Remove standalone ad label blocks (e.g. "<div><p>Advertising</p></div>").
+        for candidate in try element.select("div").reversed() {
+            let text = ((try? DOMHelpers.getInnerText(candidate)) ?? "")
+                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            guard text == "advertising" || text == "advertisement" else { continue }
+            if ((try? candidate.select("img, picture, video, iframe, object, embed, figure").isEmpty()) == false) {
+                continue
+            }
+            try candidate.remove()
         }
     }
 
@@ -623,6 +646,53 @@ final class ArticleCleaner {
             }
 
             try div.remove()
+        }
+    }
+
+    /// Remove link-collection sidecars such as "Related" and "Most Read" blocks.
+    private func removeRelatedLinkCollectionDivs(_ root: Element) throws {
+        let divs = try root.select("div")
+        for div in divs.reversed() {
+            guard div.parent() != nil else { continue }
+            if hasAncestorTag(div, tag: "figure") || hasAncestorTag(div, tag: "table") {
+                continue
+            }
+            if (try? div.select("img, picture, figure, video, iframe, object, embed").isEmpty()) == false {
+                continue
+            }
+
+            let headingText = (
+                try? div.select("h1, h2, h3, h4, h5, h6, strong, b").first()?.text()
+            )?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased() ?? ""
+            if headingText.isEmpty {
+                continue
+            }
+
+            let isRelatedHeading =
+                headingText == "related" ||
+                headingText == "more" ||
+                headingText.hasPrefix("related ") ||
+                headingText.hasPrefix("more on ") ||
+                headingText.hasPrefix("most read")
+            if !isRelatedHeading {
+                continue
+            }
+
+            let linkCount = try div.select("a").count
+            let listCount = try div.select("ul, ol").count
+            let paragraphCount = try div.select("p").count
+            let textLength = try DOMHelpers.getInnerText(div).count
+            let linkDensity = try getLinkDensity(div)
+
+            if linkCount >= 3,
+               listCount >= 1,
+               paragraphCount <= 3,
+               textLength <= 1200,
+               linkDensity >= 0.2 {
+                try div.remove()
+            }
         }
     }
 
@@ -756,7 +826,39 @@ final class ArticleCleaner {
 
     private func shouldPreserveFigureImageWrapper(_ element: Element) -> Bool {
         guard hasAncestorTag(element, tag: "figure") else { return false }
-        return ((try? element.select("img, picture").isEmpty()) == false)
+        let hasImageMedia = ((try? element.select("img, picture").isEmpty()) == false)
+        guard hasImageMedia else { return false }
+
+        // Preserve single-child figure wrappers to avoid collapsing image-only
+        // figure structure into a bare <p> in late cleanup.
+        if let parent = element.parent(),
+           parent.tagName().lowercased() == "figure",
+           parent.children().count == 1 {
+            return true
+        }
+
+        // Preserve wrappers that carry explicit syndicated-media metadata.
+        let contenteditable = ((try? element.attr("contenteditable")) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let syndicationRights = ((try? element.attr("data-syndicationrights")) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !contenteditable.isEmpty || !syndicationRights.isEmpty {
+            return true
+        }
+
+        // Also preserve wrappers when parent figure declares syndicated media metadata.
+        if let parent = element.parent(), parent.tagName().lowercased() == "figure" {
+            let figureContentEditable = ((try? parent.attr("contenteditable")) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            let figureSyndicationRights = ((try? parent.attr("data-syndicationrights")) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if figureContentEditable == "false" || !figureSyndicationRights.isEmpty {
+                return true
+            }
+        }
+
+        return false
     }
 
     private func isAdvertisementWord(_ text: String) -> Bool {
