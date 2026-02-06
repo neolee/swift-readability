@@ -451,28 +451,10 @@ final class ContentExtractor {
             return 0
         }
 
-        // Initialize and score
-        var score = scoringManager.initializeNode(element).contentScore
-
-        // Add comma score
-        let commaCount = text.filter { $0 == "," }.count
-        score += Double(commaCount)
-
-        // Add length score (max 3)
-        score += min(Double(textLength) / 100.0, 3.0)
-
-        // Add class weight if flag enabled
-        if isFlagActive(Configuration.flagWeightClasses) {
-            score += scoringManager.getClassWeight(for: element)
-        }
-
-        // Apply link density penalty
-        let linkDensity = try scoringManager.getLinkDensity(for: element)
-        score *= (1.0 - linkDensity + options.linkDensityModifier)
-
-        // Update score in manager
-        scoringManager.addToScore(score, for: element)
-
+        // Mozilla parity: score paragraphs, then propagate only to ancestors.
+        var score = 1.0
+        score += Double(text.split(whereSeparator: { $0 == "," || $0 == "\u{FF0C}" }).count)
+        score += min(Double(textLength / 100), 3.0)
         return score
     }
 

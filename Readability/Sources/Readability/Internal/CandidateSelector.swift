@@ -23,6 +23,15 @@ final class CandidateSelector {
     func selectTopCandidate(from elements: [Element], in doc: Document) throws -> (candidate: Element, neededToCreate: Bool) {
         let topCandidates = collectTopCandidates(from: elements)
 
+        if options.debug, topCandidates.count > 0 {
+            var summaries: [String] = []
+            for index in 0..<topCandidates.count {
+                guard let candidate = topCandidates[index] else { continue }
+                summaries.append("[\(index)] \(describe(candidate.element))")
+            }
+            print("[ReadabilityDebug] Top candidates: \(summaries.joined(separator: " | "))")
+        }
+
         var topCandidate = topCandidates.best?.element
         var neededToCreateTopCandidate = false
 
@@ -44,6 +53,11 @@ final class CandidateSelector {
 
             // If top candidate is the only child, use parent instead
             topCandidate = try promoteSingleChildCandidate(topCandidate!)
+
+            if options.debug, let chosen = topCandidate {
+                print("[ReadabilityDebug] Chosen top candidate: \(describe(chosen))")
+                print("[ReadabilityDebug] Candidate ancestor chain: \(describeAncestorChain(from: chosen).joined(separator: " > "))")
+            }
         }
 
         // If still no candidate, create one
@@ -63,12 +77,15 @@ final class CandidateSelector {
 
         for element in elements {
             // Get the score (already calculated during grabArticle)
-            var score = scoringManager.getContentScore(for: element)
+            let originalScore = scoringManager.getContentScore(for: element)
+            var score = originalScore
 
             // Apply link density scaling
             if let linkDensity = try? scoringManager.getLinkDensity(for: element) {
                 score *= (1.0 - linkDensity)
             }
+            // Mozilla parity: write adjusted score back onto candidate.
+            scoringManager.setContentScore(score, for: element)
 
             // Add to top candidates
             if score > 0 {
@@ -167,7 +184,7 @@ final class CandidateSelector {
         var currentCandidate = candidate
         var parentOfTopCandidate: Element? = candidate.parent()
 
-        var lastScore = scoringManager.getContentScore(for: candidate)
+        var lastScore = scoreForParentPromotion(candidate)
         let scoreThreshold = lastScore / 3
 
         while let parent = parentOfTopCandidate,
@@ -179,7 +196,7 @@ final class CandidateSelector {
                 continue
             }
 
-            let parentScore = scoringManager.getContentScore(for: parent)
+            let parentScore = scoreForParentPromotion(parent)
 
             // If score is too low, stop
             if parentScore < scoreThreshold {
@@ -197,6 +214,37 @@ final class CandidateSelector {
         }
 
         return currentCandidate
+    }
+
+    private func scoreForParentPromotion(_ element: Element) -> Double {
+        return scoringManager.getContentScore(for: element)
+    }
+
+    private func describe(_ element: Element) -> String {
+        let tag = element.tagName().lowercased()
+        let id = element.id()
+        let cls = ((try? element.className()) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let score = String(format: "%.3f", scoreForParentPromotion(element))
+        let children = element.children().count
+        var desc = tag
+        if !id.isEmpty { desc += "#\(id)" }
+        if !cls.isEmpty { desc += ".(\(cls))" }
+        desc += "{score=\(score),children=\(children)}"
+        return desc
+    }
+
+    private func describeAncestorChain(from element: Element) -> [String] {
+        var chain: [String] = [describe(element)]
+        var parent = element.parent()
+        while let current = parent {
+            chain.append(describe(current))
+            if current.tagName().uppercased() == "BODY" {
+                break
+            }
+            parent = current.parent()
+        }
+        return chain
     }
 
     // MARK: - Fallback Candidate Creation

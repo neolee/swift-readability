@@ -70,6 +70,7 @@ final class NodeScoringManager {
             break
         }
 
+        score.contentScore += getClassWeight(for: element)
         setScore(score, for: element)
         return score
     }
@@ -92,6 +93,16 @@ final class NodeScoringManager {
     func addToScore(_ value: Double, for element: Element) {
         var score = getScore(for: element) ?? NodeScore()
         score.contentScore += value
+        score.initialized = true
+        setScore(score, for: element)
+    }
+
+    /// Replace content score while preserving initialization marker.
+    /// Mirrors Mozilla behavior where candidate score is overwritten
+    /// after link-density scaling.
+    func setContentScore(_ value: Double, for element: Element) {
+        var score = getScore(for: element) ?? NodeScore()
+        score.contentScore = value
         score.initialized = true
         setScore(score, for: element)
     }

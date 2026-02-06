@@ -8,13 +8,16 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 ### RW-C1: Wrapper Identity Drift
 - Type: Structural DOM parity
 - Signature:
-  - Expected wrapper identity (`id`/`class`) missing or transformed.
-  - Example: expected `div#page.page`, actual `div`.
+  - Leading container selection differs from Mozilla or extra non-article section is retained.
+  - Example A: expected `h2`, actual `div#js-ie-storytop`.
+  - Example B: expected article end at paragraph tail, actual keeps extra `main > section`.
 - Impacted cases:
+  - `cnn`
   - `nytimes-1`
 - Priority: P1
 - Candidate areas:
-  - Wrapper creation/normalization in post-processing and serialization path.
+  - Candidate scoring/parent promotion and sibling merge boundaries.
+  - Post-cleaning of trailing non-article sections.
 
 ### RW-C2: Embedded Media/Gallery Drift
 - Type: Structural DOM + metadata side effect
@@ -71,7 +74,7 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 | Case | First Divergence | Secondary Divergence | Clusters |
 |------|------------------|----------------------|----------|
 | `cnn` | `h2` vs `div#js-ie-storytop` | title trailing space | `RW-C1`, `RW-C5` |
-| `nytimes-1` | wrapper identity mismatch | - | `RW-C1` |
+| `nytimes-1` | extra trailing `main > section` retained (node count +13) | - | `RW-C1` |
 | `wapo-1` | gallery `div` vs expected `p` | byline format mismatch | `RW-C2`, `RW-C5` |
 | `medium-1` | `figure > div` vs `figure > p` | - | `RW-C3` |
 | `wikipedia` | `p#toctitle` vs `div#toctitle` | excerpt mismatch | `RW-C4`, `RW-C5` |

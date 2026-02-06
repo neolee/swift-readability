@@ -889,6 +889,21 @@ final class ArticleCleaner {
                 .lowercased() ?? ""
             if text == "advertisement" {
                 try node.remove()
+                continue
+            }
+
+            let id = node.id().lowercased()
+            let className = ((try? node.className()) ?? "").lowercased()
+            let identity = "\(id) \(className)"
+            let isAdContainer = identity.range(
+                of: "(^|\\s|[-_])(ad|ads|advert|advertisement)(\\s|[-_]|\\d|$)",
+                options: [.regularExpression]
+            ) != nil
+
+            if isAdContainer,
+               text.count <= 120,
+               (try? node.select("img, video, picture, figure, table, blockquote").isEmpty()) == true {
+                try node.remove()
             }
         }
     }
