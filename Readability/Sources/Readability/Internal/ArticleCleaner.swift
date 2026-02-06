@@ -199,7 +199,11 @@ final class ArticleCleaner {
         let newElement = try doc.createElement(newTag.lowercased())
 
         try DOMHelpers.copyAttributes(from: element, to: newElement)
-        try DOMHelpers.cloneChildNodes(from: element, to: newElement, in: doc)
+        // Match Mozilla semantics: move nodes instead of cloning to avoid any
+        // possibility of duplicate/reordered child content during retagging.
+        while let firstChild = element.getChildNodes().first {
+            try newElement.appendChild(firstChild)
+        }
 
         // Replace in DOM
         try element.replaceWith(newElement)

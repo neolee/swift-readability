@@ -26,9 +26,8 @@ Working assumptions applied:
 
 From local `cd Readability && swift test`:
 
-- Total: `223` tests
-- Failed: `1`
-- Failure: `002 - Content extraction produces expected text` (`99%` similarity)
+- Total: `228` tests
+- Failed: `0`
 
 Imported Mozilla pages in this repo:
 
@@ -422,6 +421,7 @@ Legend:
 #### S2-T2: Refactor paragraph wrapping to node-order-safe semantics
 
 - Priority: `P1`
+- Status: `Completed` (2026-02-06)
 - Scope:
   - `Readability/Sources/Readability/Internal/ArticleCleaner.swift`
   - related cleaner tests

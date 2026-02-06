@@ -157,6 +157,23 @@ struct ArticleCleanerTests {
         #expect(try p.text() == "Content")
     }
 
+    @Test("setNodeTag preserves mixed child node order without duplication")
+    func testSetNodeTagPreservesMixedNodeOrder() throws {
+        let html = "<div id='x'>A<span>1</span><!--note--><em>2</em>B</div>"
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let div = try doc.select("div").first()!
+
+        let cleaner = ArticleCleaner(options: .default)
+        let p = try cleaner.setNodeTag(div, newTag: "p")
+
+        #expect(p.tagName().lowercased() == "p")
+        #expect(p.id() == "x")
+        let childNodes = p.getChildNodes()
+        #expect(childNodes.map { $0.nodeName() } == ["#text", "span", "#comment", "em", "#text"])
+        #expect((childNodes[0] as? TextNode)?.getWholeText() == "A")
+        #expect((childNodes[4] as? TextNode)?.getWholeText() == "B")
+    }
+
     // MARK: - prepArticle Tests
 
     @Test("prepArticle removes scripts")
@@ -215,6 +232,28 @@ struct ArticleCleanerTests {
         #expect(divs.isEmpty())
         #expect(ps.count == 1)
         #expect(try ps.first()?.text() == "Just text content")
+    }
+
+    @Test("prepArticle wraps mixed phrasing runs without reordering")
+    func testPrepArticleMixedPhrasingOrder() throws {
+        let html = "<article><div>alpha <span>beta</span><h2>head</h2> gamma <em>delta</em></div></article>"
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let article = try doc.select("article").first()!
+
+        let cleaner = ArticleCleaner(options: .default)
+        try cleaner.prepArticle(article)
+
+        let div = try article.select("div").first()!
+        let blockChildren = div.children()
+        #expect(blockChildren.count == 3)
+        #expect(blockChildren[0].tagName().lowercased() == "p")
+        #expect(blockChildren[1].tagName().lowercased() == "h2")
+        #expect(blockChildren[2].tagName().lowercased() == "p")
+
+        #expect(try blockChildren[0].text() == "alpha beta")
+        #expect(try blockChildren[1].text() == "head")
+        #expect(try blockChildren[2].text() == "gamma delta")
+        #expect(try div.text() == "alpha beta head gamma delta")
     }
 
     // MARK: - cleanStyles Tests
