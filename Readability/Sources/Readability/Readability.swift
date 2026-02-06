@@ -705,7 +705,8 @@ public struct Readability {
         for p in paragraphs {
             let text = try p.text().trimmingCharacters(in: .whitespacesAndNewlines)
             if text.count > 50 {
-                return String(text.prefix(200))
+                // Match Mozilla fallback behavior: use full first paragraph text.
+                return text
             }
         }
         return nil

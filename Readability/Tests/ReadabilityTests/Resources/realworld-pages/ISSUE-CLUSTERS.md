@@ -47,7 +47,7 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
   - TOC/title container tag differs while id/class survives.
   - Example: expected `p#toctitle`, actual `div#toctitle`.
 - Impacted cases:
-  - `wikipedia`
+  - None (closed for current Batch 1 scope: `wikipedia`)
 - Priority: P1
 - Candidate areas:
   - Block normalization around TOC-like sections.
@@ -59,7 +59,7 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
   - Byline format mismatch (`By X` vs `@x`).
   - Excerpt truncation/selection mismatch.
 - Impacted cases:
-  - `wikipedia` (excerpt behavior)
+  - None (closed for current Batch 1 scope: `wikipedia`)
 - Priority: P1
 - Candidate areas:
   - Title trimming parity.
@@ -70,12 +70,12 @@ Scope: `wikipedia`, `medium-1`, `nytimes-1`, `cnn`, `wapo-1`
 
 | Case | First Divergence | Secondary Divergence | Clusters |
 |------|------------------|----------------------|----------|
-| `wikipedia` | `p#toctitle` vs `div#toctitle` | excerpt mismatch | `RW-C4`, `RW-C5` |
+| None | — | — | All Batch 1 clusters closed |
 
 ## Suggested Fix Order
 
-1. `RW-C1` (wrapper identity drift): broadest structural leverage with low ambiguity.
-2. `RW-C4`/`RW-C5` (TOC/excerpt parity): medium-high risk; validate against functional suite after each change.
+1. Batch 1 closure complete.
+2. Carry taxonomy into next real-world batch and classify new divergences before patching.
 
 ## Current Execution Plan (Approved)
 
@@ -110,6 +110,8 @@ Status update (2026-02-06):
 - Step 2 byline normalization target for `wapo-1` is closed.
 - Step 3 gallery/media target for `wapo-1` is closed.
 - RW-C3 figure/caption target for `medium-1` is closed.
+- RW-C4 TOC/container tag target for `wikipedia` is closed.
+- RW-C5 excerpt fallback parity target for `wikipedia` is closed.
 
 ## Acceptance Standard Per Cluster
 

@@ -217,6 +217,24 @@ struct ArticleCleanerTests {
         #expect(try paragraphs.first()?.text() == "Text")
     }
 
+    @Test("prepArticle removes short role-note main-article callout")
+    func testPrepArticleRemovesShortRoleNoteCallout() throws {
+        let html = """
+        <article>
+          <p>Lead paragraph with enough text to survive cleanup and extraction behavior.</p>
+          <div role="note"><p>Main article: <a href="/wiki/Firefox">Firefox</a></p></div>
+        </article>
+        """
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let article = try doc.select("article").first()!
+
+        let cleaner = ArticleCleaner(options: .default)
+        try cleaner.prepArticle(article)
+
+        #expect((try article.select("div[role=note]").isEmpty()) == true)
+        #expect((try article.select("a[href=/wiki/Firefox]").isEmpty()) == true)
+    }
+
     @Test("prepArticle converts divs without block children to p")
     func testConvertDivsToP() throws {
         let html = "<article><div>Just text content</div></article>"

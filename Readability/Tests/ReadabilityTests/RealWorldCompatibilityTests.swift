@@ -57,9 +57,7 @@ struct RealWorldCompatibilityTests {
     // Stage 3-R Batch 1 (initial baseline)
     @Test("realworld/wikipedia - content and metadata match")
     func testWikipedia() async throws {
-        withKnownIssue("S3R Batch 1 baseline [RW-C4, RW-C5]: structural TOC/excerpt mismatch against Mozilla expected output.") {
-            try assertContentAndMetadataMatch("wikipedia")
-        }
+        try assertContentAndMetadataMatch("wikipedia")
     }
 
     @Test("realworld/medium-1 - content and metadata match")

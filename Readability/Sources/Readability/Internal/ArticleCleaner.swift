@@ -29,6 +29,7 @@ final class ArticleCleaner {
         try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
         try removeShortLinkHeavyDivs(articleContent)
         try removeEmptyContainerDivs(articleContent)
+        try removeShortRoleNoteCallouts(articleContent)
 
         // Convert DIVs to Ps where appropriate
         try convertDivsToParagraphs(articleContent)
@@ -110,7 +111,7 @@ final class ArticleCleaner {
 
             // If no block children remain, convert DIV to P.
             if !(try hasChildBlockElement(div)) {
-                if hasContainerIdentity(div) || shouldPreserveFigureImageWrapper(div) {
+                if shouldPreserveFigureImageWrapper(div) {
                     continue
                 }
                 _ = try setNodeTag(div, newTag: "p")
@@ -622,6 +623,26 @@ final class ArticleCleaner {
             }
 
             try div.remove()
+        }
+    }
+
+    /// Remove compact role="note" callouts that are metadata/navigation (e.g. "Main article: ..."),
+    /// which Mozilla typically drops during conditional cleanup.
+    private func removeShortRoleNoteCallouts(_ root: Element) throws {
+        let notes = try root.select("div[role=note], aside[role=note]")
+        for note in notes.reversed() {
+            guard note.parent() != nil else { continue }
+            if (try? note.select("img, picture, figure, video, iframe, object, embed, table").isEmpty()) == false {
+                continue
+            }
+
+            let text = try DOMHelpers.getInnerText(note).trimmingCharacters(in: .whitespacesAndNewlines)
+            if text.isEmpty || text.count > 80 {
+                continue
+            }
+            if text.lowercased().hasPrefix("main article:") || text.lowercased().hasPrefix("see also:") {
+                try note.remove()
+            }
         }
     }
 

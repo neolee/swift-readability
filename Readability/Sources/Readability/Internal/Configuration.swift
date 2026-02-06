@@ -135,11 +135,9 @@ enum Configuration {
     ]
 
     /// Elements that indicate block content inside a DIV
-    /// Includes heading tags to avoid creating invalid `<p><hN>...</hN></p>`
-    /// structures under SwiftSoup (JSDOM auto-normalizes these cases).
+    /// Match Mozilla `DIV_TO_P_ELEMS` exactly for output parity.
     static let divToPElements = [
-        "BLOCKQUOTE", "DL", "DIV", "H1", "H2", "H3", "H4", "H5", "H6",
-        "IMG", "OL", "P", "PRE", "TABLE", "UL"
+        "BLOCKQUOTE", "DL", "DIV", "IMG", "OL", "P", "PRE", "TABLE", "UL"
     ]
 
     /// Phrasing content elements (inline elements)

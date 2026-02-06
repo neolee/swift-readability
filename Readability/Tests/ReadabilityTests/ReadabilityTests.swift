@@ -102,4 +102,26 @@ struct ReadabilityTests {
         #expect((try wrapper?.attr("contenteditable")) == "false")
         #expect((try wrapper?.attr("data-syndicationrights")) == "false")
     }
+
+    @Test("parse uses full first paragraph as excerpt fallback")
+    func testParseUsesFullFirstParagraphAsExcerptFallback() throws {
+        let firstParagraph = """
+        Mozilla readability fallback excerpt should keep the full first paragraph text without a hard cap, even when the paragraph is much longer than two hundred characters so that metadata parity can stay aligned with expected outputs for long-form articles.
+        """
+        let html = """
+        <html>
+        <body>
+          <article>
+            <h1>Long Excerpt Article</h1>
+            <p>\(firstParagraph)</p>
+            <p>This is another paragraph.</p>
+          </article>
+        </body>
+        </html>
+        """
+
+        let readability = try Readability(html: html)
+        let result = try readability.parse()
+        #expect(result.excerpt == firstParagraph)
+    }
 }

@@ -325,7 +325,7 @@ final class ContentExtractor {
                         continue
                     }
                 } else if !hasChildBlockElement(current, blockTags: blockTags) {
-                    if hasContainerIdentity(current) || shouldPreserveFigureImageWrapper(current) {
+                    if shouldPreserveFigureImageWrapper(current) {
                         node = DOMTraversal.getNextNode(current)
                         continue
                     }
