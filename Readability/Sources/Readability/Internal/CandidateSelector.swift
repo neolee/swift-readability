@@ -36,13 +36,14 @@ final class CandidateSelector {
             // Find a better top candidate if it contains multiple top candidates
             topCandidate = try findBetterTopCandidate(from: candidate, topCandidates: topCandidates)
 
-            // If top candidate is the only child, use parent instead
-            if let updatedCandidate = topCandidate {
-                topCandidate = try promoteSingleChildCandidate(updatedCandidate)
-            }
-
             // Ensure the candidate is initialized
             scoringManager.initializeNodeIfNeeded(topCandidate!)
+
+            // Mozilla parity: if parent chain scores go up, promote to better parent
+            topCandidate = findBetterParentCandidate(topCandidate!)
+
+            // If top candidate is the only child, use parent instead
+            topCandidate = try promoteSingleChildCandidate(topCandidate!)
         }
 
         // If still no candidate, create one
@@ -166,7 +167,7 @@ final class CandidateSelector {
         var currentCandidate = candidate
         var parentOfTopCandidate: Element? = candidate.parent()
 
-        let lastScore = scoringManager.getContentScore(for: candidate)
+        var lastScore = scoringManager.getContentScore(for: candidate)
         let scoreThreshold = lastScore / 3
 
         while let parent = parentOfTopCandidate,
@@ -191,6 +192,7 @@ final class CandidateSelector {
                 break
             }
 
+            lastScore = parentScore
             parentOfTopCandidate = parent.parent()
         }
 

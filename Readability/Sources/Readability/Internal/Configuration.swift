@@ -135,8 +135,11 @@ enum Configuration {
     ]
 
     /// Elements that indicate block content inside a DIV
+    /// Includes heading tags to avoid creating invalid `<p><hN>...</hN></p>`
+    /// structures under SwiftSoup (JSDOM auto-normalizes these cases).
     static let divToPElements = [
-        "BLOCKQUOTE", "DL", "DIV", "IMG", "OL", "P", "PRE", "TABLE", "UL"
+        "BLOCKQUOTE", "DL", "DIV", "H1", "H2", "H3", "H4", "H5", "H6",
+        "IMG", "OL", "P", "PRE", "TABLE", "UL"
     ]
 
     /// Phrasing content elements (inline elements)
@@ -159,7 +162,7 @@ enum Configuration {
 
     /// Default element tags to score during grabArticle
     static let defaultTagsToScore = [
-        "SECTION", "H2", "H3", "H4", "H5", "H6", "P", "TD", "PRE"
+        "H2", "H3", "H4", "H5", "H6", "P", "TD", "PRE"
     ]
 
     // MARK: - Presentational Attributes (to remove)

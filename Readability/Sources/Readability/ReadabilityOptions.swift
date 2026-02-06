@@ -57,7 +57,7 @@ public struct ReadabilityOptions: Sendable {
         self.classesToPreserve = classesToPreserve
         self.useCustomSerializer = useCustomSerializer
         self.allowedVideoRegex = allowedVideoRegex.isEmpty
-            ? "\\/\\/(www\\.)?(youtube\\.com|youtu\\.be|player\\.vimeo\\.com|vimeo\\.com|dailymotion\\.com|soundcloud\\.com|wistia\\.net|podigee\\.io|simplecast\\.com|podbean\\.com|mixcloud\\.com|embed\\.spotify\\.com|captivate\\.fm|player\\.captivate\\.fm)"
+            ? Configuration.defaultVideoRegex
             : allowedVideoRegex
         self.linkDensityModifier = linkDensityModifier
         self.debug = debug

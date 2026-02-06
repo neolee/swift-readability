@@ -88,7 +88,9 @@ final class ArticleCleaner {
             }
 
             // If DIV has exactly one P child and low link density, unwrap to that P.
-            if hasSingleTagInsideElement(div, tag: "P"), try getLinkDensity(div) < 0.25 {
+            if hasSingleTagInsideElement(div, tag: "P"),
+               try getLinkDensity(div) < 0.25,
+               !hasContainerIdentity(div) {
                 if let onlyChild = div.children().first {
                     try div.replaceWith(onlyChild)
                 }
@@ -156,6 +158,15 @@ final class ArticleCleaner {
         }
 
         return linkLength / Double(textLength)
+    }
+
+    private func hasContainerIdentity(_ element: Element) -> Bool {
+        if !element.id().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return true
+        }
+        let className = ((try? element.className()) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return !className.isEmpty
     }
 
     /// Check if node is phrasing content (inline content)
@@ -500,11 +511,15 @@ final class ArticleCleaner {
         // Remove empty paragraphs
         try removeEmptyParagraphs(articleContent)
 
+        // Remove ad placeholders that survived extraction.
+        try removeAdvertisementPlaceholders(articleContent)
+
         // Replace H1 with H2 (H1 should only be the article title)
         try replaceH1WithH2(articleContent)
 
         // Flatten single-cell tables
         try handleSingleCellTables(articleContent)
+
     }
 
     /// Remove BR tags that appear before P tags or at the end of containers
@@ -572,4 +587,17 @@ final class ArticleCleaner {
             _ = try setNodeTag(h1, newTag: "h2")
         }
     }
+
+    private func removeAdvertisementPlaceholders(_ element: Element) throws {
+        let candidates = try element.select("div, p")
+        for node in candidates {
+            let text = (try? node.text())?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased() ?? ""
+            if text == "advertisement" {
+                try node.remove()
+            }
+        }
+    }
+
 }

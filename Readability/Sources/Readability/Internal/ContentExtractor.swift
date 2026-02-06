@@ -125,6 +125,9 @@ final class ContentExtractor {
             )
         }
 
+        // Ensure hidden nodes never leak into scoring or fallback attempts.
+        try VisibilityRules.removeHiddenElements(from: body)
+
         // Extract byline from document if not already found
         if articleByline == nil {
             articleByline = try extractByline(from: body, cleaner: cleaner)
@@ -197,18 +200,161 @@ final class ContentExtractor {
 
     private func collectElementsToScore(from body: Element) throws -> [Element] {
         var elements: [Element] = []
+        let defaultTags = Set(Configuration.defaultTagsToScore.map { $0.uppercased() })
+        let blockTags = Set(Configuration.divToPElements.map { $0.uppercased() })
 
-        for tagName in Configuration.defaultTagsToScore {
-            let found = try body.select(tagName.lowercased())
-            for element in found {
-                // Skip hidden elements
-                if DOMHelpers.isProbablyVisible(element) {
-                    elements.append(element)
+        var node: Element? = body
+        while let current = node {
+            if defaultTags.contains(current.tagName().uppercased()) {
+                elements.append(current)
+            }
+
+            if current.tagName().uppercased() == "DIV" {
+                var childNode = current.getChildNodes().first
+                while let child = childNode {
+                    var nextSibling = child.nextSibling()
+
+                    if isPhrasingContent(child) {
+                        var fragment: [Node] = []
+                        var cursor: Node? = child
+                        while let phrasingNode = cursor, isPhrasingContent(phrasingNode) {
+                            nextSibling = phrasingNode.nextSibling()
+                            fragment.append(phrasingNode)
+                            cursor = nextSibling
+                        }
+
+                        while let first = fragment.first, DOMTraversal.isWhitespace(first) {
+                            try first.remove()
+                            fragment.removeFirst()
+                        }
+                        while let last = fragment.last, DOMTraversal.isWhitespace(last) {
+                            try last.remove()
+                            fragment.removeLast()
+                        }
+
+                        if !fragment.isEmpty {
+                            let p = try doc.createElement("p")
+                            if let next = nextSibling {
+                                try next.before(p)
+                            } else {
+                                try current.appendChild(p)
+                            }
+                            for fragmentNode in fragment where fragmentNode.parent() != nil {
+                                try p.appendChild(fragmentNode)
+                            }
+                        }
+                    }
+
+                    childNode = nextSibling
+                }
+
+                if hasSingleTagInsideElement(current, tag: "P"),
+                   try getLinkDensity(current) < 0.25,
+                   !hasContainerIdentity(current) {
+                    if let newNode = current.children().first {
+                        try current.replaceWith(newNode)
+                        elements.append(newNode)
+                        node = DOMTraversal.getNextNode(newNode)
+                        continue
+                    }
+                } else if !hasChildBlockElement(current, blockTags: blockTags) {
+                    let newNode = try setNodeTag(current, newTag: "p")
+                    elements.append(newNode)
+                    node = DOMTraversal.getNextNode(newNode)
+                    continue
                 }
             }
+
+            node = DOMTraversal.getNextNode(current)
         }
 
         return elements
+    }
+
+    private func hasSingleTagInsideElement(_ element: Element, tag: String) -> Bool {
+        let children = element.children()
+        guard children.count == 1,
+              children.first?.tagName().uppercased() == tag.uppercased() else {
+            return false
+        }
+
+        for textNode in element.textNodes() {
+            if !textNode.text().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    private func hasChildBlockElement(_ element: Element, blockTags: Set<String>) -> Bool {
+        for childNode in element.getChildNodes() {
+            guard let child = childNode as? Element else { continue }
+            if blockTags.contains(child.tagName().uppercased()) {
+                return true
+            }
+            if hasChildBlockElement(child, blockTags: blockTags) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func isPhrasingContent(_ node: Node) -> Bool {
+        if node is TextNode {
+            return true
+        }
+        guard let element = node as? Element else { return false }
+
+        let phrasingTags = Set(Configuration.phrasingElements.map { $0.uppercased() })
+        let tagName = element.tagName().uppercased()
+        if phrasingTags.contains(tagName) {
+            return true
+        }
+
+        if ["A", "DEL", "INS"].contains(tagName) {
+            for child in element.children() where !isPhrasingContent(child) {
+                return false
+            }
+            return true
+        }
+
+        return false
+    }
+
+    private func getLinkDensity(_ element: Element) throws -> Double {
+        let textLength = try DOMHelpers.getInnerText(element).count
+        if textLength == 0 {
+            return 0
+        }
+
+        let links = try element.select("a")
+        var linkLength = 0.0
+        for link in links {
+            let href = (try? link.attr("href")) ?? ""
+            let coefficient = href.hasPrefix("#") ? 0.3 : 1.0
+            linkLength += Double(try DOMHelpers.getInnerText(link).count) * coefficient
+        }
+        return linkLength / Double(textLength)
+    }
+
+    private func setNodeTag(_ element: Element, newTag: String) throws -> Element {
+        let newElement = try doc.createElement(newTag.lowercased())
+        try DOMHelpers.copyAttributes(from: element, to: newElement)
+        while let firstChild = element.getChildNodes().first {
+            try newElement.appendChild(firstChild)
+        }
+        try element.replaceWith(newElement)
+        return newElement
+    }
+
+    private func hasContainerIdentity(_ element: Element) -> Bool {
+        if !element.id().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return true
+        }
+        let className = ((try? element.className()) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return !className.isEmpty
     }
 
     // MARK: - Element Scoring
@@ -217,6 +363,10 @@ final class ContentExtractor {
         _ element: Element,
         scoringManager: NodeScoringManager
     ) throws -> Double {
+        if !DOMHelpers.isProbablyVisible(element) {
+            return 0
+        }
+
         let text = try element.text()
         let textLength = text.count
 
@@ -295,5 +445,3 @@ final class ContentExtractor {
         }
     }
 }
-
-

@@ -77,6 +77,10 @@ final class SiblingMerger {
             return true
         }
 
+        if !DOMHelpers.isProbablyVisible(sibling) {
+            return false
+        }
+
         var contentBonus: Double = 0
 
         // Give a bonus if sibling nodes and top candidates have the same class name

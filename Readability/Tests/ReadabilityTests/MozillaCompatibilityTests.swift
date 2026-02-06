@@ -403,11 +403,7 @@ struct MozillaCompatibilityTests {
     func testEmbeddedVideosTitle() async throws { try assertMetadataFieldMatches(.title, for: "embedded-videos") }
 
     @Test("videos-1 - Content matches expected")
-    func testVideos1Content() async throws {
-        withKnownIssue("Top-level candidate wrapper tag differs (expected div, actual section) after post-processing.") {
-            try assertContentMatches("videos-1")
-        }
-    }
+    func testVideos1Content() async throws { try assertContentMatches("videos-1") }
 
     @Test("videos-1 - Title matches expected")
     func testVideos1Title() async throws { try assertMetadataFieldMatches(.title, for: "videos-1") }

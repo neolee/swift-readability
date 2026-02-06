@@ -6,19 +6,25 @@ enum VisibilityRules {
     /// Scoring visibility follows Mozilla behavior:
     /// hidden/style-hidden are invisible; aria-hidden may keep fallback-image.
     static func isProbablyVisibleForScoring(_ element: Element) -> Bool {
-        if hasStyleHidden(element) {
-            return false
-        }
-
-        if element.hasAttr("hidden") {
-            return false
-        }
-
-        if isAriaHidden(element) {
-            let className = (try? element.className()) ?? ""
-            if !className.contains("fallback-image") {
+        var current: Element? = element
+        while let node = current {
+            if hasStyleHidden(node) || node.hasAttr("hidden") {
                 return false
             }
+
+            if isAriaHidden(node) {
+                // Keep Mozilla's fallback-image exception only for the node itself.
+                if node === element {
+                    let className = (try? element.className()) ?? ""
+                    if !className.contains("fallback-image") {
+                        return false
+                    }
+                } else {
+                    return false
+                }
+            }
+
+            current = node.parent()
         }
 
         return true
