@@ -79,6 +79,7 @@ enum SiteRuleRegistry {
             EngadgetBuyLinkRule.self,
             EngadgetBreakoutTypeRule.self,
             EngadgetReviewSummaryWrapperRule.self,
+            CityLabPromoSummarySectionRule.self,
             TheVergeZoomWrapperAccessibilityRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)

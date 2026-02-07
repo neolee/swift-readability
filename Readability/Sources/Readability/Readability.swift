@@ -817,22 +817,41 @@ public struct Readability {
     }
 
     private func removeTitleMatchedHeaders(from element: Element, title: String) throws {
-        let normalizedTitle = title
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .lowercased()
+        func normalize(_ input: String) -> String {
+            input
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                .lowercased()
+        }
+
+        let normalizedTitle = normalize(title)
 
         guard !normalizedTitle.isEmpty else { return }
 
         let headers = try element.select("h1, h2")
         for header in headers {
             let text = (try? header.text()) ?? ""
-            let normalizedHeader = text
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-                .lowercased()
+            let normalizedHeader = normalize(text)
 
             if normalizedHeader == normalizedTitle {
+                try header.remove()
+                continue
+            }
+
+            // Some pages split the visual title into stacked headings like:
+            // "Topic:" + "Actual headline". Mozilla drops the prefix heading
+            // when the concatenation still matches the extracted title.
+            let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmedText.hasSuffix(":"),
+                  let next = try? header.nextElementSibling(),
+                  ["H1", "H2", "H3", "H4", "H5", "H6"].contains(next.tagName().uppercased()) else {
+                continue
+            }
+
+            let nextText = (try? next.text()) ?? ""
+            let combined = normalize("\(trimmedText) \(nextText)")
+            if !combined.isEmpty,
+               (combined == normalizedTitle || normalizedTitle.hasSuffix(combined)) {
                 try header.remove()
             }
         }
