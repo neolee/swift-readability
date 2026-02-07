@@ -1,8 +1,8 @@
-# CODEX Review: Deep Assessment for Next-Stage Build
+# Project Review: Deep Assessment for Next-Stage Build
 
 Date: 2026-02-06
-Scope: `INIT.md`, `AGENTS.md`, `PLAN.md`, `Readability/` source and tests  
-Explicit exclusion: `README.md` (deferred by project decision)
+Scope: `AGENTS.md`, `Readability/`, `Archive/INIT.md`, `Archives/PLAN.md` source and tests
+Explicit exclusion: `README.md` (outdated, will be updated when project meets v1.0 criteria)
 
 ## Context and Assumptions
 
