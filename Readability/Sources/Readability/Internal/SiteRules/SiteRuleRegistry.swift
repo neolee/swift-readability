@@ -42,7 +42,8 @@ enum SiteRuleRegistry {
             CNETPlaylistOverlayRule.self,
             CityLabPromoSignupRule.self,
             EngadgetSlideshowIconRule.self,
-            FirefoxNightlyCommentFormRule.self
+            FirefoxNightlyCommentFormRule.self,
+            MozillaCustomizeSyncSectionRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }

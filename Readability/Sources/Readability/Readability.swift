@@ -782,11 +782,38 @@ public struct Readability {
         for p in paragraphs {
             let text = try p.text().trimmingCharacters(in: .whitespacesAndNewlines)
             if text.count > 50 {
+                let rawText = excerptTextPreservingWhitespace(from: p)
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                // Prefer whitespace-preserving text when paragraph contains
+                // semantic line breaks that should survive excerpt fallback.
+                if rawText.contains("\n") {
+                    return rawText
+                }
                 // Match Mozilla fallback behavior: use full first paragraph text.
                 return text
             }
         }
         return nil
+    }
+
+    private func excerptTextPreservingWhitespace(from element: Element) -> String {
+        func collect(from node: Node, into output: inout String) {
+            if let textNode = node as? TextNode {
+                output.append(textNode.getWholeText())
+                return
+            }
+            if let childElement = node as? Element {
+                for child in childElement.getChildNodes() {
+                    collect(from: child, into: &output)
+                }
+            }
+        }
+
+        var raw = ""
+        for node in element.getChildNodes() {
+            collect(from: node, into: &raw)
+        }
+        return raw
     }
 
     private func removeTitleMatchedHeaders(from element: Element, title: String) throws {
@@ -898,13 +925,49 @@ public struct Readability {
                 return resolved.absoluteString
             }
 
-            if let resolved = URL(string: uri)?.absoluteURL {
+            if let parsed = URL(string: uri),
+               parsed.scheme != nil {
+                let resolved = parsed.absoluteURL
                 if var components = URLComponents(url: resolved, resolvingAgainstBaseURL: false),
                    components.path.isEmpty {
                     components.path = "/"
                     return components.string ?? resolved.absoluteString
                 }
                 return resolved.absoluteString
+            }
+
+            // Fallback for malformed relative URLs (for example strings prefixed
+            // by zero-width characters before an absolute-looking URL).
+            if let base = effectiveBaseURL {
+                let encoded = uri.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed) ?? uri
+                if let resolved = URL(string: encoded, relativeTo: base)?.absoluteURL {
+                    if var components = URLComponents(url: resolved, resolvingAgainstBaseURL: false),
+                       components.path.isEmpty {
+                        components.path = "/"
+                        return components.string ?? resolved.absoluteString
+                    }
+                    return resolved.absoluteString
+                }
+            }
+
+            let hasExplicitScheme = uri.range(
+                of: "^[a-zA-Z][a-zA-Z0-9+.-]*:",
+                options: .regularExpression
+            ) != nil
+            if let base = effectiveBaseURL,
+               !hasExplicitScheme,
+               !uri.hasPrefix("//"),
+               !uri.hasPrefix("/"),
+               !uri.hasPrefix("#") {
+                var baseString = base.absoluteString
+                if !baseString.hasSuffix("/") {
+                    if let slashIndex = baseString.lastIndex(of: "/") {
+                        baseString = String(baseString[...slashIndex])
+                    } else {
+                        baseString += "/"
+                    }
+                }
+                return baseString + uri
             }
 
             return uri

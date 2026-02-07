@@ -970,6 +970,15 @@ final class ArticleCleaner {
                   let child = div.children().first else {
                 continue
             }
+            if let attributes = div.getAttributes() {
+                for attr in attributes {
+                    let key = attr.getKey().lowercased()
+                    if child.tagName().lowercased() == "p" && key == "dir" {
+                        continue
+                    }
+                    try child.attr(attr.getKey(), attr.getValue())
+                }
+            }
             try div.replaceWith(child)
         }
     }

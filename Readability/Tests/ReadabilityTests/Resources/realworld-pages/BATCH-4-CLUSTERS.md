@@ -63,6 +63,12 @@ Acceptance for cluster:
 
 ## Cluster C3 - Attribute Preservation Mismatch (framework attrs)
 
+Status:
+- [x] Completed on 2026-02-07
+- Result: `testGitLabBlog` passes
+- Real-world delta: `9 issues -> 8 issues`
+- Mozilla gate: pass (`119/119`)
+
 Cases:
 - `gitlab-blog`
 
@@ -110,6 +116,11 @@ Acceptance for cluster:
 
 ## Cluster C5 - Whitespace-Sensitive Metadata Normalization
 
+Status:
+- [~] In progress on 2026-02-07
+- Result: `mozilla-1` excerpt fixed (overlap with C6), `google-sre-book-1` byline and `lwn-1` byline remain
+- Real-world remaining: 2 issues in this cluster
+
 Cases:
 - `google-sre-book-1` (byline)
 - `mozilla-1` (excerpt)
@@ -129,6 +140,12 @@ Acceptance for cluster:
 2. Changes are narrowly scoped to avoid breaking previously passing metadata cases.
 
 ## Cluster C6 - Extra Tail Content Retention
+
+Status:
+- [x] Completed on 2026-02-07
+- Result: `testMozilla1` content + metadata assertions pass
+- Real-world delta: `8 issues -> 6 issues`
+- Mozilla gate: pass (`119/119`)
 
 Cases:
 - `mozilla-1`
