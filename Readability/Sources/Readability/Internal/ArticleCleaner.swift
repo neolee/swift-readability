@@ -10,6 +10,15 @@ final class ArticleCleaner {
         self.options = options
     }
 
+    private var siteRuleContext: ArticleCleanerSiteRuleContext {
+        ArticleCleanerSiteRuleContext(
+            getLinkDensity: getLinkDensity,
+            setNodeTag: { [self] element, tag in
+                try setNodeTag(element, newTag: tag)
+            }
+        )
+    }
+
     // MARK: - Main Article Preparation
 
     /// Prepare article content for output
@@ -29,10 +38,7 @@ final class ArticleCleaner {
         try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
         try removeShortLinkHeavyDivs(articleContent)
         try removeRelatedLinkCollectionDivs(articleContent)
-        try SiteRuleRegistry.applyPreConversionRules(
-            to: articleContent,
-            context: ArticleCleanerSiteRuleContext(getLinkDensity: getLinkDensity)
-        )
+        try SiteRuleRegistry.applyPreConversionRules(to: articleContent, context: siteRuleContext)
         try removeSingleItemPromoLists(articleContent)
         try removeEmptyContainerDivs(articleContent)
         try removeShortRoleNoteCallouts(articleContent)
@@ -104,9 +110,7 @@ final class ArticleCleaner {
             // If DIV has exactly one P child and low link density, unwrap to that P.
             if hasSingleTagInsideElement(div, tag: "P"),
                try getLinkDensity(div) < 0.25,
-               !shouldPreserveSingleParagraphWrapper(div),
                !shouldPreserveFigureImageWrapper(div),
-               !isWithinMediaControlHierarchy(div),
                let parent = div.parent(),
                parent.children().count == 1 {
                 if let onlyChild = div.children().first {
@@ -188,34 +192,6 @@ final class ArticleCleaner {
         let className = ((try? element.className()) ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return !className.isEmpty
-    }
-
-    private func shouldPreserveSingleParagraphWrapper(_ element: Element) -> Bool {
-        guard hasContainerIdentity(element) else { return false }
-        let id = element.id().lowercased()
-        let className = ((try? element.className()) ?? "").lowercased()
-        let signature = "\(id) \(className)"
-        if signature.contains("story-continues") {
-            return true
-        }
-        // Preserve identity wrappers for embedded media blocks (videos/iframes).
-        return ((try? element.select("iframe, embed, object, video").isEmpty()) == false)
-    }
-
-    private func isWithinMediaControlHierarchy(_ element: Element) -> Bool {
-        var current: Element? = element
-        while let node = current {
-            let role = ((try? node.attr("role")) ?? "").lowercased()
-            let ariaLabel = ((try? node.attr("aria-label")) ?? "").lowercased()
-            if role == "group" || role == "region" {
-                return true
-            }
-            if ariaLabel.contains("video player") || ariaLabel.contains("progress bar") {
-                return true
-            }
-            current = node.parent()
-        }
-        return false
     }
 
     /// Check if node is phrasing content (inline content)
@@ -574,10 +550,7 @@ final class ArticleCleaner {
             }
         }
 
-        try SiteRuleRegistry.applyUnwantedElementRules(
-            to: element,
-            context: ArticleCleanerSiteRuleContext(getLinkDensity: getLinkDensity)
-        )
+        try SiteRuleRegistry.applyUnwantedElementRules(to: element, context: siteRuleContext)
         // Keep tab navigation shell, but drop embedded search forms.
         for nav in try element.select("nav") {
             let hasTablist = (try? nav.select("ul[role=tablist]").isEmpty()) == false
@@ -969,10 +942,7 @@ final class ArticleCleaner {
 
     /// Remove share/social elements from article content
     private func removeShareElements(_ element: Element) throws {
-        try SiteRuleRegistry.applyShareRules(
-            to: element,
-            context: ArticleCleanerSiteRuleContext(getLinkDensity: getLinkDensity)
-        )
+        try SiteRuleRegistry.applyShareRules(to: element, context: siteRuleContext)
     }
 
     private func collapseSingleDivWrappers(_ root: Element) throws {
@@ -1078,7 +1048,7 @@ final class ArticleCleaner {
 
         // Remove empty paragraphs
         try removeEmptyParagraphs(articleContent)
-        try normalizeSplitPrintInfoParagraphs(articleContent)
+        try SiteRuleRegistry.applyPostParagraphRules(to: articleContent, context: siteRuleContext)
         try mergeFragmentedParagraphDivs(articleContent)
 
         // Remove ad placeholders that survived extraction.
@@ -1088,9 +1058,7 @@ final class ArticleCleaner {
         try replaceH1WithH2(articleContent)
 
         // Keep parity with Mozilla on known NYTimes wrapper tag normalization.
-        try normalizeKnownSectionWrappers(articleContent)
-        try trimLeadingCardSummaryPanels(articleContent)
-        try normalizePhotoViewerWrappers(articleContent)
+        try SiteRuleRegistry.applyPostProcessRules(to: articleContent, context: siteRuleContext)
 
         // Flatten single-cell tables
         try handleSingleCellTables(articleContent)
@@ -1154,35 +1122,6 @@ final class ArticleCleaner {
         }
     }
 
-    /// Merge NYTimes print-info fragments that may be split into multiple paragraphs.
-    private func normalizeSplitPrintInfoParagraphs(_ element: Element) throws {
-        let candidates = try element.select("div > div")
-        for container in candidates.reversed() {
-            guard container.parent() != nil else { continue }
-            let text = try DOMHelpers.getInnerText(container).lowercased()
-            guard text.contains("a version of this article appears in print on") else { continue }
-
-            let paragraphs = container.children().array().filter { $0.tagName().lowercased() == "p" }
-            guard paragraphs.count >= 3 else { continue }
-
-            let doc = container.ownerDocument() ?? Document("")
-            let merged = try doc.createElement("p")
-
-            for paragraph in paragraphs {
-                while let first = paragraph.getChildNodes().first {
-                    try merged.appendChild(first)
-                }
-                try paragraph.remove()
-            }
-
-            if let firstChild = container.getChildNodes().first {
-                try firstChild.before(merged)
-            } else {
-                try container.appendChild(merged)
-            }
-        }
-    }
-
     /// Merge div blocks whose direct paragraph children were split into many tiny fragments.
     /// This commonly happens in print-info tails where inline spans are broken into
     /// consecutive short paragraphs.
@@ -1227,110 +1166,6 @@ final class ArticleCleaner {
 
         for h1 in h1s {
             _ = try setNodeTag(h1, newTag: "h2")
-        }
-    }
-
-    private func normalizeKnownSectionWrappers(_ element: Element) throws {
-        for section in try element.select("section#collection-highlights-container") {
-            _ = try setNodeTag(section, newTag: "div")
-        }
-
-        for container in try element.select("div#collection-highlights-container") {
-            guard let firstChild = container.children().first,
-                  firstChild.tagName().lowercased() == "div" else { continue }
-            let children = firstChild.children()
-            guard children.count >= 2,
-                  children[0].tagName().lowercased() == "h2",
-                  children[1].tagName().lowercased() == "ol" else { continue }
-            while let node = firstChild.getChildNodes().first {
-                try firstChild.before(node)
-            }
-            try firstChild.remove()
-        }
-
-        for container in try element.select("div#collection-highlights-container") {
-            let children = container.children().array()
-
-            // Mozilla output keeps only the leading "Highlights" list block here.
-            // Additional sibling div>ol blocks are emitted as separate sections, not nested
-            // under collection-highlights-container.
-            for child in children.dropFirst(2) where child.tagName().lowercased() == "div" {
-                let childElements = child.children().array()
-                if childElements.count == 1, childElements.first?.tagName().lowercased() == "ol" {
-                    try child.remove()
-                }
-            }
-
-            // For the first highlight card, Mozilla keeps the hero media block and drops
-            // the adjacent plain summary panel (h2 + paragraphs) in this container.
-            if let firstItem = try container.select("> ol > li").first(),
-               let article = try firstItem.select("> article").first() {
-                let articleChildren = article.children().array()
-                if articleChildren.count == 2,
-                   articleChildren[0].tagName().lowercased() == "figure",
-                   articleChildren[1].tagName().lowercased() == "div" {
-                    let summary = articleChildren[1]
-                    let hasHeading = (try? summary.select("h2").isEmpty()) == false
-                    let hasSubheading = (try? summary.select("h3").isEmpty()) == false
-                    let paragraphCount = try summary.select("p").count
-                    if hasHeading, !hasSubheading, paragraphCount >= 2 {
-                        try summary.remove()
-                    }
-                }
-            }
-        }
-    }
-
-    private func normalizePhotoViewerWrappers(_ element: Element) throws {
-        for inner in try element.select("div[data-testid=photoviewer-wrapper] > div[data-testid=photoviewer-children]") {
-            while let node = inner.getChildNodes().first {
-                try inner.before(node)
-            }
-            try inner.remove()
-        }
-    }
-
-    /// Align with Mozilla output for NYTimes Spanish section-front card lists.
-    private func trimLeadingCardSummaryPanels(_ element: Element) throws {
-        for section in try element.select("section") {
-            let title = ((try? section.select("> header h2").text()) ?? "")
-                .lowercased()
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !title.isEmpty else { continue }
-
-            // Keep indices of cards whose summary panel should remain.
-            let keepSummaryAtIndices: Set<Int>
-            if title.contains("opinión") {
-                keepSummaryAtIndices = []
-            } else if title.contains("especial") {
-                keepSummaryAtIndices = [0]
-            } else if title.contains("el brote de coronavirus") {
-                keepSummaryAtIndices = [1]
-            } else if title.contains("estados unidos") {
-                keepSummaryAtIndices = [4]
-            } else {
-                continue
-            }
-
-            guard let list = try section.select("> ol").first() else { continue }
-            let isOpinion = title.contains("opinión")
-            let items = try (isOpinion ? list.select("li") : list.select("> li")).array()
-            for (index, item) in items.enumerated() {
-                let shouldKeep = !isOpinion && keepSummaryAtIndices.contains(index)
-                guard !shouldKeep,
-                      let article = try item.select("> article").first(),
-                      (try? article.select("> figure").isEmpty()) == false else { continue }
-
-                for summary in try article.select("> div") {
-                    let hasLinkHeading = (try? summary.select("h2 > a").isEmpty()) == false
-                    let hasSubheading = (try? summary.select("h3").isEmpty()) == false
-                    let paragraphCount = try summary.select("p").count
-                    if hasLinkHeading, !hasSubheading, paragraphCount >= 1 {
-                        try summary.remove()
-                    }
-                }
-            }
         }
     }
 

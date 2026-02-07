@@ -57,4 +57,26 @@ enum SiteRuleRegistry {
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }
+
+    static func applyPostProcessRules(
+        to articleContent: Element,
+        context: ArticleCleanerSiteRuleContext
+    ) throws {
+        let rules: [ArticleCleanerSiteRule.Type] = [
+            NYTimesCollectionHighlightsRule.self,
+            NYTimesSpanishCardSummaryRule.self,
+            NYTimesPhotoViewerWrapperRule.self
+        ]
+        try applyArticleCleanerRules(rules, to: articleContent, context: context)
+    }
+
+    static func applyPostParagraphRules(
+        to articleContent: Element,
+        context: ArticleCleanerSiteRuleContext
+    ) throws {
+        let rules: [ArticleCleanerSiteRule.Type] = [
+            NYTimesSplitPrintInfoRule.self
+        ]
+        try applyArticleCleanerRules(rules, to: articleContent, context: context)
+    }
 }

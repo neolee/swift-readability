@@ -956,13 +956,6 @@ public struct Readability {
                 } else if cleaner.hasSingleTagInsideElement(current, tag: "DIV") ||
                             cleaner.hasSingleTagInsideElement(current, tag: "SECTION"),
                           let child = current.children().first {
-                    let marker = ((try? current.attr("data-testid")) ?? "")
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
-                        .lowercased()
-                    if marker == "photoviewer-wrapper" {
-                        node = next
-                        continue
-                    }
                     if let attributes = current.getAttributes() {
                         for attr in attributes {
                             let key = attr.getKey().lowercased()

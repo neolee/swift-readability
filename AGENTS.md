@@ -210,22 +210,36 @@ Migration decision standard (should this be a site rule?):
    - Logic is core Mozilla semantics or broadly reusable heuristics.
    - Rule depends on generic content structure without site identity.
    - Moving it would hide cross-site behavior that should remain in shared algorithm paths.
+5. Exception (keep in core even with site markers):
+   - If logic is a flow-compensation step inside a shared cleanup/extraction transaction
+     (for example, rescue-before-remove behavior tightly coupled to the same traversal),
+     keep it in core pipeline code instead of `SiteRules`.
 
 Current candidate decisions:
-1. `rescueStoryContinueLinks()` in `ArticleCleaner`: KEEP IN CORE for now.
-   - Reason: tightly coupled with generic explicit-no-content removal flow, and functionally acts as a safety valve during shared cleanup.
-2. `story-continues` candidate-preservation checks in `ContentExtractor` / `ArticleCleaner`: KEEP IN CORE for now.
-   - Reason: guard behavior participates in candidate/wrapper stability rather than isolated removable chrome.
-3. `normalizeKnownSectionWrappers()` in `ArticleCleaner`: MIGRATE NEXT (site rule).
-   - Reason: explicit NYTimes-only selectors (`collection-highlights-container`) and deterministic shape normalization.
-4. `normalizePhotoViewerWrappers()` in `ArticleCleaner`: MIGRATE NEXT (site rule).
-   - Reason: explicit NYTimes `data-testid` marker and clear post-process phase.
-5. `trimLeadingCardSummaryPanels()` in `ArticleCleaner`: MIGRATE NEXT (site rule).
-   - Reason: explicit NYTimes Spanish section wording and deterministic card-summary trimming.
-6. NYTimes-specific protection in `CandidateSelector.shouldKeepArticleCandidate()` (`article#story`): KEEP IN CORE for now.
-   - Reason: impacts top-candidate promotion strategy (core extraction path), not a post-cleaning detachable widget rule.
-7. `photoviewer-wrapper` branch in `Readability.simplifyNestedElements()`: DEFER.
-   - Reason: overlaps with post-process wrapper normalization; re-evaluate after completing the three NYTimes migrations above.
+1. `rescueStoryContinueLinks()` in `ArticleCleaner`: KEEP IN CORE.
+   - Result: removing this rescue path regressed `realworld/nytimes-2` (loss of `#story-continues-1` jump block parity).
+2. `story-continues` candidate-preservation checks in `ContentExtractor` / `ArticleCleaner`: REMOVED after verification.
+   - Result: removing both checks caused no regressions in `RealWorldCompatibilityTests` and `MozillaCompatibilityTests`.
+3. `normalizeKnownSectionWrappers()` in `ArticleCleaner`: MIGRATED to `SiteRules`.
+   - Rule: `NYTimesCollectionHighlightsRule`
+4. `normalizePhotoViewerWrappers()` in `ArticleCleaner`: MIGRATED to `SiteRules`.
+   - Rule: `NYTimesPhotoViewerWrapperRule`
+5. `trimLeadingCardSummaryPanels()` in `ArticleCleaner`: MIGRATED to `SiteRules`.
+   - Rule: `NYTimesSpanishCardSummaryRule`
+6. `normalizeSplitPrintInfoParagraphs()` in `ArticleCleaner`: MIGRATED to `SiteRules`.
+   - Rule: `NYTimesSplitPrintInfoRule`
+7. NYTimes-specific protection in `CandidateSelector.shouldKeepArticleCandidate()` (`article#story`): KEEP IN CORE.
+   - Result: removing this guard regressed `realworld/nytimes-3` and `realworld/nytimes-4` (`article#story` promoted to outer `div#site-content`).
+8. `photoviewer-wrapper` branch in `Readability.simplifyNestedElements()`: REMOVED after verification.
+   - Result: after migrating NYTimes wrapper normalization to `SiteRules`, removing the branch caused no regressions in `RealWorldCompatibilityTests` and `MozillaCompatibilityTests`.
+9. `ContentExtractor.shouldPreserveFigureImageWrapper()` `aspectratioplaceholder` guard: KEEP IN CORE.
+   - Result: removing this guard regressed `realworld/medium-1` (`figure > div` collapsed to `figure > p`).
+10. `ArticleCleaner.convertDivsToParagraphs()` single-paragraph wrapper preservation gate (`!shouldPreserveSingleParagraphWrapper(div)`): REMOVED after verification.
+   - Result: removing this gate caused no regressions in `RealWorldCompatibilityTests` and `MozillaCompatibilityTests`; redundant `ArticleCleaner.shouldPreserveSingleParagraphWrapper()` helper removed.
+11. `ArticleCleaner.convertDivsToParagraphs()` media-control hierarchy gate (`!isWithinMediaControlHierarchy(div)`): REMOVED after verification.
+   - Result: removing this gate caused no regressions in `RealWorldCompatibilityTests` and `MozillaCompatibilityTests`; redundant `ArticleCleaner.isWithinMediaControlHierarchy()` helper removed.
+12. `ArticleCleaner.collapseSingleDivWrappers()` `data-testid` skip guard: KEEP IN CORE.
+   - Result: removing this guard regressed `realworld/nytimes-3` and `realworld/nytimes-4` (expected `data-testid="photoviewer-wrapper"` collapsed to `photoviewer-children`).
 
 Validation requirements for any new/modified site rule:
 1. Run targeted fixture(s) first (single real-world test).

@@ -11,6 +11,15 @@ protocol ArticleCleanerSiteRule: SiteRule {
 
 struct ArticleCleanerSiteRuleContext {
     let getLinkDensity: (Element) throws -> Double
+    let setNodeTag: ((Element, String) throws -> Element)?
+
+    init(
+        getLinkDensity: @escaping (Element) throws -> Double,
+        setNodeTag: ((Element, String) throws -> Element)? = nil
+    ) {
+        self.getLinkDensity = getLinkDensity
+        self.setNodeTag = setNodeTag
+    }
 }
 
 protocol SerializationSiteRule: SiteRule {
