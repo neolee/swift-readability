@@ -6,9 +6,9 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Cases: 11
-- Strict pass: 8 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`)
-- Cases with known issues: 3
-- Known issue instances: 3
+- Strict pass: 9 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`, `nytimes-5`)
+- Cases with known issues: 2
+- Known issue instances: 2
 
 ## Cluster Taxonomy
 
@@ -40,7 +40,7 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
   - expected identity attributes retained/removed differently
   - list wrapper boundaries drift (`ol > li` vs nested `div` inside item content)
 - Impacted cases:
-  - `nytimes-5`
+  - `nytimes-5` - resolved in current branch
   - `seattletimes-1` - resolved in current branch
   - `yahoo-1` - resolved in current branch
   - `yahoo-2` - resolved in current branch
@@ -63,8 +63,7 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - closed for current Batch 2 scope (`bbc-1`, `nytimes-5`, `yahoo-1`)
 
 2. B2-C3 (tag conversion parity)
-- shared mechanics across remaining core cases (`nytimes-5`)
-- likely medium-impact changes, requires tight regression gating
+- closed for current Batch 2 scope (`nytimes-5`)
 
 3. B2-C4 (figure/inline boundary)
 - likely needs targeted media/cleaning heuristics

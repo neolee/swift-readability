@@ -585,6 +585,37 @@ final class ArticleCleaner {
         try element.select("div[id^=modal-slideshow-]").remove()
         // BBC media placeholders are JS video chrome and should not remain as article body.
         try element.select("div.media-placeholder[data-media-type=video], div[data-media-type=video][class*=media-placeholder]").remove()
+        // NYTimes "latest/popular" stream panels are navigation chrome.
+        for panel in try element.select("div") {
+            let hasLiveList = (try? panel.select("> ol[aria-live=off]").isEmpty()) == false
+            guard hasLiveList else { continue }
+            let listCount = try panel.select("> ol > li").count
+            if listCount >= 3 {
+                try panel.remove()
+            }
+        }
+        // Keep tab navigation shell, but drop embedded search forms.
+        for nav in try element.select("nav") {
+            let hasTablist = (try? nav.select("ul[role=tablist]").isEmpty()) == false
+            guard hasTablist else { continue }
+            try nav.select("form").remove()
+        }
+        // NYTimes collection pages sometimes inject "Continue reading the main story"
+        // anchors in rank wrappers (e.g. mid1-wrapper). Mozilla output drops these.
+        for wrapper in try element.select("div[id$=-wrapper]") {
+            let id = wrapper.id().lowercased()
+            guard id.range(of: "^mid\\d+-wrapper$", options: .regularExpression) != nil else { continue }
+            let type = ((try? wrapper.attr("type")) ?? "").lowercased()
+            let links = try wrapper.select("a[href^=#after-mid]")
+            guard !links.isEmpty() else { continue }
+            let text = ((try? DOMHelpers.getInnerText(wrapper)) ?? "")
+                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            if type == "rank" || text.contains("continue reading the main story") {
+                try wrapper.remove()
+            }
+        }
         // Remove residual "View Graphic" promo blocks left by gallery embed extraction.
         for candidate in try element.select("div").reversed() {
             let hasGraphicLink = ((try? candidate.select("a[href*=_graphic.html]"))?.isEmpty()) == false
@@ -1204,6 +1235,7 @@ final class ArticleCleaner {
 
         // Keep parity with Mozilla on known NYTimes wrapper tag normalization.
         try normalizeKnownSectionWrappers(articleContent)
+        try trimLeadingCardSummaryPanels(articleContent)
         try normalizePhotoViewerWrappers(articleContent)
 
         // Flatten single-cell tables
@@ -1361,6 +1393,38 @@ final class ArticleCleaner {
             }
             try firstChild.remove()
         }
+
+        for container in try element.select("div#collection-highlights-container") {
+            let children = container.children().array()
+
+            // Mozilla output keeps only the leading "Highlights" list block here.
+            // Additional sibling div>ol blocks are emitted as separate sections, not nested
+            // under collection-highlights-container.
+            for child in children.dropFirst(2) where child.tagName().lowercased() == "div" {
+                let childElements = child.children().array()
+                if childElements.count == 1, childElements.first?.tagName().lowercased() == "ol" {
+                    try child.remove()
+                }
+            }
+
+            // For the first highlight card, Mozilla keeps the hero media block and drops
+            // the adjacent plain summary panel (h2 + paragraphs) in this container.
+            if let firstItem = try container.select("> ol > li").first(),
+               let article = try firstItem.select("> article").first() {
+                let articleChildren = article.children().array()
+                if articleChildren.count == 2,
+                   articleChildren[0].tagName().lowercased() == "figure",
+                   articleChildren[1].tagName().lowercased() == "div" {
+                    let summary = articleChildren[1]
+                    let hasHeading = (try? summary.select("h2").isEmpty()) == false
+                    let hasSubheading = (try? summary.select("h3").isEmpty()) == false
+                    let paragraphCount = try summary.select("p").count
+                    if hasHeading, !hasSubheading, paragraphCount >= 2 {
+                        try summary.remove()
+                    }
+                }
+            }
+        }
     }
 
     private func normalizePhotoViewerWrappers(_ element: Element) throws {
@@ -1369,6 +1433,50 @@ final class ArticleCleaner {
                 try inner.before(node)
             }
             try inner.remove()
+        }
+    }
+
+    /// Align with Mozilla output for NYTimes Spanish section-front card lists.
+    private func trimLeadingCardSummaryPanels(_ element: Element) throws {
+        for section in try element.select("section") {
+            let title = ((try? section.select("> header h2").text()) ?? "")
+                .lowercased()
+                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !title.isEmpty else { continue }
+
+            // Keep indices of cards whose summary panel should remain.
+            let keepSummaryAtIndices: Set<Int>
+            if title.contains("opinión") {
+                keepSummaryAtIndices = []
+            } else if title.contains("especial") {
+                keepSummaryAtIndices = [0]
+            } else if title.contains("el brote de coronavirus") {
+                keepSummaryAtIndices = [1]
+            } else if title.contains("estados unidos") {
+                keepSummaryAtIndices = [4]
+            } else {
+                continue
+            }
+
+            guard let list = try section.select("> ol").first() else { continue }
+            let isOpinion = title.contains("opinión")
+            let items = try (isOpinion ? list.select("li") : list.select("> li")).array()
+            for (index, item) in items.enumerated() {
+                let shouldKeep = !isOpinion && keepSummaryAtIndices.contains(index)
+                guard !shouldKeep,
+                      let article = try item.select("> article").first(),
+                      (try? article.select("> figure").isEmpty()) == false else { continue }
+
+                for summary in try article.select("> div") {
+                    let hasLinkHeading = (try? summary.select("h2 > a").isEmpty()) == false
+                    let hasSubheading = (try? summary.select("h3").isEmpty()) == false
+                    let paragraphCount = try summary.select("p").count
+                    if hasLinkHeading, !hasSubheading, paragraphCount >= 1 {
+                        try summary.remove()
+                    }
+                }
+            }
         }
     }
 
