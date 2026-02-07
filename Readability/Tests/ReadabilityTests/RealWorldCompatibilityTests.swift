@@ -193,4 +193,59 @@ struct RealWorldCompatibilityTests {
         try assertContentAndMetadataMatch("ars-1")
     }
 
+    @Test("realworld/daringfireball-1 - content and metadata match")
+    func testDaringFireball1() async throws {
+        try assertContentAndMetadataMatch("daringfireball-1")
+    }
+
+    @Test("realworld/dropbox-blog - content and metadata match")
+    func testDropboxBlog() async throws {
+        try assertContentAndMetadataMatch("dropbox-blog")
+    }
+
+    @Test("realworld/firefox-nightly-blog - content and metadata match")
+    func testFirefoxNightlyBlog() async throws {
+        try assertContentAndMetadataMatch("firefox-nightly-blog")
+    }
+
+    @Test("realworld/gitlab-blog - content and metadata match")
+    func testGitLabBlog() async throws {
+        try assertContentAndMetadataMatch("gitlab-blog")
+    }
+
+    @Test("realworld/google-sre-book-1 - content and metadata match")
+    func testGoogleSREBook1() async throws {
+        try assertContentAndMetadataMatch("google-sre-book-1")
+    }
+
+    @Test("realworld/ietf-1 - content and metadata match")
+    func testIETF1() async throws {
+        try assertContentAndMetadataMatch("ietf-1")
+    }
+
+    @Test("realworld/lwn-1 - content and metadata match")
+    func testLWN1() async throws {
+        try assertContentAndMetadataMatch("lwn-1")
+    }
+
+    @Test("realworld/v8-blog - content and metadata match")
+    func testV8Blog() async throws {
+        try assertContentAndMetadataMatch("v8-blog")
+    }
+
+    @Test("realworld/mozilla-1 - content and metadata match")
+    func testMozilla1() async throws {
+        try assertContentAndMetadataMatch("mozilla-1")
+    }
+
+    @Test("realworld/medium-2 - content and metadata match")
+    func testMedium2() async throws {
+        try assertContentAndMetadataMatch("medium-2")
+    }
+
+    @Test("realworld/medium-3 - content and metadata match")
+    func testMedium3() async throws {
+        try assertContentAndMetadataMatch("medium-3")
+    }
+
 }

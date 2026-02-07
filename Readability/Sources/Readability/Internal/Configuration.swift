@@ -106,7 +106,7 @@ enum Configuration {
         "header", "legends", "menu", "related", "remark", "replies",
         "rss", "shoutbox", "sidebar", "skyscraper", "social",
         "sponsor", "supplemental", "ad-break", "agegate", "pagination",
-        "pager", "popup", "yom-remote"
+        "pager", "popup", "yom-remote", "newsletter", "form-contents"
     ]
 
     /// Elements that might be content despite matching unlikely patterns

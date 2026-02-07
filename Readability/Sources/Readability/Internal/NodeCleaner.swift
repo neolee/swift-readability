@@ -282,6 +282,13 @@ final class NodeCleaner {
         // Only check H1 and H2
         guard tagName == "H1" || tagName == "H2" else { return false }
 
+        // Section headings commonly use IDs for anchor links; they should not be
+        // treated as duplicated article titles.
+        if tagName == "H2",
+           !node.id().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return false
+        }
+
         let heading = (try? node.text())?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
         return textSimilarity(articleTitle, heading) > 0.75
