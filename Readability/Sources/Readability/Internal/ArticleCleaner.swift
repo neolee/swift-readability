@@ -29,7 +29,10 @@ final class ArticleCleaner {
         try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
         try removeShortLinkHeavyDivs(articleContent)
         try removeRelatedLinkCollectionDivs(articleContent)
-        try removeNYTimesRelatedLinkCards(articleContent)
+        try SiteRuleRegistry.applyPreConversionRules(
+            to: articleContent,
+            context: ArticleCleanerSiteRuleContext(getLinkDensity: getLinkDensity)
+        )
         try removeSingleItemPromoLists(articleContent)
         try removeEmptyContainerDivs(articleContent)
         try removeShortRoleNoteCallouts(articleContent)
@@ -571,82 +574,16 @@ final class ArticleCleaner {
             }
         }
 
-        // Scald gallery widgets (and companion heading wrappers) are non-article chrome.
-        for gallery in try element.select("[data-scald-gallery]") {
-            if let parent = gallery.parent(), parent.tagName().lowercased() == "div" {
-                try parent.remove()
-            } else {
-                try gallery.remove()
-            }
-        }
-        // Washington Post gallery embeds are interactive chrome; Mozilla output drops them.
-        try element.select("div[id^=gallery-embed_]").remove()
-        // Yahoo slideshow modal chrome is non-article UI.
-        try element.select("div[id^=modal-slideshow-]").remove()
-        // BBC media placeholders are JS video chrome and should not remain as article body.
-        try element.select("div.media-placeholder[data-media-type=video], div[data-media-type=video][class*=media-placeholder]").remove()
-        // NYTimes "latest/popular" stream panels are navigation chrome.
-        for panel in try element.select("div") {
-            let hasLiveList = (try? panel.select("> ol[aria-live=off]").isEmpty()) == false
-            guard hasLiveList else { continue }
-            let listCount = try panel.select("> ol > li").count
-            if listCount >= 3 {
-                try panel.remove()
-            }
-        }
-        // Seattle Times section rail inserts are non-article related-link modules.
-        for panel in try element.select("div[data-section]").reversed() {
-            guard panel.parent() != nil else { continue }
-            if (try? panel.select("img, picture, figure, video, iframe, object, embed, table").isEmpty()) == false {
-                continue
-            }
-            let listCount = try panel.select("ul, ol").count
-            let linkCount = try panel.select("a").count
-            let text = ((try? DOMHelpers.getInnerText(panel)) ?? "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            let linkDensity = try getLinkDensity(panel)
-            if listCount >= 1,
-               linkCount >= 3,
-               text.count <= 1200,
-               linkDensity >= 0.2 {
-                try panel.remove()
-            }
-        }
+        try SiteRuleRegistry.applyUnwantedElementRules(
+            to: element,
+            context: ArticleCleanerSiteRuleContext(getLinkDensity: getLinkDensity)
+        )
         // Keep tab navigation shell, but drop embedded search forms.
         for nav in try element.select("nav") {
             let hasTablist = (try? nav.select("ul[role=tablist]").isEmpty()) == false
             guard hasTablist else { continue }
             try nav.select("form").remove()
         }
-        // NYTimes collection pages sometimes inject "Continue reading the main story"
-        // anchors in rank wrappers (e.g. mid1-wrapper). Mozilla output drops these.
-        for wrapper in try element.select("div[id$=-wrapper]") {
-            let id = wrapper.id().lowercased()
-            guard id.range(of: "^mid\\d+-wrapper$", options: .regularExpression) != nil else { continue }
-            let type = ((try? wrapper.attr("type")) ?? "").lowercased()
-            let links = try wrapper.select("a[href^=#after-mid]")
-            guard !links.isEmpty() else { continue }
-            let text = ((try? DOMHelpers.getInnerText(wrapper)) ?? "")
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .lowercased()
-            if type == "rank" || text.contains("continue reading the main story") {
-                try wrapper.remove()
-            }
-        }
-        // Remove residual "View Graphic" promo blocks left by gallery embed extraction.
-        for candidate in try element.select("div").reversed() {
-            let hasGraphicLink = ((try? candidate.select("a[href*=_graphic.html]"))?.isEmpty()) == false
-            let hasImage = ((try? candidate.select("img"))?.isEmpty()) == false
-            guard hasGraphicLink && hasImage else { continue }
-            let text = ((try? DOMHelpers.getInnerText(candidate)) ?? "")
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-                .lowercased()
-            if text.contains("view graphic") {
-                try candidate.remove()
-            }
-        }
-
         // Interactive editor promo inner widgets (direct SVG + markdown children) should be removed.
         for candidate in try element.select("div").reversed() {
             let children = candidate.children()
@@ -664,20 +601,6 @@ final class ArticleCleaner {
             let cls = ((try? prompt.className()) ?? "").lowercased()
             if cls.contains("feedback-prompt") || cls.contains("reader-satisfaction-survey") {
                 try prompt.remove()
-            }
-        }
-
-        // CNN legacy story-top video wrapper should be removed from article body.
-        try element.select("div#js-ie-storytop, div.ie--storytop, div#ie_column").remove()
-
-        // In-read ad shell that Mozilla output drops in cnn real-world fixtures.
-        for candidate in try element.select("div").reversed() {
-            let text = ((try? DOMHelpers.getInnerText(candidate)) ?? "")
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .lowercased()
-            if text == "advertising inread invented by teads" {
-                try candidate.remove()
             }
         }
 
@@ -835,79 +758,6 @@ final class ArticleCleaner {
             let next = ((try? list.nextElementSibling()?.tagName().lowercased()) ?? "") == "p"
             if previous && next {
                 try list.remove()
-            }
-        }
-    }
-
-    /// Remove NYTimes in-article related-link card inserts.
-    /// These are usually represented by links carrying `module=RelatedLinks`
-    /// and should not remain in extracted article bodies.
-    private func removeNYTimesRelatedLinkCards(_ root: Element) throws {
-        let links = try root.select("a[href*=module=RelatedLinks][href*=pgtype=Article]")
-        var cardContainers: [Element] = []
-        var sectionContainers: [Element] = []
-
-        for link in links {
-            var cursor: Element? = link
-            while let node = cursor {
-                let tag = node.tagName().lowercased()
-                if tag == "div",
-                   node.parent()?.tagName().lowercased() == "section" {
-                    sectionContainers.append(node)
-                    break
-                }
-                if tag == "div",
-                   node.parent()?.tagName().lowercased() == "div" {
-                    cardContainers.append(node)
-                    break
-                }
-                if tag == "article" || node.parent() == nil {
-                    break
-                }
-                cursor = node.parent()
-            }
-        }
-
-        for container in cardContainers.reversed() {
-            guard container.parent() != nil else { continue }
-            let allLinks = try container.select("a")
-            guard !allLinks.isEmpty() else { continue }
-            let relatedLinksCount = allLinks.array().filter { link in
-                let href = ((try? link.attr("href")) ?? "").lowercased()
-                return href.contains("module=relatedlinks") && href.contains("pgtype=article")
-            }.count
-            let textLength = try DOMHelpers.getInnerText(container)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .count
-            if relatedLinksCount == allLinks.count, textLength <= 260 {
-                try container.remove()
-            }
-        }
-
-        for container in sectionContainers.reversed() {
-            guard container.parent() != nil else { continue }
-            let headingCount = try container.select("h1, h2, h3, h4, h5, h6").count
-            if headingCount > 0 {
-                continue
-            }
-
-            let allLinks = try container.select("a")
-            guard !allLinks.isEmpty() else { continue }
-
-            let relatedLinksCount = allLinks.array().filter { link in
-                let href = ((try? link.attr("href")) ?? "").lowercased()
-                return href.contains("module=relatedlinks") && href.contains("pgtype=article")
-            }.count
-
-            let textLength = try DOMHelpers.getInnerText(container)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .count
-            let linkDensity = try getLinkDensity(container)
-
-            if relatedLinksCount == allLinks.count,
-               textLength <= 420,
-               linkDensity >= 0.15 {
-                try container.remove()
             }
         }
     }
@@ -1119,34 +969,10 @@ final class ArticleCleaner {
 
     /// Remove share/social elements from article content
     private func removeShareElements(_ element: Element) throws {
-        // Match share/social controls, but avoid media figures such as
-        // Guardian "fig--has-shares" article images.
-        let candidates = try element.select("[class*=share], [id*=share], [class*=sharedaddy], [id*=sharedaddy]")
-        for node in candidates.reversed() {
-            let identity = (
-                (((try? node.className()) ?? "") + " " + node.id())
-                    .lowercased()
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-
-            let isShareControl = identity.range(
-                of: "(^|\\s|[-_])(share|sharedaddy)(\\s|[-_]|$)",
-                options: [.regularExpression]
-            ) != nil
-            if !isShareControl {
-                continue
-            }
-
-            if node.tagName().lowercased() == "figure" {
-                continue
-            }
-
-            let textLength = (try? DOMHelpers.getInnerText(node).count) ?? 0
-            let paragraphCount = (try? node.select("p").count) ?? 0
-            if textLength <= 1500 && paragraphCount <= 3 {
-                try node.remove()
-            }
-        }
+        try SiteRuleRegistry.applyShareRules(
+            to: element,
+            context: ArticleCleanerSiteRuleContext(getLinkDensity: getLinkDensity)
+        )
     }
 
     private func collapseSingleDivWrappers(_ root: Element) throws {

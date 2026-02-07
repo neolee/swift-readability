@@ -173,6 +173,66 @@ import Testing
 3. **Concurrency**: Never add `@MainActor` - this defeats the purpose of `WKWebView`-free implementation
 4. **Path Dependencies**: `ReadabilityCLI` uses `../Readability` path dependency
 
+### Site-Specific Rule Architecture
+
+To reduce regression risk in real-world fixtures, all site-specific cleanup logic should be isolated under:
+- `Readability/Sources/Readability/Internal/SiteRules/`
+
+Current mechanism:
+- Shared protocols live in `SiteRule.swift`
+- Rule orchestration lives in `SiteRuleRegistry.swift`
+- `ArticleCleaner` and `Readability` call registry entry points at fixed phases:
+  - unwanted element cleanup
+  - pre-conversion cleanup
+  - share/social cleanup
+  - serialization cleanup
+
+Authoring rules:
+1. Keep each rule focused on one site/mechanism (small selector surface).
+2. Use deterministic selectors/thresholds; avoid broad global heuristics in site rules.
+3. Prefer registry-based wiring over inlining site logic back into `ArticleCleaner`/`Readability`.
+4. For Swift 6 strict concurrency, avoid static stored arrays of protocol metatypes in registry; use method-local rule lists.
+
+Migration decision standard (should this be a site rule?):
+1. Hard gate: the trigger is primarily site-specific (brand-specific id/class/data attributes, fixed module URL params, or stable site wording) and not reliably generalizable.
+2. Score dimensions (practical checklist):
+   - Trigger specificity: high
+   - Cross-site generality: low
+   - Regression blast radius if kept inline: high
+   - Evidence strength: at least one reproducible real-world fixture
+   - Lifecycle phase fit: clear placement in `unwanted` / `preConversion` / `share` / `postProcess` / `serialization`
+   - Maintenance clarity: can be named and documented as one site+mechanism rule
+3. Migration recommendation threshold:
+   - Hard gate satisfied, and
+   - At least 4 of 6 dimensions are site-rule leaning, and
+   - Lifecycle phase is unambiguous.
+4. Do not migrate when:
+   - Logic is core Mozilla semantics or broadly reusable heuristics.
+   - Rule depends on generic content structure without site identity.
+   - Moving it would hide cross-site behavior that should remain in shared algorithm paths.
+
+Current candidate decisions:
+1. `rescueStoryContinueLinks()` in `ArticleCleaner`: KEEP IN CORE for now.
+   - Reason: tightly coupled with generic explicit-no-content removal flow, and functionally acts as a safety valve during shared cleanup.
+2. `story-continues` candidate-preservation checks in `ContentExtractor` / `ArticleCleaner`: KEEP IN CORE for now.
+   - Reason: guard behavior participates in candidate/wrapper stability rather than isolated removable chrome.
+3. `normalizeKnownSectionWrappers()` in `ArticleCleaner`: MIGRATE NEXT (site rule).
+   - Reason: explicit NYTimes-only selectors (`collection-highlights-container`) and deterministic shape normalization.
+4. `normalizePhotoViewerWrappers()` in `ArticleCleaner`: MIGRATE NEXT (site rule).
+   - Reason: explicit NYTimes `data-testid` marker and clear post-process phase.
+5. `trimLeadingCardSummaryPanels()` in `ArticleCleaner`: MIGRATE NEXT (site rule).
+   - Reason: explicit NYTimes Spanish section wording and deterministic card-summary trimming.
+6. NYTimes-specific protection in `CandidateSelector.shouldKeepArticleCandidate()` (`article#story`): KEEP IN CORE for now.
+   - Reason: impacts top-candidate promotion strategy (core extraction path), not a post-cleaning detachable widget rule.
+7. `photoviewer-wrapper` branch in `Readability.simplifyNestedElements()`: DEFER.
+   - Reason: overlaps with post-process wrapper normalization; re-evaluate after completing the three NYTimes migrations above.
+
+Validation requirements for any new/modified site rule:
+1. Run targeted fixture(s) first (single real-world test).
+2. Run full `RealWorldCompatibilityTests`.
+3. Run full `MozillaCompatibilityTests`.
+4. If behavior intentionally deviates from Mozilla parity, document rationale near the rule and in planning docs.
+
 ---
 
 ## Testing Guidelines
