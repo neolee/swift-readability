@@ -5,18 +5,15 @@ Scope: Mozilla `test-pages` remaining real-world imports
 
 ## Current Status Snapshot (2026-02-07)
 
-- Stage: Batch 3 stabilization in progress
-- `RealWorldCompatibilityTests`: 26 tests, 3 failing cases
-  - `citylab-1`
-  - `buzzfeed-1`
-  - `engadget`
+- Stage: Batch 4 kickoff in progress
+- `RealWorldCompatibilityTests`: 27 tests imported (`ars-1` added), validation in progress
 - `MozillaCompatibilityTests`: 119/119 passing
 
 Latest confirmed regression guardrails:
 - `nytimes-3` and `nytimes-4` are passing after byline normalization rollback/narrowing.
 - Real-world fixes must preserve full Mozilla suite pass status.
 
-Execution cadence (applies to all remaining Batch 3 work):
+Execution cadence (applies to Batch 4 and later):
 1. One iteration fixes one case only.
 2. Run targeted case test.
 3. Run full `RealWorldCompatibilityTests`.
@@ -27,11 +24,11 @@ Execution cadence (applies to all remaining Batch 3 work):
 
 - Mozilla `test-pages` total: 130
 - Imported in `Resources/test-pages`: 52
-- Imported in `Resources/realworld-pages`: 5
-- Imported unique total: 57
-- Remaining not imported: 73
+- Imported in `Resources/realworld-pages`: 27
+- Imported unique total: 79
+- Remaining not imported: 51
 
-All 73 remaining cases were checked and contain:
+All 51 remaining cases were checked and contain:
 - `source.html`
 - `expected.html`
 - `expected-metadata.json`

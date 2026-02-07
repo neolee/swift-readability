@@ -187,4 +187,10 @@ struct RealWorldCompatibilityTests {
         try assertContentAndMetadataMatch("salon-1")
     }
 
+    // Stage 3-R Batch 4 (baseline import)
+    @Test("realworld/ars-1 - content and metadata match")
+    func testArs1() async throws {
+        try assertContentAndMetadataMatch("ars-1")
+    }
+
 }

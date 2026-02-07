@@ -16,7 +16,8 @@ enum SiteRuleRegistry {
         let rules: [SerializationSiteRule.Type] = [
             TelegraphCaptionOnlyFigureRule.self,
             CityLabHeadlineTimestampRule.self,
-            BuzzFeedLeadImageSuperlistRule.self
+            BuzzFeedLeadImageSuperlistRule.self,
+            ArsIntroHeaderWrapperRule.self
         ]
         for rule in rules {
             try rule.apply(to: articleContent)
