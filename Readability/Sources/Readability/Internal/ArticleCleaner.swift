@@ -594,6 +594,24 @@ final class ArticleCleaner {
                 try panel.remove()
             }
         }
+        // Seattle Times section rail inserts are non-article related-link modules.
+        for panel in try element.select("div[data-section]").reversed() {
+            guard panel.parent() != nil else { continue }
+            if (try? panel.select("img, picture, figure, video, iframe, object, embed, table").isEmpty()) == false {
+                continue
+            }
+            let listCount = try panel.select("ul, ol").count
+            let linkCount = try panel.select("a").count
+            let text = ((try? DOMHelpers.getInnerText(panel)) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let linkDensity = try getLinkDensity(panel)
+            if listCount >= 1,
+               linkCount >= 3,
+               text.count <= 1200,
+               linkDensity >= 0.2 {
+                try panel.remove()
+            }
+        }
         // Keep tab navigation shell, but drop embedded search forms.
         for nav in try element.select("nav") {
             let hasTablist = (try? nav.select("ul[role=tablist]").isEmpty()) == false
@@ -1101,22 +1119,32 @@ final class ArticleCleaner {
 
     /// Remove share/social elements from article content
     private func removeShareElements(_ element: Element) throws {
-        // Build a combined selector for efficiency
-        // Match elements where class contains share patterns
-        var selectors: [String] = []
-        for pattern in Configuration.shareElements {
-            selectors.append("[class*=\(pattern)]")
-            selectors.append("[id*=\(pattern)]")
-        }
+        // Match share/social controls, but avoid media figures such as
+        // Guardian "fig--has-shares" article images.
+        let candidates = try element.select("[class*=share], [id*=share], [class*=sharedaddy], [id*=sharedaddy]")
+        for node in candidates.reversed() {
+            let identity = (
+                (((try? node.className()) ?? "") + " " + node.id())
+                    .lowercased()
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            )
 
-        if !selectors.isEmpty {
-            let combinedSelector = selectors.joined(separator: ", ")
-            let found = try element.select(combinedSelector)
-            for node in found {
-                let textLength = (try? DOMHelpers.getInnerText(node).count) ?? 0
-                if textLength < options.charThreshold {
-                    try node.remove()
-                }
+            let isShareControl = identity.range(
+                of: "(^|\\s|[-_])(share|sharedaddy)(\\s|[-_]|$)",
+                options: [.regularExpression]
+            ) != nil
+            if !isShareControl {
+                continue
+            }
+
+            if node.tagName().lowercased() == "figure" {
+                continue
+            }
+
+            let textLength = (try? DOMHelpers.getInnerText(node).count) ?? 0
+            let paragraphCount = (try? node.select("p").count) ?? 0
+            if textLength <= 1500 && paragraphCount <= 3 {
+                try node.remove()
             }
         }
     }

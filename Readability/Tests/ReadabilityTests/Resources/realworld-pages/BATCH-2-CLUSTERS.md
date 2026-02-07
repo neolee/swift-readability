@@ -6,9 +6,9 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Cases: 11
-- Strict pass: 10 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`, `nytimes-5`, `telegraph`)
-- Cases with known issues: 1
-- Known issue instances: 1
+- Strict pass: 11 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`, `nytimes-5`, `telegraph`, `guardian-1`)
+- Cases with known issues: 0
+- Known issue instances: 0
 
 ## Cluster Taxonomy
 
@@ -53,7 +53,7 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Signature:
   - expected inline/paragraph content where actual output keeps/promotes figure/list block
 - Impacted cases:
-  - `guardian-1`
+  - resolved for current Batch 2 scope (`guardian-1`, `telegraph`)
 - Priority: P2
 
 ## Proposed Fix Order
@@ -65,7 +65,7 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - closed for current Batch 2 scope (`nytimes-5`)
 
 3. B2-C4 (figure/inline boundary)
-- likely needs targeted media/cleaning heuristics
+- closed for current Batch 2 scope
 
 ## Acceptance Gates
 

@@ -6,9 +6,9 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Total new cases: 11
-- Strict pass: 10 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`, `nytimes-5`, `telegraph`)
-- Cases with known issues: 1
-- Known issue instances: 1
+- Strict pass: 11 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`, `nytimes-5`, `telegraph`, `guardian-1`)
+- Cases with known issues: 0
+- Known issue instances: 0
 
 ## First-Diff Snapshot (Batch 2)
 
@@ -16,7 +16,7 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Status: strict pass in current branch.
 
 2. `guardian-1`
-- Content: expected `figure#img-2`, actual `ul`.
+- Status: strict pass in current branch.
 
 3. `telegraph`
 - Status: strict pass in current branch.
@@ -49,5 +49,5 @@ Batch: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 
 - Batch 1 remains strict green.
 - Batch 2 tests are imported and executable in `RealWorldCompatibilityTests`.
-- Batch 2 has now closed 9 structural/content instances (`seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`, `nytimes-5`, `telegraph`) in addition to earlier metadata closures.
-- Next step is fixing remaining structural cluster (`guardian-1` media-boundary drift).
+- Batch 2 has now closed all 10 structural/content instances (`seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`, `nytimes-5`, `telegraph`, `guardian-1`) in addition to earlier metadata closures.
+- Next step is moving to the next real-world batch.
