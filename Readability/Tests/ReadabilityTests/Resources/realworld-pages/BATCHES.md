@@ -3,6 +3,26 @@
 Date: 2026-02-06
 Scope: Mozilla `test-pages` remaining real-world imports
 
+## Current Status Snapshot (2026-02-07)
+
+- Stage: Batch 3 stabilization in progress
+- `RealWorldCompatibilityTests`: 26 tests, 3 failing cases
+  - `citylab-1`
+  - `buzzfeed-1`
+  - `engadget`
+- `MozillaCompatibilityTests`: 119/119 passing
+
+Latest confirmed regression guardrails:
+- `nytimes-3` and `nytimes-4` are passing after byline normalization rollback/narrowing.
+- Real-world fixes must preserve full Mozilla suite pass status.
+
+Execution cadence (applies to all remaining Batch 3 work):
+1. One iteration fixes one case only.
+2. Run targeted case test.
+3. Run full `RealWorldCompatibilityTests`.
+4. Run full `MozillaCompatibilityTests`.
+5. Report explicit failure delta and next case queue.
+
 ## Inventory
 
 - Mozilla `test-pages` total: 130

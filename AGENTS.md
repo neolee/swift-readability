@@ -284,11 +284,11 @@ test-pages/001/
 └── expected-metadata.json # Expected metadata
 ```
 
-**DOM Comparison:** Custom traversal comparing:
+**DOM Comparison:** Structural traversal comparing:
 - Node types (element, text)
-- Tag names
+- Tag names / descriptors
 - Text content (normalized whitespace)
-- Full text similarity ratio for reporting
+- Attributes (with path-based first-diff diagnostics)
 
 ### Importing New Mozilla Tests
 
@@ -353,6 +353,33 @@ When working on `MozillaCompatibilityTests`, use this workflow to keep iteration
    - Then run `cd Readability && swift test --filter MozillaCompatibilityTests`
    - Track failure count deltas explicitly (e.g., `10 -> 9`).
 
+### Real-world Debugging Playbook (Stage 3-R)
+
+When working on `RealWorldCompatibilityTests`, use this workflow to keep scope controlled and outcomes verifiable:
+
+1. One iteration fixes one case only.
+   - Do not mix multiple failing real-world fixtures in one patch.
+   - If a shared change is needed, still validate and merge case-by-case.
+
+2. Keep fixes minimal and mechanism-driven.
+   - Prefer rule-level, deterministic changes.
+   - Prefer `SiteRules` for site-specific behavior; keep core logic generic unless behavior is clearly cross-site.
+
+3. Use three-level validation for every iteration:
+   - Targeted case test first (single fixture).
+   - Full `RealWorldCompatibilityTests` next (report remaining failures explicitly).
+   - Full `MozillaCompatibilityTests` as global safety gate.
+
+4. Regression handling policy:
+   - If a fix introduces unrelated regressions, rollback or narrow the rule before moving to the next case.
+   - Keep `nytimes-*` and imported functional parity cases as high-sensitivity canaries.
+
+5. Status reporting format per iteration:
+   - Case fixed: `<case-name>`
+   - Full real-world delta: `<before> -> <after>` failures
+   - Mozilla gate: `pass/fail`
+   - Remaining case queue in priority order
+
 ---
 
 ## Quick Reference
@@ -377,35 +404,16 @@ cd ReadabilityCLI && swift run ReadabilityCLI <url> --text-only
 
 ## Future Enhancements
 
-### DOM Comparison Strictness (P2)
+### Comparator Diagnostics (P2)
 
-**Current State:** The test comparison logic in `MozillaCompatibilityTests.compareDOM()` uses text-based similarity (Jaccard index) rather than structural DOM comparison.
+**Current State:** `MozillaCompatibilityTests` now uses structural DOM comparison with node-path first-diff diagnostics.
 
-**Differences from Mozilla Original:**
+**Remaining Enhancement Opportunity:**
+1. Improve mismatch summarization for very large fixtures (multiple strategic diff anchors, not only first mismatch).
+2. Add optional debug output grouping by mismatch type (descriptor / text / attribute).
+3. Keep assertions strict; diagnostics should improve developer speed only.
 
-| Aspect | Mozilla Original | Current Implementation |
-|--------|------------------|----------------------|
-| HTML Formatting | Uses `js-beautify` `prettyPrint()` | No formatting |
-| Node Comparison | Traverses DOM, compares tag names, IDs, classes, attributes | Compares text content only |
-| Text Comparison | Collapses whitespace, exact match | Jaccard similarity (default 100%) |
-| Attribute Comparison | Compares all valid XML attributes | Not compared |
-
-**Impact:**
-- The `002` test fails with 99% similarity due to whitespace handling differences between `SwiftSoup` and `JSDOM`
-- Potential to miss structural HTML differences that don't affect text content
-- Less strict than Mozilla's original test suite
-
-**Proposed Enhancement:**
-1. Add HTML formatting equivalent to `js-beautify` for consistent comparison
-2. Implement structural DOM traversal matching Mozilla's `traverseDOM()` logic
-3. Compare element tags, IDs, classes, and attributes in addition to text
-4. Keep text similarity as fallback for known platform differences
-
-**Priority:** P2 (Medium) - Current tests catch functional issues; this is for stricter compliance.
-
-**Files to Modify:**
-- `Tests/ReadabilityTests/MozillaCompatibilityTests.swift` - `compareDOM()` function
-- May need new utility for HTML formatting
+**Priority:** P2 (Medium) - correctness gate is in place; this is developer efficiency work.
 
 ---
 
