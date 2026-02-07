@@ -5,8 +5,8 @@ Scope: Mozilla `test-pages` remaining real-world imports
 
 ## Current Status Snapshot (2026-02-07)
 
-- Stage: Batch 4 kickoff in progress
-- `RealWorldCompatibilityTests`: 27 tests imported (`ars-1` added), validation in progress
+- Stage: Batch 5 baseline imported and analyzed
+- `RealWorldCompatibilityTests`: 49 tests imported, 6 failures in Batch 5 baseline (`ehow-1`, `ehow-2`, `simplyfound-1`, `wordpress`, `tumblr`, `royal-road`)
 - `MozillaCompatibilityTests`: 119/119 passing
 
 Latest confirmed regression guardrails:
@@ -24,9 +24,9 @@ Execution cadence (applies to Batch 4 and later):
 
 - Mozilla `test-pages` total: 130
 - Imported in `Resources/test-pages`: 52
-- Imported in `Resources/realworld-pages`: 27
-- Imported unique total: 79
-- Remaining not imported: 51
+- Imported in `Resources/realworld-pages`: 49
+- Imported unique total: 101
+- Remaining not imported: 29
 
 All 51 remaining cases were checked and contain:
 - `source.html`
@@ -46,6 +46,11 @@ All 51 remaining cases were checked and contain:
 
 ### Batch 5 (P2) - CMS/Blog Platforms (11)
 `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-comment-load`, `ehow-1`, `ehow-2`, `dev418`, `simplyfound-1`, `spiceworks`, `royal-road`
+
+Status:
+- Imported: 11/11
+- Strict pass: 5/11
+- Failing: 6/11 (clustered in `BATCH-5-CLUSTERS.md`)
 
 ### Batch 6 (P2) - International/Multilingual Sites (11)
 `aktualne`, `folha`, `heise`, `herald-sun-1`, `la-nacion`, `lemonde-1`, `liberation-1`, `pixnet`, `qq`, `yahoo-3`, `yahoo-4`

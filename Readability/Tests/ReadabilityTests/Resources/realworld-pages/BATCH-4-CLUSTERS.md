@@ -5,15 +5,10 @@ Scope: Stage 3-R Batch 4 baseline import (`ars-1`, `daringfireball-1`, `dropbox-
 
 ## Baseline Snapshot
 
-- `RealWorldCompatibilityTests`: 38 tests total, 7 failing cases, 12 issues
-- Failing cases:
-  - `v8-blog`
-  - `mozilla-1`
-  - `lwn-1`
-  - `gitlab-blog`
-  - `ietf-1`
-  - `firefox-nightly-blog`
-  - `google-sre-book-1`
+- Import status: 12/12 cases imported and registered
+- `RealWorldCompatibilityTests`: all Batch 4 cases strict pass
+- `MozillaCompatibilityTests`: pass (`119/119`)
+- Batch status: closed
 
 ## Cluster C1 - Intro Block Fragmentation (`<p></p>` + heading/body split)
 
@@ -177,7 +172,7 @@ Acceptance for cluster:
 3. C6 (`mozilla-1` content tail) + C3 (`gitlab-blog` attrs).
 4. C2 (`lwn-1` wrapper shape).
 5. C5 (metadata whitespace exactness sweep).
-6. Remaining queue: `theverge`, `citylab-1`, `medium-1`.
+6. Remaining queue: none in Batch 4.
 
 ## Iteration Protocol (per cluster)
 
@@ -185,3 +180,22 @@ Acceptance for cluster:
 2. Run full `RealWorldCompatibilityTests` and record failure delta.
 3. Run full `MozillaCompatibilityTests` as safety gate.
 4. Update this file with resolved cluster status and remaining queue.
+
+## Closure Summary
+
+- Batch 4 cases:
+  - `ars-1`
+  - `daringfireball-1`
+  - `dropbox-blog`
+  - `firefox-nightly-blog`
+  - `gitlab-blog`
+  - `google-sre-book-1`
+  - `ietf-1`
+  - `lwn-1`
+  - `v8-blog`
+  - `mozilla-1`
+  - `medium-2`
+  - `medium-3`
+- Final state:
+  - strict pass across all Batch 4 cases
+  - no known issues left in Batch 4 scope

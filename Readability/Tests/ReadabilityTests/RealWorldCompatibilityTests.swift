@@ -248,4 +248,60 @@ struct RealWorldCompatibilityTests {
         try assertContentAndMetadataMatch("medium-3")
     }
 
+    // Stage 3-R Batch 5 (baseline import)
+    @Test("realworld/blogger - content and metadata match")
+    func testBlogger() async throws {
+        try assertContentAndMetadataMatch("blogger")
+    }
+
+    @Test("realworld/wordpress - content and metadata match")
+    func testWordpress() async throws {
+        try assertContentAndMetadataMatch("wordpress")
+    }
+
+    @Test("realworld/tumblr - content and metadata match")
+    func testTumblr() async throws {
+        try assertContentAndMetadataMatch("tumblr")
+    }
+
+    @Test("realworld/lifehacker-working - content and metadata match")
+    func testLifehackerWorking() async throws {
+        try assertContentAndMetadataMatch("lifehacker-working")
+    }
+
+    @Test("realworld/lifehacker-post-comment-load - content and metadata match")
+    func testLifehackerPostCommentLoad() async throws {
+        try assertContentAndMetadataMatch("lifehacker-post-comment-load")
+    }
+
+    @Test("realworld/ehow-1 - content and metadata match")
+    func testEHow1() async throws {
+        try assertContentAndMetadataMatch("ehow-1")
+    }
+
+    @Test("realworld/ehow-2 - content and metadata match")
+    func testEHow2() async throws {
+        try assertContentAndMetadataMatch("ehow-2")
+    }
+
+    @Test("realworld/dev418 - content and metadata match")
+    func testDev418() async throws {
+        try assertContentAndMetadataMatch("dev418")
+    }
+
+    @Test("realworld/simplyfound-1 - content and metadata match")
+    func testSimplyFound1() async throws {
+        try assertContentAndMetadataMatch("simplyfound-1")
+    }
+
+    @Test("realworld/spiceworks - content and metadata match")
+    func testSpiceworks() async throws {
+        try assertContentAndMetadataMatch("spiceworks")
+    }
+
+    @Test("realworld/royal-road - content and metadata match")
+    func testRoyalRoad() async throws {
+        try assertContentAndMetadataMatch("royal-road")
+    }
+
 }
