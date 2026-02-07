@@ -5,8 +5,8 @@ Scope: Mozilla `test-pages` remaining real-world imports
 
 ## Current Status Snapshot (2026-02-07)
 
-- Stage: Batch 5 C1 completed (`ehow-*` resolved)
-- `RealWorldCompatibilityTests`: 49 tests imported, 4 failures (`simplyfound-1`, `wordpress`, `tumblr`, `royal-road`)
+- Stage: Batch 5 C1+C3 completed (`ehow-*` and `wordpress` resolved)
+- `RealWorldCompatibilityTests`: 49 tests imported, 3 failures (`simplyfound-1`, `tumblr`, `royal-road`)
 - `MozillaCompatibilityTests`: 119/119 passing
 
 Latest confirmed regression guardrails:
@@ -49,8 +49,8 @@ All 51 remaining cases were checked and contain:
 
 Status:
 - Imported: 11/11
-- Strict pass: 7/11
-- Failing: 4/11 (clustered in `BATCH-5-CLUSTERS.md`)
+- Strict pass: 8/11
+- Failing: 3/11 (clustered in `BATCH-5-CLUSTERS.md`)
 
 ### Batch 6 (P2) - International/Multilingual Sites (11)
 `aktualne`, `folha`, `heise`, `herald-sun-1`, `la-nacion`, `lemonde-1`, `liberation-1`, `pixnet`, `qq`, `yahoo-3`, `yahoo-4`

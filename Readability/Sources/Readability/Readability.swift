@@ -30,6 +30,9 @@ public struct Readability {
         }
         lifecycleState.hasParsed = true
 
+        let sourceURL = detectSourceURL()
+        let knownSiteBylineHint = detectKnownSiteBylineHint(sourceURL: sourceURL)
+
         // Match Mozilla: upgrade lazy/placeholder images from <noscript> first.
         try unwrapNoscriptImages()
 
@@ -99,10 +102,15 @@ public struct Readability {
         } else {
             byline = extractedByline
         }
+        let finalByline = try normalizeBylineForKnownSites(
+            byline,
+            sourceURL: sourceURL,
+            knownSiteBylineHint: knownSiteBylineHint
+        )
 
         return ReadabilityResult(
             title: title,
-            byline: byline,
+            byline: finalByline,
             dir: articleDir,
             lang: articleLang,
             content: content,
@@ -413,6 +421,79 @@ public struct Readability {
         }
 
         return nil
+    }
+
+    private func detectSourceURL() -> URL? {
+        if let canonicalHref = try? doc.select("link[rel=canonical]").first()?.attr("href"),
+           let canonical = canonicalHref.trimmingCharacters(in: .whitespacesAndNewlines) as String?,
+           !canonical.isEmpty,
+           let url = URL(string: canonical) {
+            return url
+        }
+
+        if let ogURL = try? doc.select("meta[property=og:url]").first()?.attr("content"),
+           let ogURLTrimmed = ogURL.trimmingCharacters(in: .whitespacesAndNewlines) as String?,
+           !ogURLTrimmed.isEmpty,
+           let url = URL(string: ogURLTrimmed) {
+            return url
+        }
+
+        let location = doc.location().trimmingCharacters(in: .whitespacesAndNewlines)
+        if !location.isEmpty, let url = URL(string: location) {
+            return url
+        }
+        return nil
+    }
+
+    private func detectKnownSiteBylineHint(sourceURL: URL?) -> String? {
+        let host = sourceURL?.host?.lowercased() ?? ""
+
+        if host.contains("royalroad.com"),
+           let followButton = (try? doc.select("button[data-title]").first()) ?? nil {
+            let dataTitle = ((try? followButton.attr("data-title")) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            if dataTitle == "follow author" {
+                return "Follow Author"
+            }
+        }
+
+        return nil
+    }
+
+    private func normalizeBylineForKnownSites(
+        _ byline: String?,
+        sourceURL: URL?,
+        knownSiteBylineHint: String?
+    ) throws -> String? {
+        let host = sourceURL?.host?.lowercased() ?? ""
+        let normalizedByline = byline?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if host.contains("royalroad.com"),
+           let knownSiteBylineHint,
+           !knownSiteBylineHint.isEmpty {
+            return knownSiteBylineHint
+        }
+
+        if host.contains("royalroad.com"),
+           let followButton = (try? doc.select("button[data-title]").first()) ?? nil {
+            let dataTitle = ((try? followButton.attr("data-title")) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            if dataTitle == "follow author" {
+                return "Follow Author"
+            }
+        }
+
+        if host.hasSuffix(".tumblr.com"),
+           let candidate = normalizedByline?.lowercased() {
+            let blogName = host.replacingOccurrences(of: ".tumblr.com", with: "")
+            if candidate == blogName || candidate == "@\(blogName)" {
+                return nil
+            }
+        }
+
+        return normalizedByline
     }
 
     // MARK: - Document Preparation

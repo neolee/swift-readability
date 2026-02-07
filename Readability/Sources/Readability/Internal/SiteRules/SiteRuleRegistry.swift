@@ -45,7 +45,8 @@ enum SiteRuleRegistry {
             EngadgetSlideshowIconRule.self,
             FirefoxNightlyCommentFormRule.self,
             MozillaCustomizeSyncSectionRule.self,
-            EHowAuthorProfileRule.self
+            EHowAuthorProfileRule.self,
+            SimplyFoundMediaContainerRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }
@@ -82,7 +83,8 @@ enum SiteRuleRegistry {
             EngadgetBreakoutTypeRule.self,
             EngadgetReviewSummaryWrapperRule.self,
             CityLabPromoSummarySectionRule.self,
-            TheVergeZoomWrapperAccessibilityRule.self
+            TheVergeZoomWrapperAccessibilityRule.self,
+            WordPressPrevNextNavigationRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }

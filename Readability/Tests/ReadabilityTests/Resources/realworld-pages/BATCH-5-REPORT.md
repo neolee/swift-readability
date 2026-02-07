@@ -67,3 +67,19 @@ Batch: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 
 - `RealWorldCompatibilityTests`: 49 tests total, 4 failures (`simplyfound-1`, `wordpress`, `tumblr`, `royal-road`).
 - `MozillaCompatibilityTests`: pass (`119/119`).
+
+## C3 Iteration Update
+
+- Cluster fixed: `B5-C3` (`wordpress`)
+- Main mechanism addressed:
+  - WordPress template previous/next post navigation rail removal
+  - Implemented via site-specific post-process rule (`WordPressPrevNextNavigationRule`)
+- Validation:
+  - Targeted: `testWordpress` pass
+  - Full `RealWorldCompatibilityTests`: failures `4 -> 3`
+  - Full `MozillaCompatibilityTests`: pass (`119/119`)
+
+## Latest Validation Snapshot
+
+- `RealWorldCompatibilityTests`: 49 tests total, 3 failures (`simplyfound-1`, `tumblr`, `royal-road`).
+- `MozillaCompatibilityTests`: pass (`119/119`).

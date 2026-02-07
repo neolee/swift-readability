@@ -7,9 +7,8 @@ Scope: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 
 - Cases: 11
 - Strict pass: 5
-- Failing cases: 4
+- Failing cases: 3
   - `simplyfound-1`
-  - `wordpress`
   - `tumblr`
   - `royal-road`
 - Global safety gate: `MozillaCompatibilityTests` pass (`119/119`)
@@ -49,6 +48,7 @@ Scope: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 - Hypothesis:
   - Sidebar/footer-like sibling block is being retained past candidate extraction and post-cleaning.
 - Priority: P1
+- Status: CLOSED (`wordpress` strict pass)
 
 ## Cluster B5-C4 - Byline Source Priority/Filtering Drift
 
@@ -65,9 +65,8 @@ Scope: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 
 ## Proposed Fix Order
 
-1. B5-C3 (`wordpress`) - likely high-leverage tail cleanup.
-2. B5-C2 (`simplyfound-1`) - targeted media/caption normalization.
-3. B5-C4 (`tumblr`, `royal-road`) - metadata/byline narrowing.
+1. B5-C2 (`simplyfound-1`) - targeted media/caption normalization.
+2. B5-C4 (`tumblr`, `royal-road`) - metadata/byline narrowing.
 
 ## Acceptance Gates
 
