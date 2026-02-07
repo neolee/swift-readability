@@ -1,9 +1,9 @@
-# Stage 3-R Batch 5 Baseline Report
+# Stage 3-R Batch 5 Progress Report
 
 Date: 2026-02-07
 Batch: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-comment-load`, `ehow-1`, `ehow-2`, `dev418`, `simplyfound-1`, `spiceworks`, `royal-road`
 
-## Summary
+## Baseline Summary
 
 - Total new cases: 11
 - Strict pass: 5 (`blogger`, `lifehacker-working`, `lifehacker-post-comment-load`, `dev418`, `spiceworks`)
@@ -51,7 +51,19 @@ Batch: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 - Status: failing.
 - First diff: byline mismatch (`expected "Follow Author"`, `actual "Sleyca"`).
 
-## Validation Snapshot
+## C1 Iteration Update
 
-- `RealWorldCompatibilityTests`: 49 tests total, 6 failures.
+- Cluster fixed: `B5-C1` (`ehow-1`, `ehow-2`)
+- Main mechanisms addressed:
+  - eHow author-profile/byline preservation through extraction + cleanup
+  - eHow header helper wrapper parity (`Found This Helpful`)
+  - eHow related-content rail removal + featured tombstone trimming
+- Validation:
+  - Targeted: `testEHow1` / `testEHow2` pass
+  - Full `RealWorldCompatibilityTests`: failures `6 -> 4`
+  - Full `MozillaCompatibilityTests`: pass (`119/119`)
+
+## Current Validation Snapshot
+
+- `RealWorldCompatibilityTests`: 49 tests total, 4 failures (`simplyfound-1`, `wordpress`, `tumblr`, `royal-road`).
 - `MozillaCompatibilityTests`: pass (`119/119`).

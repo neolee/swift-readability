@@ -3,13 +3,11 @@
 Date: 2026-02-07
 Scope: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-comment-load`, `ehow-1`, `ehow-2`, `dev418`, `simplyfound-1`, `spiceworks`, `royal-road`
 
-## Baseline Snapshot
+## Current Snapshot
 
 - Cases: 11
 - Strict pass: 5
-- Failing cases: 6
-  - `ehow-1`
-  - `ehow-2`
+- Failing cases: 4
   - `simplyfound-1`
   - `wordpress`
   - `tumblr`
@@ -28,6 +26,7 @@ Scope: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 - Hypothesis:
   - Over-flattening and/or early block removal around non-core pre-article modules in eHow templates.
 - Priority: P1
+- Status: CLOSED (both `ehow-1` and `ehow-2` strict pass)
 
 ## Cluster B5-C2 - Media/Caption Wrapper Normalization Drift
 
@@ -66,10 +65,9 @@ Scope: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 
 ## Proposed Fix Order
 
-1. B5-C1 (`ehow-1`, `ehow-2`) - shared template mechanism.
-2. B5-C3 (`wordpress`) - likely high-leverage tail cleanup.
-3. B5-C2 (`simplyfound-1`) - targeted media/caption normalization.
-4. B5-C4 (`tumblr`, `royal-road`) - metadata/byline narrowing.
+1. B5-C3 (`wordpress`) - likely high-leverage tail cleanup.
+2. B5-C2 (`simplyfound-1`) - targeted media/caption normalization.
+3. B5-C4 (`tumblr`, `royal-road`) - metadata/byline narrowing.
 
 ## Acceptance Gates
 

@@ -18,7 +18,8 @@ enum SiteRuleRegistry {
             CityLabHeadlineTimestampRule.self,
             BuzzFeedLeadImageSuperlistRule.self,
             ArsIntroHeaderWrapperRule.self,
-            FirefoxNightlyHeaderPlaceholderRule.self
+            FirefoxNightlyHeaderPlaceholderRule.self,
+            EHowFoundHelpfulHeaderRule.self
         ]
         for rule in rules {
             try rule.apply(to: articleContent)
@@ -43,7 +44,8 @@ enum SiteRuleRegistry {
             CityLabPromoSignupRule.self,
             EngadgetSlideshowIconRule.self,
             FirefoxNightlyCommentFormRule.self,
-            MozillaCustomizeSyncSectionRule.self
+            MozillaCustomizeSyncSectionRule.self,
+            EHowAuthorProfileRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }

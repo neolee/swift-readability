@@ -198,6 +198,10 @@ final class NodeCleaner {
             return false
         }
 
+        if shouldKeepBylineContainer(node) {
+            return false
+        }
+
         return true
     }
 
@@ -329,6 +333,33 @@ final class NodeCleaner {
             return true
         }
         return false
+    }
+
+    /// Keep eHow-style author profile containers in content while still
+    /// extracting byline text from them.
+    private func shouldKeepBylineContainer(_ node: Element) -> Bool {
+        guard let profile = enclosingAuthorProfile(for: node) else { return false }
+        let hasAvatarImage = ((try? profile.select("img").isEmpty()) == false)
+        let hasTime = ((try? profile.select("time[datetime], time").isEmpty()) == false)
+        return hasAvatarImage && hasTime
+    }
+
+    private func enclosingAuthorProfile(for node: Element) -> Element? {
+        var current: Element? = node
+        while let element = current {
+            guard element.tagName().uppercased() == "DIV" else {
+                current = element.parent()
+                continue
+            }
+            let dataType = ((try? element.attr("data-type")) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            if dataType == "authorprofile" {
+                return element
+            }
+            current = element.parent()
+        }
+        return nil
     }
 
     private func isWithinCommentsContainer(_ node: Element) -> Bool {
