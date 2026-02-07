@@ -6,9 +6,9 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 ## Summary
 
 - Cases: 11
-- Strict pass: 9 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`, `nytimes-5`)
-- Cases with known issues: 2
-- Known issue instances: 2
+- Strict pass: 10 (`wapo-2`, `seattletimes-1`, `yahoo-1`, `yahoo-2`, `bbc-1`, `nytimes-2`, `nytimes-3`, `nytimes-4`, `nytimes-5`, `telegraph`)
+- Cases with known issues: 1
+- Known issue instances: 1
 
 ## Cluster Taxonomy
 
@@ -53,7 +53,6 @@ Scope: `bbc-1`, `guardian-1`, `telegraph`, `seattletimes-1`, `nytimes-2`, `nytim
 - Signature:
   - expected inline/paragraph content where actual output keeps/promotes figure/list block
 - Impacted cases:
-  - `telegraph`
   - `guardian-1`
 - Priority: P2
 
