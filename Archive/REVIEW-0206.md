@@ -605,18 +605,6 @@ Legend:
 - Pass standard:
   - New fixes must close at least one failure cluster and not regress functional suite.
 
-#### S3R-T3: Real-world known-issues ledger and quarantine policy
-
-- Priority: `P2`
-- Scope:
-  - `PLAN.md` (or dedicated issue ledger)
-- Implementation:
-  - Keep real-world unresolved items separate from functional baseline status.
-- Acceptance method:
-  - `Doc`: unresolved real-world issues listed with severity and next action.
-- Pass standard:
-  - Functional and real-world statuses remain clearly separated in tracking.
-
 ## Decision Points
 
 1. API option policy:

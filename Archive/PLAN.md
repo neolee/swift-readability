@@ -1,3 +1,11 @@
+# DEPRECATED - ARCHIVED
+
+**Status:** Archived (2026-02-07)
+**Reason:** Information outdated, superseded by REVIEW.md and AGENTS.md
+**Current Status:** See REVIEW.md for latest project status
+
+---
+
 # Swift Readability Porting Plan
 
 This document outlines the phased implementation plan for porting Mozilla Readability.js to Swift.
@@ -292,7 +300,7 @@ Sources/Readability/Internal/
 **Priority:** High
 **Issue:** DOM manipulation reorders text nodes and inline elements
 
-**Solution:** 
+**Solution:**
 - [x] Extracted shared `DOMHelpers.cloneElement()` utility
 - [x] Changed all implementations to use `getChildNodes()` to preserve mixed element/text order
 - [x] Refactored `Readability.swift`, `SiblingMerger.swift`, `ArticleCleaner.swift` to use shared utility
@@ -624,8 +632,8 @@ Mozilla Readability has **130 test cases** total, divided into:
 
 ### Current Status
 
-**Standard Tests:** 52/52 imported (100%), currently passing in compatibility suite  
-**Real-world Tests:** 5/78 imported in `Resources/realworld-pages` (Batch 1 baseline)  
+**Standard Tests:** 52/52 imported (100%), currently passing in compatibility suite
+**Real-world Tests:** 5/78 imported in `Resources/realworld-pages` (Batch 1 baseline)
 **Known Issues:** 0 active in functional suite; 8 active (quarantined) in real-world suite
 
 ### Phase 6 Detailed Progress

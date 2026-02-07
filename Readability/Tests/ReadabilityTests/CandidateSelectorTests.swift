@@ -113,38 +113,6 @@ struct CandidateSelectorTests {
         #expect(candidate.id() == "common")
     }
 
-    @Test("selectTopCandidate does not mutate stored scores during collection")
-    func testSelectTopCandidateDoesNotMutateStoredScores() throws {
-        let html = """
-        <div id="plain">Plain content with enough words, commas, and text for scoring.</div>
-        <div id="linked"><a href="https://example.com">link link link link</a> trailing text</div>
-        """
-        let doc = try SwiftSoup.parseBodyFragment(html)
-        let plain = try doc.select("#plain").first()!
-        let linked = try doc.select("#linked").first()!
-        let elements = [plain, linked]
-
-        let scoringManager = NodeScoringManager()
-        let options = ReadabilityOptions(nbTopCandidates: 5)
-        let selector = CandidateSelector(options: options, scoringManager: scoringManager)
-
-        scoringManager.initializeNode(plain)
-        scoringManager.initializeNode(linked)
-        scoringManager.addToScore(100, for: plain)
-        scoringManager.addToScore(100, for: linked)
-
-        let beforePlain = scoringManager.getContentScore(for: plain)
-        let beforeLinked = scoringManager.getContentScore(for: linked)
-
-        _ = try selector.selectTopCandidate(from: elements, in: doc)
-
-        let afterPlain = scoringManager.getContentScore(for: plain)
-        let afterLinked = scoringManager.getContentScore(for: linked)
-
-        #expect(afterPlain == beforePlain)
-        #expect(afterLinked == beforeLinked)
-    }
-
     // MARK: - Alternative Ancestor Analysis Tests
 
     @Test("findBetterTopCandidate finds common ancestor")

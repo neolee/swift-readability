@@ -79,7 +79,38 @@ Batch: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
   - Full `RealWorldCompatibilityTests`: failures `4 -> 3`
   - Full `MozillaCompatibilityTests`: pass (`119/119`)
 
-## Latest Validation Snapshot
+## C4/C5 Iteration Update
 
-- `RealWorldCompatibilityTests`: 49 tests total, 3 failures (`simplyfound-1`, `tumblr`, `royal-road`).
+- Cluster fixed: `B5-C2` (`simplyfound-1`)
+- Main mechanism addressed:
+  - Media/caption wrapper normalization via site-specific rule (`SimplyFoundMediaContainerRule`)
+- Validation:
+  - Targeted: `testSimplyFound1` pass
+  - Full `RealWorldCompatibilityTests`: failures `3 -> 2`
+  - `MozillaCompatibilityTests`: pass (`119/119`)
+
+- Cluster fixed: `B5-C4` (`tumblr`, `royal-road`)
+- Main mechanism addressed:
+  - Byline source priority adjustment for platform-style author modules
+  - Enhanced filtering for CTA labels vs actual author names
+- Validation:
+  - Targeted: `testTumblr` / `testRoyalRoad` pass
+  - Full `RealWorldCompatibilityTests`: failures `2 -> 0`
+  - `MozillaCompatibilityTests`: pass (`119/119`)
+
+## Final Validation Snapshot
+
+- `RealWorldCompatibilityTests`: 49 tests total, **0 failures**.
 - `MozillaCompatibilityTests`: pass (`119/119`).
+
+## Batch 5 Closure Summary
+
+All 11 cases in Batch 5 now pass strict assertions:
+- `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-comment-load`
+- `ehow-1`, `ehow-2`, `dev418`, `simplyfound-1`, `spiceworks`, `royal-road`
+
+Issue clusters status:
+- B5-C1 (eHow wrapper shape): CLOSED
+- B5-C2 (SimplyFound media/caption): CLOSED
+- B5-C3 (WordPress tail content): CLOSED
+- B5-C4 (Tumblr/RoyalRoad byline): CLOSED

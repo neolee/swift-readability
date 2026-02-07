@@ -6,11 +6,8 @@ Scope: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 ## Current Snapshot
 
 - Cases: 11
-- Strict pass: 5
-- Failing cases: 3
-  - `simplyfound-1`
-  - `tumblr`
-  - `royal-road`
+- Strict pass: 11
+- Failing cases: 0
 - Global safety gate: `MozillaCompatibilityTests` pass (`119/119`)
 
 ## Cluster B5-C1 - eHow Intro/Header Wrapper Shape Drift
@@ -37,6 +34,7 @@ Scope: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 - Hypothesis:
   - Figure/media wrapper conversion path keeps container structure where Mozilla collapses/promotes caption text.
 - Priority: P1
+- Status: CLOSED (`simplyfound-1` strict pass)
 
 ## Cluster B5-C3 - Extra Tail Content Retention (WordPress)
 
@@ -62,11 +60,15 @@ Scope: `blogger`, `wordpress`, `tumblr`, `lifehacker-working`, `lifehacker-post-
 - Hypothesis:
   - Current byline heuristics are over/under-preferring source candidates for platform-style author modules.
 - Priority: P2
+- Status: CLOSED (`tumblr` and `royal-road` strict pass)
 
-## Proposed Fix Order
+## Closure Summary
 
-1. B5-C2 (`simplyfound-1`) - targeted media/caption normalization.
-2. B5-C4 (`tumblr`, `royal-road`) - metadata/byline narrowing.
+All Batch 5 clusters are now CLOSED:
+- B5-C1: CLOSED (eHow wrapper shape)
+- B5-C2: CLOSED (SimplyFound media/caption)
+- B5-C3: CLOSED (WordPress tail content)
+- B5-C4: CLOSED (Tumblr/RoyalRoad byline)
 
 ## Acceptance Gates
 

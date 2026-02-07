@@ -26,14 +26,12 @@ public struct ReadabilityOptions: Sendable {
     public var useCustomSerializer: Bool
 
     /// Regex pattern for allowed video URLs.
-    /// Status: deferred/no-op. Not yet consumed by cleaning/embedding logic.
     public var allowedVideoRegex: String
 
     /// Modifier for link density calculation
     public var linkDensityModifier: Double
 
     /// Enable debug logging.
-    /// Status: deferred/no-op. The core pipeline currently does not emit debug logs from this flag.
     public var debug: Bool
 
     /// Creates a new ReadabilityOptions instance with default values

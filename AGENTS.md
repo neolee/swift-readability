@@ -372,7 +372,7 @@ When working on `RealWorldCompatibilityTests`, use this workflow to keep scope c
 
 4. Regression handling policy:
    - If a fix introduces unrelated regressions, rollback or narrow the rule before moving to the next case.
-   - Keep `nytimes-*` and imported functional parity cases as high-sensitivity canaries.
+   - Keep imported functional parity cases as high-sensitivity canaries.
 
 5. Status reporting format per iteration:
    - Case fixed: `<case-name>`
