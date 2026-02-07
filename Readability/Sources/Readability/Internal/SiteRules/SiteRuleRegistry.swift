@@ -72,6 +72,9 @@ enum SiteRuleRegistry {
             NYTimesCollectionHighlightsRule.self,
             NYTimesSpanishCardSummaryRule.self,
             NYTimesPhotoViewerWrapperRule.self,
+            EngadgetBuyLinkRule.self,
+            EngadgetBreakoutTypeRule.self,
+            EngadgetReviewSummaryWrapperRule.self,
             TheVergeZoomWrapperAccessibilityRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
