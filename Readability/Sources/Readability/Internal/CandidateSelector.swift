@@ -236,6 +236,10 @@ final class CandidateSelector {
     }
 
     private func promoteSchemaArticleParentIfNeeded(_ candidate: Element) -> Element {
+        if let nightlyContainer = promoteFirefoxNightlyContainerIfNeeded(candidate) {
+            return nightlyContainer
+        }
+
         if candidate.tagName().uppercased() == "SECTION" {
             let sectionID = candidate.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             guard sectionID == "article-section-1",
@@ -267,6 +271,25 @@ final class CandidateSelector {
         }
 
         return candidate
+    }
+
+    private func promoteFirefoxNightlyContainerIfNeeded(_ candidate: Element) -> Element? {
+        let chain = [candidate] + candidate.ancestors(maxDepth: 8)
+        for node in chain {
+            let tag = node.tagName().uppercased()
+            guard (tag == "MAIN" || tag == "DIV"),
+                  node.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "content" else {
+                continue
+            }
+
+            guard let article = (try? node.select("> div.content > article[id^=post-]").first()) ?? nil else {
+                continue
+            }
+            let hasNightlyMarkers = ((try? article.select("a[href*=\"bugzilla.mozilla.org\"], a[href*=\"blog.nightly.mozilla.org\"]").isEmpty()) == false)
+            guard hasNightlyMarkers else { continue }
+            return node
+        }
+        return nil
     }
 
     /// Keep explicit NYTimes article container from being promoted into layout wrappers.

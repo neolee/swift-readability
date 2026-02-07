@@ -17,6 +17,12 @@ Scope: Stage 3-R Batch 4 baseline import (`ars-1`, `daringfireball-1`, `dropbox-
 
 ## Cluster C1 - Intro Block Fragmentation (`<p></p>` + heading/body split)
 
+Status:
+- [x] Completed on 2026-02-07
+- Result: `testFirefoxNightlyBlog` and `testV8Blog` both pass
+- Real-world delta: `14 issues -> 12 issues`
+- Mozilla gate: pass (`119/119`)
+
 Cases:
 - `firefox-nightly-blog`
 - `v8-blog`
@@ -74,6 +80,12 @@ Acceptance for cluster:
 2. No broad keep-attribute change that affects unrelated pages.
 
 ## Cluster C4 - RFC/Preformatted Content + Metadata Extraction Drift
+
+Status:
+- [x] Completed on 2026-02-07
+- Result: `testIETF1` passes content + metadata assertions
+- Real-world delta: `12 issues -> 9 issues`
+- Mozilla gate: pass (`119/119`)
 
 Cases:
 - `ietf-1`

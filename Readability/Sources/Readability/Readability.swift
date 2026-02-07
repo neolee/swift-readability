@@ -182,25 +182,27 @@ public struct Readability {
             let nameKeys = name.isEmpty ? [] : [name]
 
             for key in propertyKeys {
-                guard shouldStore(key: key, fromProperty: true) else { continue }
+                let normalizedKey = canonicalMetaKey(key)
+                guard shouldStore(key: normalizedKey, fromProperty: true) else { continue }
                 // Check if key matches the pattern OR is article:published_time
-                let isArticlePublishedTime = key == "article:published_time"
-                let isArticleAuthor = key == "article:author" || key == "og:article:author"
+                let isArticlePublishedTime = normalizedKey == "article:published_time"
+                let isArticleAuthor = normalizedKey == "article:author" || normalizedKey == "og:article:author"
                 if let regex = try? NSRegularExpression(pattern: propertyPattern, options: [.caseInsensitive]),
-                   (regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil || isArticlePublishedTime || isArticleAuthor),
+                   (regex.firstMatch(in: normalizedKey, options: [], range: NSRange(location: 0, length: normalizedKey.utf16.count)) != nil || isArticlePublishedTime || isArticleAuthor),
                    !content.isEmpty {
-                    values[key] = content
+                    values[normalizedKey] = content
                 }
             }
 
             for key in nameKeys {
-                guard shouldStore(key: key, fromProperty: false) else { continue }
-                let isArticlePublishedTime = key == "article:published_time"
-                let isArticleAuthor = key == "article:author" || key == "og:article:author"
+                let normalizedKey = canonicalMetaKey(key)
+                guard shouldStore(key: normalizedKey, fromProperty: false) else { continue }
+                let isArticlePublishedTime = normalizedKey == "article:published_time"
+                let isArticleAuthor = normalizedKey == "article:author" || normalizedKey == "og:article:author"
                 if let regex = try? NSRegularExpression(pattern: propertyPattern, options: [.caseInsensitive]),
-                   (regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil || isArticlePublishedTime || isArticleAuthor),
+                   (regex.firstMatch(in: normalizedKey, options: [], range: NSRange(location: 0, length: normalizedKey.utf16.count)) != nil || isArticlePublishedTime || isArticleAuthor),
                    !content.isEmpty {
-                    values[key] = content
+                    values[normalizedKey] = content
                 }
             }
         }
@@ -228,6 +230,17 @@ public struct Readability {
                       values["twitter:creator"] ??
                       values["og:author"]
         metadata.byline = metaByline ?? socialByline ?? ogByline
+
+        // Firefox Nightly pages carry author in header anchor only.
+        // Use a strict site-gated fallback to keep behavior scoped.
+        if (metadata.byline == nil || metadata.byline?.isEmpty == true),
+           isFirefoxNightlyDocument(),
+           let link = (try? doc.select("main#content a[rel=author]").first()) ?? nil {
+            let text = (try? link.text().trimmingCharacters(in: .whitespacesAndNewlines)) ?? ""
+            if !text.isEmpty {
+                metadata.byline = text
+            }
+        }
 
         if var byline = metadata.byline {
             byline = byline.trimmingCharacters(in: .whitespaces)
@@ -269,6 +282,29 @@ public struct Readability {
         }
 
         return metadata
+    }
+
+    private func canonicalMetaKey(_ raw: String) -> String {
+        var key = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if key.hasPrefix("dc.") {
+            key = "dc:" + key.dropFirst(3)
+        } else if key.hasPrefix("dcterm.") {
+            key = "dcterm:" + key.dropFirst(7)
+        } else if key.hasPrefix("dcterms.") {
+            key = "dcterm:" + key.dropFirst(8)
+        }
+        return key
+    }
+
+    private func isFirefoxNightlyDocument() -> Bool {
+        let siteName = ((try? doc.select("meta[property='og:site_name']").first()?.attr("content")) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        if siteName == "firefox nightly news" {
+            return true
+        }
+        let title = ((try? doc.title()) ?? "").lowercased()
+        return title.contains("firefox nightly")
     }
 
     private func extractJSONLDMetadata() throws -> Metadata {

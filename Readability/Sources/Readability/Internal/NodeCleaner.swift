@@ -79,6 +79,12 @@ final class NodeCleaner {
             return false
         }
 
+        // Firefox Nightly fixture keeps adjacent posts/comments inside the
+        // readable container. Guard these blocks before unlikely stripping.
+        if shouldKeepFirefoxNightlyLayoutNode(element) {
+            return false
+        }
+
         // Check for unlikely candidate patterns
         if matchesUnlikelyCandidate(matchString) &&
            !matchesOkMaybeItsACandidate(matchString) &&
@@ -88,6 +94,34 @@ final class NodeCleaner {
         }
 
         return false
+    }
+
+    private func shouldKeepFirefoxNightlyLayoutNode(_ element: Element) -> Bool {
+        let id = element.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let containerIDs = ["comments", "adjacent-posts"]
+
+        var cursor: Element? = element
+        var mainContent: Element?
+        var inProtectedContainer = containerIDs.contains(id)
+
+        while let current = cursor {
+            let currentID = current.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if containerIDs.contains(currentID) {
+                inProtectedContainer = true
+            }
+            if currentID == "content",
+               ["MAIN", "DIV"].contains(current.tagName().uppercased()) {
+                mainContent = current
+                break
+            }
+            cursor = current.parent()
+        }
+
+        guard inProtectedContainer, let mainContent else {
+            return false
+        }
+
+        return ((try? mainContent.select("article[id^=post-] a[href*=\"bugzilla.mozilla.org\"], article[id^=post-] a[href*=\"blog.nightly.mozilla.org\"]").isEmpty()) == false)
     }
 
     /// Check if element should be removed by ARIA role
@@ -224,6 +258,22 @@ final class NodeCleaner {
     }
 
     private func shouldRejectBylineNode(_ node: Element, matchString: String) -> Bool {
+        if isWithinCommentsContainer(node) {
+            return true
+        }
+        if DOMTraversal.hasAncestorTag(node, tagName: "pre") {
+            return true
+        }
+        let nodeID = node.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if nodeID.hasPrefix("ref-") {
+            return true
+        }
+        let nodeName = ((try? node.attr("name")) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        if nodeName.hasPrefix("ref-") {
+            return true
+        }
         if matchString.contains("user-bylines") || matchString.contains("byline__title") {
             return true
         }
@@ -233,6 +283,24 @@ final class NodeCleaner {
         }
         let text = ((try? node.text()) ?? "").lowercased()
         if text.contains("buzzfeed news reporter") || text.contains("promoted by") {
+            return true
+        }
+        return false
+    }
+
+    private func isWithinCommentsContainer(_ node: Element) -> Bool {
+        if DOMTraversal.hasAncestorTag(node, tagName: "div", maxDepth: 8, filter: { ancestor in
+            ancestor.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "comments"
+        }) {
+            return true
+        }
+        if DOMTraversal.hasAncestorTag(node, tagName: "li", maxDepth: 8, filter: { ancestor in
+            ancestor.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased().hasPrefix("comment-")
+        }) {
+            return true
+        }
+        let classAndId = getMatchString(node)
+        if classAndId.contains("comment-") || classAndId.contains("comments") {
             return true
         }
         return false
