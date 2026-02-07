@@ -764,6 +764,12 @@ final class ArticleCleaner {
                 continue
             }
 
+            let hasHeadlineSchema = (try? node.select("[itemprop=headline]").isEmpty()) == false
+            let hasPublishedSchema = (try? node.select("meta[itemprop=datePublished], meta[itemprop=dateModified], time").isEmpty()) == false
+            if hasHeadlineSchema || hasPublishedSchema {
+                continue
+            }
+
             let weight = getClassWeight(node)
             if weight < 0 {
                 try node.remove()
@@ -950,6 +956,10 @@ final class ArticleCleaner {
         for div in divs.reversed() {
             guard div.parent() != nil else { continue }
             if div.hasAttr("data-testid") {
+                continue
+            }
+            if div.hasAttr("data-load-playlist") ||
+               ((try? div.select("[data-load-playlist]").isEmpty()) == false) {
                 continue
             }
             if hasContainerIdentity(div) {

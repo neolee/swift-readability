@@ -83,13 +83,16 @@ public struct Readability {
         let content = try cleanAndSerialize(articleContent)
 
         // Prefer metadata byline by default (Mozilla behavior), but avoid
-        // low-quality social handles when richer extracted byline exists.
+        // low-quality metadata values when richer extracted byline exists.
         let byline: String?
         if let metadataByline = metadata.byline {
-            if isSocialHandleByline(metadataByline),
-               let extractedByline,
-               !extractedByline.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                byline = extractedByline
+            if isLowQualityMetadataByline(metadataByline) {
+                if let extractedByline,
+                   !extractedByline.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    byline = extractedByline
+                } else {
+                    byline = nil
+                }
             } else {
                 byline = metadataByline
             }
@@ -166,16 +169,32 @@ public struct Readability {
             let name = (try? meta.attr("name"))?.lowercased() ?? ""
             let content = (try? meta.attr("content")) ?? ""
 
-            var keysToCheck: [String] = []
-            if !property.isEmpty {
-                keysToCheck.append(contentsOf: property.split(separator: " ").map(String.init))
-            }
-            if !name.isEmpty {
-                keysToCheck.append(name)
+            func shouldStore(key: String, fromProperty: Bool) -> Bool {
+                // Keep `author` from `name=author`, but ignore bare `property=author`
+                // which is noisy on several real-world pages.
+                if key == "author" && fromProperty {
+                    return false
+                }
+                return true
             }
 
-            for key in keysToCheck {
+            let propertyKeys = property.isEmpty ? [] : property.split(separator: " ").map(String.init)
+            let nameKeys = name.isEmpty ? [] : [name]
+
+            for key in propertyKeys {
+                guard shouldStore(key: key, fromProperty: true) else { continue }
                 // Check if key matches the pattern OR is article:published_time
+                let isArticlePublishedTime = key == "article:published_time"
+                let isArticleAuthor = key == "article:author" || key == "og:article:author"
+                if let regex = try? NSRegularExpression(pattern: propertyPattern, options: [.caseInsensitive]),
+                   (regex.firstMatch(in: key, options: [], range: NSRange(location: 0, length: key.utf16.count)) != nil || isArticlePublishedTime || isArticleAuthor),
+                   !content.isEmpty {
+                    values[key] = content
+                }
+            }
+
+            for key in nameKeys {
+                guard shouldStore(key: key, fromProperty: false) else { continue }
                 let isArticlePublishedTime = key == "article:published_time"
                 let isArticleAuthor = key == "article:author" || key == "og:article:author"
                 if let regex = try? NSRegularExpression(pattern: propertyPattern, options: [.caseInsensitive]),
@@ -324,9 +343,20 @@ public struct Readability {
         return metadata
     }
 
-    private func isSocialHandleByline(_ byline: String) -> Bool {
+    private func isLowQualityMetadataByline(_ byline: String) -> Bool {
         let trimmed = byline.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.hasPrefix("@") && trimmed.count > 1
+        if trimmed.hasPrefix("@"), trimmed.count > 1 {
+            return true
+        }
+
+        let lower = trimmed.lowercased()
+        if lower.hasPrefix("http://") || lower.hasPrefix("https://") {
+            return true
+        }
+        if lower.contains("facebook.com/") || lower.contains("twitter.com/") {
+            return true
+        }
+        return false
     }
 
     private func extractAuthorFromJSONLD(_ author: Any?) -> String? {

@@ -125,11 +125,21 @@ final class NodeCleaner {
 
         // Look for itemprop="name" child for more accurate author name
         if let nameNode = findItemPropNameNode(startingAt: node) {
-            articleByline = try? nameNode.text().trimmingCharacters(in: .whitespacesAndNewlines)
+            let extracted = (try? nameNode.text().trimmingCharacters(in: .whitespacesAndNewlines)) ?? ""
+            articleByline = normalizeByline(extracted, in: node)
         } else if let authorLinkText = findAuthorLinkText(startingAt: node) {
-            articleByline = authorLinkText
+            articleByline = normalizeByline(authorLinkText, in: node)
         } else {
             articleByline = try? node.text().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        if let byline = articleByline {
+            articleByline = stripTrailingDatelineTime(byline)
+        }
+
+        if let byline = articleByline, looksLikeURLText(byline) {
+            articleByline = nil
+            return false
         }
 
         return true
@@ -146,6 +156,9 @@ final class NodeCleaner {
         let isAuthorRel = rel == "author"
         let isAuthorItemprop = itemprop.contains("author")
         let matchesBylinePattern = matchesBylinePattern(matchString)
+        if shouldRejectBylineNode(node, matchString: matchString) {
+            return false
+        }
 
         // Must have author indicator, non-empty content, and reasonable length
         return (isAuthorRel || isAuthorItemprop || matchesBylinePattern) &&
@@ -190,11 +203,72 @@ final class NodeCleaner {
                 continue
             }
             let text = (try? candidate.text().trimmingCharacters(in: .whitespacesAndNewlines)) ?? ""
-            if !text.isEmpty {
+            if !text.isEmpty, !looksLikeURLText(text) {
                 return text
             }
         }
         return nil
+    }
+
+    private func normalizeByline(_ extracted: String, in node: Element) -> String {
+        let cleanExtracted = extracted.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanExtracted.isEmpty else { return cleanExtracted }
+        let nodeText = (try? node.text().trimmingCharacters(in: .whitespacesAndNewlines)) ?? ""
+        let hasItempropName = ((try? node.select("[itemprop~=name]").isEmpty()) ?? true) == false
+        if nodeText.lowercased().hasPrefix("by "),
+           !hasItempropName,
+           nodeText.lowercased().contains(cleanExtracted.lowercased()) {
+            return nodeText
+        }
+        return cleanExtracted
+    }
+
+    private func shouldRejectBylineNode(_ node: Element, matchString: String) -> Bool {
+        if matchString.contains("user-bylines") || matchString.contains("byline__title") {
+            return true
+        }
+        let hasRoleTitle = (try? node.select(".byline__title, [class*=byline__title], [class*=author-bio]").isEmpty()) == false
+        if hasRoleTitle {
+            return true
+        }
+        let text = ((try? node.text()) ?? "").lowercased()
+        if text.contains("buzzfeed news reporter") || text.contains("promoted by") {
+            return true
+        }
+        return false
+    }
+
+    private func looksLikeURLText(_ text: String) -> Bool {
+        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if normalized.hasPrefix("http://") || normalized.hasPrefix("https://") {
+            return true
+        }
+        if normalized.contains("facebook.com/") || normalized.contains("twitter.com/") {
+            return true
+        }
+        return false
+    }
+
+    private func stripTrailingDatelineTime(_ text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.lowercased().contains("updated") {
+            return trimmed
+        }
+        let patterns = [
+            "\\s+\\d{1,2}:\\d{2}\\s*(?:a\\.m\\.|p\\.m\\.|am|pm)\\s*(?:[A-Z]{1,5})?$",
+            "\\s+\\d{1,2}:\\d{2}\\s*(?:ET|PT|CT|GMT|UTC)$"
+        ]
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
+                let range = NSRange(location: 0, length: trimmed.utf16.count)
+                let stripped = regex.stringByReplacingMatches(in: trimmed, options: [], range: range, withTemplate: "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if stripped != trimmed, !stripped.isEmpty {
+                    return stripped
+                }
+            }
+        }
+        return trimmed
     }
 
     // MARK: - Header Duplicate Title Detection

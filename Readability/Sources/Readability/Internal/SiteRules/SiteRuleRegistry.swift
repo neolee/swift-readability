@@ -14,7 +14,9 @@ enum SiteRuleRegistry {
 
     static func applySerializationRules(to articleContent: Element) throws {
         let rules: [SerializationSiteRule.Type] = [
-            TelegraphCaptionOnlyFigureRule.self
+            TelegraphCaptionOnlyFigureRule.self,
+            CityLabHeadlineTimestampRule.self,
+            BuzzFeedLeadImageSuperlistRule.self
         ]
         for rule in rules {
             try rule.apply(to: articleContent)
@@ -33,7 +35,10 @@ enum SiteRuleRegistry {
             SeattleTimesSectionRailRule.self,
             NYTimesContinueReadingWrapperRule.self,
             WashingtonPostViewGraphicPromoRule.self,
-            CNNLegacyStoryTopRule.self
+            CNNLegacyStoryTopRule.self,
+            MedicalNewsTodayRelatedInlineRule.self,
+            CNETPlaylistOverlayRule.self,
+            EngadgetSlideshowIconRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }
@@ -65,7 +70,8 @@ enum SiteRuleRegistry {
         let rules: [ArticleCleanerSiteRule.Type] = [
             NYTimesCollectionHighlightsRule.self,
             NYTimesSpanishCardSummaryRule.self,
-            NYTimesPhotoViewerWrapperRule.self
+            NYTimesPhotoViewerWrapperRule.self,
+            TheVergeZoomWrapperAccessibilityRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }

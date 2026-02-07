@@ -136,4 +136,55 @@ struct RealWorldCompatibilityTests {
         try assertContentAndMetadataMatch("yahoo-2")
     }
 
+    // Stage 3-R Batch 3 (baseline import)
+    @Test("realworld/cnet - content and metadata match")
+    func testCNET() async throws {
+        try assertContentAndMetadataMatch("cnet")
+    }
+
+    @Test("realworld/cnet-svg-classes - content and metadata match")
+    func testCNETSVGClasses() async throws {
+        try assertContentAndMetadataMatch("cnet-svg-classes")
+    }
+
+    @Test("realworld/engadget - content and metadata match")
+    func testEngadget() async throws {
+        try assertContentAndMetadataMatch("engadget")
+    }
+
+    @Test("realworld/theverge - content and metadata match")
+    func testTheVerge() async throws {
+        try assertContentAndMetadataMatch("theverge")
+    }
+
+    @Test("realworld/buzzfeed-1 - content and metadata match")
+    func testBuzzFeed1() async throws {
+        try assertContentAndMetadataMatch("buzzfeed-1")
+    }
+
+    @Test("realworld/citylab-1 - content and metadata match")
+    func testCityLab1() async throws {
+        try assertContentAndMetadataMatch("citylab-1")
+    }
+
+    @Test("realworld/tmz-1 - content and metadata match")
+    func testTMZ1() async throws {
+        try assertContentAndMetadataMatch("tmz-1")
+    }
+
+    @Test("realworld/medicalnewstoday - content and metadata match")
+    func testMedicalNewsToday() async throws {
+        try assertContentAndMetadataMatch("medicalnewstoday")
+    }
+
+    @Test("realworld/msn - content and metadata match")
+    func testMSN() async throws {
+        try assertContentAndMetadataMatch("msn")
+    }
+
+    @Test("realworld/salon-1 - content and metadata match")
+    func testSalon1() async throws {
+        try assertContentAndMetadataMatch("salon-1")
+    }
+
 }
