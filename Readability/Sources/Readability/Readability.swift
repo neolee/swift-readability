@@ -859,7 +859,35 @@ public struct Readability {
 
         doc.outputSettings().prettyPrint(pretty: false)
 
-        return try cleaned.html()
+        var serialized = try cleaned.html()
+        serialized = wrapOrphanRootCellContentIfNeeded(serialized)
+        return serialized
+    }
+
+    private func wrapOrphanRootCellContentIfNeeded(_ html: String) -> String {
+        let orphanRootPattern = #"^<div id="readability-page-1" class="page">\s*<t[dh]\b"#
+        guard html.range(of: orphanRootPattern, options: .regularExpression) != nil else {
+            return html
+        }
+
+        guard let regex = try? NSRegularExpression(
+            pattern: #"^(<div id="readability-page-1" class="page">)([\s\S]*)(</div>)$"#,
+            options: []
+        ) else {
+            return html
+        }
+
+        let nsRange = NSRange(html.startIndex..<html.endIndex, in: html)
+        guard regex.firstMatch(in: html, options: [], range: nsRange) != nil else {
+            return html
+        }
+
+        return regex.stringByReplacingMatches(
+            in: html,
+            options: [],
+            range: nsRange,
+            withTemplate: "$1<div>$2</div>$3"
+        )
     }
 
     private func cleanClasses(_ element: Element) throws {

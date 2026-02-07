@@ -45,6 +45,12 @@ Acceptance for cluster:
 
 ## Cluster C2 - Container Flattening vs Expected Grouping
 
+Status:
+- [x] Completed on 2026-02-07
+- Result: `testLWN1` passes content + byline assertions
+- Real-world delta: `6 issues -> 5 issues`
+- Mozilla gate: pass (`119/119`)
+
 Cases:
 - `lwn-1`
 
@@ -117,9 +123,10 @@ Acceptance for cluster:
 ## Cluster C5 - Whitespace-Sensitive Metadata Normalization
 
 Status:
-- [~] In progress on 2026-02-07
-- Result: `mozilla-1` excerpt fixed (overlap with C6), `google-sre-book-1` byline and `lwn-1` byline remain
-- Real-world remaining: 2 issues in this cluster
+- [x] Completed on 2026-02-07
+- Result: `mozilla-1`, `google-sre-book-1`, `lwn-1` metadata whitespace assertions pass
+- Real-world delta: `5 issues -> 3 issues`
+- Mozilla gate: pass (`119/119`)
 
 Cases:
 - `google-sre-book-1` (byline)
@@ -170,6 +177,7 @@ Acceptance for cluster:
 3. C6 (`mozilla-1` content tail) + C3 (`gitlab-blog` attrs).
 4. C2 (`lwn-1` wrapper shape).
 5. C5 (metadata whitespace exactness sweep).
+6. Remaining queue: `theverge`, `citylab-1`, `medium-1`.
 
 ## Iteration Protocol (per cluster)
 

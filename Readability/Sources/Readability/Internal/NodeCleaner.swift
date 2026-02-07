@@ -164,7 +164,8 @@ final class NodeCleaner {
         } else if let authorLinkText = findAuthorLinkText(startingAt: node) {
             articleByline = normalizeByline(authorLinkText, in: node)
         } else {
-            articleByline = try? node.text().trimmingCharacters(in: .whitespacesAndNewlines)
+            articleByline = bylineTextPreservingWhitespace(from: node)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
         if let byline = articleByline {
@@ -247,7 +248,8 @@ final class NodeCleaner {
     private func normalizeByline(_ extracted: String, in node: Element) -> String {
         let cleanExtracted = extracted.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanExtracted.isEmpty else { return cleanExtracted }
-        let nodeText = (try? node.text().trimmingCharacters(in: .whitespacesAndNewlines)) ?? ""
+        let nodeText = bylineTextPreservingWhitespace(from: node)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         let hasItempropName = ((try? node.select("[itemprop~=name]").isEmpty()) ?? true) == false
         if nodeText.lowercased().hasPrefix("by "),
            !hasItempropName,
@@ -255,6 +257,26 @@ final class NodeCleaner {
             return nodeText
         }
         return cleanExtracted
+    }
+
+    private func bylineTextPreservingWhitespace(from element: Element) -> String {
+        func collect(_ node: Node, into output: inout String) {
+            if let textNode = node as? TextNode {
+                output.append(textNode.getWholeText())
+                return
+            }
+            if let childElement = node as? Element {
+                for child in childElement.getChildNodes() {
+                    collect(child, into: &output)
+                }
+            }
+        }
+
+        var result = ""
+        for node in element.getChildNodes() {
+            collect(node, into: &result)
+        }
+        return result
     }
 
     private func shouldRejectBylineNode(_ node: Element, matchString: String) -> Bool {

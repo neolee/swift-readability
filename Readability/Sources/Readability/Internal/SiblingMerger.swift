@@ -31,7 +31,14 @@ final class SiblingMerger {
         guard let parentOfTopCandidate = topCandidate.parent() else {
             // If no parent, clone the top candidate into document context
             let clone = try DOMHelpers.cloneElement(topCandidate, in: doc)
-            try articleContent.appendChild(clone)
+            let cloneTag = clone.tagName().uppercased()
+            if cloneTag == "TD" || cloneTag == "TH" {
+                let wrapper = try doc.createElement("div")
+                try wrapper.appendChild(clone)
+                try articleContent.appendChild(wrapper)
+            } else {
+                try articleContent.appendChild(clone)
+            }
             return articleContent
         }
 
