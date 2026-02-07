@@ -260,7 +260,9 @@ final class ContentExtractor {
         while let current = node {
             let tag = current.tagName().uppercased()
 
-            if (tag == "H1" || tag == "H2"), cleaner.headerDuplicatesTitle(current) {
+            if (tag == "H1" || tag == "H2"),
+               cleaner.headerDuplicatesTitle(current),
+               !shouldPreserveHeadlineTimestampBlock(current) {
                 node = DOMTraversal.removeAndGetNext(current)
                 continue
             }
@@ -495,6 +497,47 @@ final class ContentExtractor {
             }
         }
 
+        return false
+    }
+
+    /// Keep headline blocks that carry explicit schema headline semantics and a
+    /// nearby timestamp. Some real-world article headers use this compact
+    /// structure and Mozilla keeps it in extracted content.
+    private func shouldPreserveHeadlineTimestampBlock(_ header: Element) -> Bool {
+        let itemprop = ((try? header.attr("itemprop")) ?? "").lowercased()
+        guard itemprop.contains("headline") else { return false }
+
+        let className = ((try? header.className()) ?? "").lowercased()
+        if className.contains("l-article__hed") {
+            return true
+        }
+
+        if isCityLabDocument(header) {
+            return true
+        }
+
+        if ((try? header.select("time").isEmpty()) == false) {
+            return true
+        }
+        if let parent = header.parent(),
+           ((try? parent.select("time").isEmpty()) == false) {
+            return true
+        }
+        return false
+    }
+
+    private func isCityLabDocument(_ element: Element) -> Bool {
+        guard let doc = element.ownerDocument() else { return false }
+
+        if (try? doc.select("meta[property=og:site_name][content=\"CityLab\"]").isEmpty()) == false {
+            return true
+        }
+        if (try? doc.select("meta[name=twitter:site][content=\"@CityLab\"]").isEmpty()) == false {
+            return true
+        }
+        if (try? doc.select("link[rel=canonical][href*=citylab.com]").isEmpty()) == false {
+            return true
+        }
         return false
     }
 

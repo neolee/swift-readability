@@ -19,8 +19,15 @@ enum CityLabHeadlineTimestampRule: SerializationSiteRule {
         let rawPublished = (try? datePublished.attr("content")) ?? ""
         let formattedTime = formatCityLabTime(rawPublished)
 
-        for wrapper in try articleContent.select("p:has(> h2[itemprop=headline])").reversed() {
-            guard let headline = (try? wrapper.select("> h2[itemprop=headline]").first()) ?? nil else {
+        for wrapper in try articleContent.select("p").reversed() {
+            let children = wrapper.children()
+            guard children.count == 1,
+                  let headline = children.first,
+                  headline.tagName().lowercased() == "h2" else {
+                continue
+            }
+            let itemprop = ((try? headline.attr("itemprop")) ?? "").lowercased()
+            guard itemprop.contains("headline") else {
                 continue
             }
             let doc = wrapper.ownerDocument() ?? Document("")
@@ -40,6 +47,19 @@ enum CityLabHeadlineTimestampRule: SerializationSiteRule {
             }
 
             try wrapper.replaceWith(container)
+        }
+
+        // Keep author bio block while dropping CityLab RSS feed lists.
+        let lists = try articleContent.select("ul")
+        for list in lists.reversed() {
+            let links = try list.select("a")
+            let hasAuthorFeedLink = links.contains { link in
+                let href = ((try? link.attr("href")) ?? "").lowercased()
+                return href.contains("/feeds/author/")
+            }
+            if hasAuthorFeedLink {
+                try list.remove()
+            }
         }
     }
 

@@ -38,6 +38,7 @@ enum SiteRuleRegistry {
             CNNLegacyStoryTopRule.self,
             MedicalNewsTodayRelatedInlineRule.self,
             CNETPlaylistOverlayRule.self,
+            CityLabPromoSignupRule.self,
             EngadgetSlideshowIconRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
