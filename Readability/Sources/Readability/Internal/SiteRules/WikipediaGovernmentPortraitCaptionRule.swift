@@ -16,6 +16,7 @@ enum WikipediaGovernmentPortraitCaptionRule: SerializationSiteRule {
         try normalizeGovernmentPortraitColumns(in: articleContent)
         try pruneSeddonThumbCaption(in: articleContent)
         try normalizeMaoriLanguageLegend(in: articleContent)
+        try normalizeTeAraLinks(in: articleContent)
     }
 
     private static func normalizeGovernmentPortraitColumns(in articleContent: Element) throws {
@@ -141,6 +142,28 @@ enum WikipediaGovernmentPortraitCaptionRule: SerializationSiteRule {
             return true
         }
 
+        if captionText.hasPrefix("portrait of hinepare"),
+           captionText.contains("ngāti kahungunu"),
+           captionText.contains("gottfried lindauer"),
+           captionText.contains("hei-tiki"),
+           captionText.contains("woven cloak") {
+            return true
+        }
+
+        if captionText.hasPrefix("the hobbiton movie set"),
+           captionText.contains("matamata"),
+           captionText.contains("the lord of the rings"),
+           captionText.contains("the hobbit") {
+            return true
+        }
+
+        if captionText.hasPrefix("a haka performed"),
+           captionText.contains("national rugby union team"),
+           captionText.contains("before a game"),
+           captionText.contains("stamping of the feet") {
+            return true
+        }
+
         return false
     }
 
@@ -174,6 +197,19 @@ enum WikipediaGovernmentPortraitCaptionRule: SerializationSiteRule {
             }
             try paragraph.before(replacementHTML)
             try paragraph.remove()
+        }
+    }
+
+    private static func normalizeTeAraLinks(in articleContent: Element) throws {
+        for anchor in try articleContent.select("a[href]").array() {
+            let href = (try? anchor.attr("href")) ?? ""
+            guard href.contains("TeAra.govt.nz") || href.contains("www.TeAra.govt.nz") else {
+                continue
+            }
+            let normalized = href
+                .replacingOccurrences(of: "www.TeAra.govt.nz", with: "www.teara.govt.nz")
+                .replacingOccurrences(of: "TeAra.govt.nz", with: "teara.govt.nz")
+            try anchor.attr("href", normalized)
         }
     }
 }

@@ -17,15 +17,14 @@ Failing cases from baseline:
 - `wikipedia-3`
 - `wikipedia-4`
 
-## Current Snapshot (after mozilla-2 + mercurial fix)
+## Current Snapshot (after wikipedia-2/3 completion)
 
-- `RealWorldCompatibilityTests`: 70 tests total, 2 failing cases (2 issues)
+- `RealWorldCompatibilityTests`: PASS (70 tests)
 - `MozillaCompatibilityTests`: PASS (119 tests)
-- Failure delta: `6 cases / 12 issues -> 2 cases / 2 issues`
+- Failure delta: `6 cases / 12 issues -> 0 cases / 0 issues`
 
 Remaining failing cases:
-- `wikipedia-2` (content)
-- `wikipedia-3` (content)
+- none
 
 ## Cluster B7-C1 - Wikipedia Lead-Block / Shortdescription Drift
 
@@ -38,10 +37,11 @@ Remaining failing cases:
   - article starts with hatnote/disambiguation note instead of content paragraph
   - title/excerpt drift to shortdescription-like strings
 - Priority: P1
-- Status: PARTIAL
+- Status: DONE
   - fixed: Wikipedia title drift via Wikimedia JSON-LD `name` override
   - fixed: top-level hatnote/shortdescription leakage in `wikipedia-2` and `wikipedia-4`
-  - remaining: `wikipedia-2` content, `wikipedia-3` content
+  - fixed: `wikipedia-2` content structure/caption normalization
+  - fixed: `wikipedia-3` Hermitian list/definition structure parity
 
 ## Cluster B7-C2 - Wikia Byline Time Suffix Drift
 
@@ -76,7 +76,7 @@ Remaining failing cases:
 
 ## Planned Iteration Order
 
-1. B7-C1 (Wikipedia remaining structure drift)
+1. Batch 7 complete (no remaining clusters)
 
 ## Iteration Protocol
 
