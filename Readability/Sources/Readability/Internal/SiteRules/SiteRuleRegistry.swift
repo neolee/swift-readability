@@ -75,6 +75,7 @@ enum SiteRuleRegistry {
             QQSharePanelRule.self,
             HeraldSunReadMoreLinkRule.self,
             LiberationRelatedAsideRule.self,
+            LiberationAuthorsContainerRule.self,
             NYTimesLivePanelsRule.self,
             SeattleTimesSectionRailRule.self,
             NYTimesContinueReadingWrapperRule.self,
@@ -87,7 +88,9 @@ enum SiteRuleRegistry {
             FirefoxNightlyCommentFormRule.self,
             MozillaCustomizeSyncSectionRule.self,
             EHowAuthorProfileRule.self,
-            SimplyFoundMediaContainerRule.self
+            SimplyFoundMediaContainerRule.self,
+            FolhaGalleryWidgetRule.self,
+            PixnetArticleKeywordRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }

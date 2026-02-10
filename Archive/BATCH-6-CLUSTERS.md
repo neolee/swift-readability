@@ -19,16 +19,14 @@ Failing cases from baseline:
 - `qq`
 - `yahoo-3`
 
-## Current Snapshot (after C1 + herald byline + yahoo-3 + la-nacion fix)
+## Current Snapshot (after C1 + C2 + C3 + C4 targeted fixes)
 
-- `RealWorldCompatibilityTests`: 60 tests total, 3 failing cases (3 issues)
+- `RealWorldCompatibilityTests`: 60 tests total, 0 failing cases (0 issues)
 - `MozillaCompatibilityTests`: PASS (119 tests)
-- Failure delta: `8 cases / 10 issues -> 3 cases / 3 issues`
+- Failure delta: `8 cases / 10 issues -> 0 cases / 0 issues`
 
 Remaining failing cases:
-- `folha` (content)
-- `pixnet` (content)
-- `liberation-1` (content)
+- none
 
 ## Cluster B6-C1 - Share/Embed Widget Retention (Stable IDs)
 
@@ -52,7 +50,10 @@ Remaining failing cases:
 - Signals:
   - candidate container shape differs from Mozilla expected wrapper.
 - Priority: P1
-- Status: IN_PROGRESS
+- Status: DONE
+  - fixed: `la-nacion`
+  - fixed: `folha`
+  - fixed: `liberation-1`
 
 ## Cluster B6-C3 - Residual Tail Block Retention
 
@@ -63,7 +64,9 @@ Remaining failing cases:
 - Signals:
   - extra recirculation/tail content survives extraction/cleanup.
 - Priority: P1
-- Status: OPEN
+- Status: DONE
+  - fixed: `yahoo-3`
+  - fixed: `pixnet`
 
 ## Cluster B6-C4 - Byline Source/Normalization Drift
 
@@ -77,6 +80,7 @@ Remaining failing cases:
 - Status: PARTIAL
   - fixed: `herald-sun-1`
   - fixed: `yahoo-3`
+  - no remaining failures in Batch 6 fixtures
 
 ## Planned Iteration Order
 
