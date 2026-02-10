@@ -19,7 +19,8 @@ enum SiteRuleRegistry {
             BuzzFeedLeadImageSuperlistRule.self,
             ArsIntroHeaderWrapperRule.self,
             FirefoxNightlyHeaderPlaceholderRule.self,
-            EHowFoundHelpfulHeaderRule.self
+            EHowFoundHelpfulHeaderRule.self,
+            QQVoteContainerRule.self
         ]
         for rule in rules {
             try rule.apply(to: articleContent)
@@ -32,6 +33,7 @@ enum SiteRuleRegistry {
         document: Document
     ) throws -> String? {
         let rules: [BylineSiteRule.Type] = [
+            HeraldSunUppercaseBylineRule.self,
             RoyalRoadFollowAuthorBylineRule.self,
             TumblrBlogHandleBylineRule.self
         ]
@@ -66,6 +68,11 @@ enum SiteRuleRegistry {
             WashingtonPostGalleryEmbedRule.self,
             YahooSlideshowModalRule.self,
             BBCVideoPlaceholderRule.self,
+            AktualneTwitterEmbedRule.self,
+            AktualneInlinePhotoRule.self,
+            QQSharePanelRule.self,
+            HeraldSunReadMoreLinkRule.self,
+            LiberationRelatedAsideRule.self,
             NYTimesLivePanelsRule.self,
             SeattleTimesSectionRailRule.self,
             NYTimesContinueReadingWrapperRule.self,
@@ -116,6 +123,7 @@ enum SiteRuleRegistry {
             EngadgetReviewSummaryWrapperRule.self,
             CityLabPromoSummarySectionRule.self,
             TheVergeZoomWrapperAccessibilityRule.self,
+            LiberationArticleBodyWrapperRule.self,
             WordPressPrevNextNavigationRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)

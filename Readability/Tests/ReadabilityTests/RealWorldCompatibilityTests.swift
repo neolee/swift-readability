@@ -304,4 +304,60 @@ struct RealWorldCompatibilityTests {
         try assertContentAndMetadataMatch("royal-road")
     }
 
+    // Stage 3-R Batch 6 (baseline import)
+    @Test("realworld/aktualne - content and metadata match")
+    func testAktualne() async throws {
+        try assertContentAndMetadataMatch("aktualne")
+    }
+
+    @Test("realworld/folha - content and metadata match")
+    func testFolha() async throws {
+        try assertContentAndMetadataMatch("folha")
+    }
+
+    @Test("realworld/heise - content and metadata match")
+    func testHeise() async throws {
+        try assertContentAndMetadataMatch("heise")
+    }
+
+    @Test("realworld/herald-sun-1 - content and metadata match")
+    func testHeraldSun1() async throws {
+        try assertContentAndMetadataMatch("herald-sun-1")
+    }
+
+    @Test("realworld/la-nacion - content and metadata match")
+    func testLaNacion() async throws {
+        try assertContentAndMetadataMatch("la-nacion")
+    }
+
+    @Test("realworld/lemonde-1 - content and metadata match")
+    func testLeMonde1() async throws {
+        try assertContentAndMetadataMatch("lemonde-1")
+    }
+
+    @Test("realworld/liberation-1 - content and metadata match")
+    func testLiberation1() async throws {
+        try assertContentAndMetadataMatch("liberation-1")
+    }
+
+    @Test("realworld/pixnet - content and metadata match")
+    func testPixnet() async throws {
+        try assertContentAndMetadataMatch("pixnet")
+    }
+
+    @Test("realworld/qq - content and metadata match")
+    func testQQ() async throws {
+        try assertContentAndMetadataMatch("qq")
+    }
+
+    @Test("realworld/yahoo-3 - content and metadata match")
+    func testYahoo3() async throws {
+        try assertContentAndMetadataMatch("yahoo-3")
+    }
+
+    @Test("realworld/yahoo-4 - content and metadata match")
+    func testYahoo4() async throws {
+        try assertContentAndMetadataMatch("yahoo-4")
+    }
+
 }
