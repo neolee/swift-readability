@@ -19,16 +19,14 @@ Failing cases from baseline:
 - `qq`
 - `yahoo-3`
 
-## Current Snapshot (after C1 + herald byline fix)
+## Current Snapshot (after C1 + herald byline + yahoo-3 + la-nacion fix)
 
-- `RealWorldCompatibilityTests`: 60 tests total, 5 failing cases (6 issues)
+- `RealWorldCompatibilityTests`: 60 tests total, 3 failing cases (3 issues)
 - `MozillaCompatibilityTests`: PASS (119 tests)
-- Failure delta: `8 cases / 10 issues -> 5 cases / 6 issues`
+- Failure delta: `8 cases / 10 issues -> 3 cases / 3 issues`
 
 Remaining failing cases:
-- `yahoo-3` (content + byline)
 - `folha` (content)
-- `la-nacion` (content)
 - `pixnet` (content)
 - `liberation-1` (content)
 
@@ -78,7 +76,7 @@ Remaining failing cases:
 - Priority: P2
 - Status: PARTIAL
   - fixed: `herald-sun-1`
-  - remaining: `yahoo-3`
+  - fixed: `yahoo-3`
 
 ## Planned Iteration Order
 

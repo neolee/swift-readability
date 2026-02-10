@@ -34,6 +34,7 @@ enum SiteRuleRegistry {
     ) throws -> String? {
         let rules: [BylineSiteRule.Type] = [
             HeraldSunUppercaseBylineRule.self,
+            YahooBylineTimeRule.self,
             RoyalRoadFollowAuthorBylineRule.self,
             TumblrBlogHandleBylineRule.self
         ]
@@ -67,6 +68,7 @@ enum SiteRuleRegistry {
         let rules: [ArticleCleanerSiteRule.Type] = [
             WashingtonPostGalleryEmbedRule.self,
             YahooSlideshowModalRule.self,
+            YahooBreakingNewsModuleRule.self,
             BBCVideoPlaceholderRule.self,
             AktualneTwitterEmbedRule.self,
             AktualneInlinePhotoRule.self,
@@ -121,6 +123,7 @@ enum SiteRuleRegistry {
             EngadgetBuyLinkRule.self,
             EngadgetBreakoutTypeRule.self,
             EngadgetReviewSummaryWrapperRule.self,
+            YahooStoryContainerRule.self,
             CityLabPromoSummarySectionRule.self,
             TheVergeZoomWrapperAccessibilityRule.self,
             LiberationArticleBodyWrapperRule.self,

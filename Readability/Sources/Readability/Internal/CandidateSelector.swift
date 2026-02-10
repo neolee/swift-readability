@@ -241,6 +241,16 @@ final class CandidateSelector {
         }
 
         if candidate.tagName().uppercased() == "SECTION" {
+            let sectionItemprop = ((try? candidate.attr("itemprop")) ?? "").lowercased()
+            if sectionItemprop.contains("articlebody"),
+               let parent = candidate.parent(),
+               parent.tagName().uppercased() == "ARTICLE" {
+                let itemtype = ((try? parent.attr("itemtype")) ?? "").lowercased()
+                if itemtype.contains("newsarticle") {
+                    return parent
+                }
+            }
+
             let sectionID = candidate.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             guard sectionID == "article-section-1",
                   let parent = candidate.parent(),
