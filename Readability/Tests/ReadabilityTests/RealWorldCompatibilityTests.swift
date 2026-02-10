@@ -411,4 +411,45 @@ struct RealWorldCompatibilityTests {
         try assertContentAndMetadataMatch("wikipedia-4")
     }
 
+    // Stage 3-R Batch 8 (baseline import)
+    @Test("realworld/ebb-org - content and metadata match")
+    func testEbbOrg() async throws {
+        try assertContentAndMetadataMatch("ebb-org")
+    }
+
+    @Test("realworld/gmw - content and metadata match")
+    func testGMW() async throws {
+        try assertContentAndMetadataMatch("gmw")
+    }
+
+    @Test("realworld/hukumusume - content and metadata match")
+    func testHukumusume() async throws {
+        try assertContentAndMetadataMatch("hukumusume")
+    }
+
+    @Test("realworld/quanta-1 - content and metadata match")
+    func testQuanta1() async throws {
+        try assertContentAndMetadataMatch("quanta-1")
+    }
+
+    @Test("realworld/webmd-1 - content and metadata match")
+    func testWebMD1() async throws {
+        try assertContentAndMetadataMatch("webmd-1")
+    }
+
+    @Test("realworld/webmd-2 - content and metadata match")
+    func testWebMD2() async throws {
+        try assertContentAndMetadataMatch("webmd-2")
+    }
+
+    @Test("realworld/youth - content and metadata match")
+    func testYouth() async throws {
+        try assertContentAndMetadataMatch("youth")
+    }
+
+    @Test("realworld/breitbart - content and metadata match")
+    func testBreitbart() async throws {
+        try assertContentAndMetadataMatch("breitbart")
+    }
+
 }

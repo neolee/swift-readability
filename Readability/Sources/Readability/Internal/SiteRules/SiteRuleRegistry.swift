@@ -22,7 +22,8 @@ enum SiteRuleRegistry {
             WikipediaGovernmentPortraitCaptionRule.self,
             WikipediaMathDisplayBlockRule.self,
             EHowFoundHelpfulHeaderRule.self,
-            QQVoteContainerRule.self
+            QQVoteContainerRule.self,
+            HukumusumeLegacyFileURLRule.self
         ]
         for rule in rules {
             try rule.apply(to: articleContent)
@@ -35,6 +36,8 @@ enum SiteRuleRegistry {
         document: Document
     ) throws -> String? {
         let rules: [BylineSiteRule.Type] = [
+            WebMDBylineRule.self,
+            QuantaBylineDateRule.self,
             HeraldSunUppercaseBylineRule.self,
             YahooBylineTimeRule.self,
             RoyalRoadFollowAuthorBylineRule.self,
@@ -54,7 +57,8 @@ enum SiteRuleRegistry {
         document: Document
     ) throws -> Bool {
         let rules: [BylineContainerRetentionSiteRule.Type] = [
-            EHowAuthorProfileBylineRetentionRule.self
+            EHowAuthorProfileBylineRetentionRule.self,
+            WebMDAuthorBylineRetentionRule.self
         ]
         for rule in rules {
             if try rule.shouldKeepBylineContainer(node, sourceURL: sourceURL, document: document) {
@@ -94,7 +98,8 @@ enum SiteRuleRegistry {
             EHowAuthorProfileRule.self,
             SimplyFoundMediaContainerRule.self,
             FolhaGalleryWidgetRule.self,
-            PixnetArticleKeywordRule.self
+            PixnetArticleKeywordRule.self,
+            WebMDReviewedByRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }
@@ -136,7 +141,8 @@ enum SiteRuleRegistry {
             LiberationArticleBodyWrapperRule.self,
             WordPressPrevNextNavigationRule.self,
             MercurialExampleSectionRule.self,
-            WikipediaHermitianListPruneRule.self
+            WikipediaHermitianListPruneRule.self,
+            EbbPreviousLinkRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }
