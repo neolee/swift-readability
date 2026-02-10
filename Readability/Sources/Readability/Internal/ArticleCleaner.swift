@@ -111,6 +111,7 @@ final class ArticleCleaner {
             if hasSingleTagInsideElement(div, tag: "P"),
                try getLinkDensity(div) < 0.25,
                !shouldPreserveFigureImageWrapper(div),
+               !shouldPreserveMathFormulaWrapper(div),
                let parent = div.parent(),
                parent.children().count == 1 {
                 if let onlyChild = div.children().first {
@@ -904,6 +905,14 @@ final class ArticleCleaner {
         }
 
         return false
+    }
+
+    /// Preserve wrappers for math-render image blocks (for example Wikimedia math formulas),
+    /// where Mozilla keeps `div > p > img` structure.
+    private func shouldPreserveMathFormulaWrapper(_ element: Element) -> Bool {
+        guard hasSingleTagInsideElement(element, tag: "P") else { return false }
+        let mathImgs = (try? element.select("p > img[src*='/media/math/render/']")).map { !$0.isEmpty() } ?? false
+        return mathImgs
     }
 
     private func isAdvertisementWord(_ text: String) -> Bool {

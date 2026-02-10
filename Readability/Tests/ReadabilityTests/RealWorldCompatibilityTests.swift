@@ -360,4 +360,55 @@ struct RealWorldCompatibilityTests {
         try assertContentAndMetadataMatch("yahoo-4")
     }
 
+    // Stage 3-R Batch 7 (baseline import)
+    @Test("realworld/aclu - content and metadata match")
+    func testACLU() async throws {
+        try assertContentAndMetadataMatch("aclu")
+    }
+
+    @Test("realworld/archive-of-our-own - content and metadata match")
+    func testArchiveOfOurOwn() async throws {
+        try assertContentAndMetadataMatch("archive-of-our-own")
+    }
+
+    @Test("realworld/iab-1 - content and metadata match")
+    func testIAB1() async throws {
+        try assertContentAndMetadataMatch("iab-1")
+    }
+
+    @Test("realworld/mercurial - content and metadata match")
+    func testMercurial() async throws {
+        try assertContentAndMetadataMatch("mercurial")
+    }
+
+    @Test("realworld/mozilla-2 - content and metadata match")
+    func testMozilla2() async throws {
+        try assertContentAndMetadataMatch("mozilla-2")
+    }
+
+    @Test("realworld/topicseed-1 - content and metadata match")
+    func testTopicseed1() async throws {
+        try assertContentAndMetadataMatch("topicseed-1")
+    }
+
+    @Test("realworld/wikia - content and metadata match")
+    func testWikia() async throws {
+        try assertContentAndMetadataMatch("wikia")
+    }
+
+    @Test("realworld/wikipedia-2 - content and metadata match")
+    func testWikipedia2() async throws {
+        try assertContentAndMetadataMatch("wikipedia-2")
+    }
+
+    @Test("realworld/wikipedia-3 - content and metadata match")
+    func testWikipedia3() async throws {
+        try assertContentAndMetadataMatch("wikipedia-3")
+    }
+
+    @Test("realworld/wikipedia-4 - content and metadata match")
+    func testWikipedia4() async throws {
+        try assertContentAndMetadataMatch("wikipedia-4")
+    }
+
 }

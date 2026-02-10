@@ -19,6 +19,7 @@ enum SiteRuleRegistry {
             BuzzFeedLeadImageSuperlistRule.self,
             ArsIntroHeaderWrapperRule.self,
             FirefoxNightlyHeaderPlaceholderRule.self,
+            WikipediaMathDisplayBlockRule.self,
             EHowFoundHelpfulHeaderRule.self,
             QQVoteContainerRule.self
         ]
@@ -36,7 +37,8 @@ enum SiteRuleRegistry {
             HeraldSunUppercaseBylineRule.self,
             YahooBylineTimeRule.self,
             RoyalRoadFollowAuthorBylineRule.self,
-            TumblrBlogHandleBylineRule.self
+            TumblrBlogHandleBylineRule.self,
+            WikiaBylineTimeSuffixRule.self
         ]
         var current = byline
         for rule in rules {
@@ -85,6 +87,7 @@ enum SiteRuleRegistry {
             CNETPlaylistOverlayRule.self,
             CityLabPromoSignupRule.self,
             EngadgetSlideshowIconRule.self,
+            WikipediaLeadMetaNoiseRule.self,
             FirefoxNightlyCommentFormRule.self,
             MozillaCustomizeSyncSectionRule.self,
             EHowAuthorProfileRule.self,

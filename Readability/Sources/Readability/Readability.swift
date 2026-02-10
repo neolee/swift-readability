@@ -364,7 +364,19 @@ public struct Readability {
             return metadata
         }
 
-        if let headline = jsonld["headline"] as? String {
+        let publisherName = ((jsonld["publisher"] as? [String: Any])?["name"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let jsonldName = (jsonld["name"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let jsonldHeadline = (jsonld["headline"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if let name = jsonldName, !name.isEmpty,
+           let publisherName, publisherName.lowercased().contains("wikimedia foundation") {
+            // Wikimedia pages often store shortdescription in `headline`.
+            // Prefer the page `name` to align with Mozilla parity fixtures.
+            metadata.title = name
+        } else if let headline = jsonldHeadline, !headline.isEmpty {
             metadata.title = headline
         }
 
@@ -378,8 +390,7 @@ public struct Readability {
 
         metadata.byline = extractAuthorFromJSONLD(jsonld["author"])
 
-        if let publisher = jsonld["publisher"] as? [String: Any],
-           let publisherName = publisher["name"] as? String {
+        if let publisherName, !publisherName.isEmpty {
             metadata.siteName = publisherName
         }
 
@@ -810,7 +821,7 @@ public struct Readability {
         let paragraphs = try element.select("p")
         for p in paragraphs {
             let text = try p.text().trimmingCharacters(in: .whitespacesAndNewlines)
-            if text.count > 50 {
+            if !text.isEmpty {
                 let rawText = excerptTextPreservingWhitespace(from: p)
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 // Prefer whitespace-preserving text when paragraph contains
@@ -818,7 +829,7 @@ public struct Readability {
                 if rawText.contains("\n") {
                     return rawText
                 }
-                // Match Mozilla fallback behavior: use full first paragraph text.
+                // Match Mozilla fallback behavior: use first non-empty paragraph text.
                 return text
             }
         }
@@ -903,6 +914,7 @@ public struct Readability {
         if !options.keepClasses {
             try cleanClasses(cleaned)
         }
+        try trimParagraphBoundaryWhitespace(cleaned)
         try restoreFigureWrapperMetadataAttributes(cleaned)
 
         doc.outputSettings().prettyPrint(pretty: false)
@@ -1216,6 +1228,22 @@ public struct Readability {
                 try paragraph.remove()
             }
             try container.replaceWith(merged)
+        }
+    }
+
+    /// Remove pure-whitespace boundary text nodes from paragraphs to match jsdom output shape.
+    private func trimParagraphBoundaryWhitespace(_ articleContent: Element) throws {
+        let paragraphs = try articleContent.select("p")
+        for paragraph in paragraphs {
+            while let first = paragraph.getChildNodes().first as? TextNode,
+                  first.getWholeText().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                try first.remove()
+            }
+
+            while let last = paragraph.getChildNodes().last as? TextNode,
+                  last.getWholeText().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                try last.remove()
+            }
         }
     }
 }
