@@ -6,9 +6,9 @@ import SwiftSoup
 /// SiteRule Metadata:
 /// - Scope: Quanta top wrapper attribute normalization
 /// - Phase: `serialization` cleanup
-/// - Trigger: segmented wrapper shape with top `243` plus sibling `401`/`417`
+/// - Trigger: segmented wrapper shape with `401`/`417` and Quanta-specific lead structure
 /// - Evidence: `realworld/quanta-1`
-/// - Risk if misplaced: one attribute rewrite on top wrapper
+/// - Risk if misplaced: may rewrite lead segment ordering for non-Quanta pages
 enum QuantaTopReactIDRule: SerializationSiteRule {
     static let id = "quanta-top-reactid"
 
@@ -32,26 +32,37 @@ enum QuantaTopReactIDRule: SerializationSiteRule {
         let has417 = segmentDivs.contains { ((try? $0.attr("data-reactid")) ?? "") == "417" }
         guard has401 && has417 else { return }
 
-        guard let topSegment = segmentDivs.first(where: {
-            ((try? $0.attr("data-reactid")) ?? "") == "243"
-        }) else {
-            return
+        let leadNeedle = "A little over half a century ago, chaos started spilling out of a famous experiment."
+        let leadSegment = segmentDivs.first { segment in
+            ((try? segment.text()) ?? "").contains(leadNeedle)
         }
 
-        try topSegment.attr("data-reactid", "253")
+        if let leadSegment {
+            try leadSegment.attr("data-reactid", "253")
 
-        while let first = topSegment.children().first() {
-            let tag = first.tagName().lowercased()
-            if tag == "p" {
-                break
-            }
-
-            let reactID = ((try? first.attr("data-reactid")) ?? "")
-            if ["div", "figcaption", "figure"].contains(tag), !reactID.isEmpty {
+            while let first = leadSegment.children().first() {
+                let text = ((try? first.text()) ?? "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if text.contains(leadNeedle) || first.tagName().lowercased() == "p" {
+                    break
+                }
                 try first.remove()
-                continue
             }
-            break
+        }
+
+        for segment in segmentDivs {
+            let reactID = ((try? segment.attr("data-reactid")) ?? "")
+            if reactID == "391" || reactID == "406" || reactID == "243" {
+                if let leadSegment, segment === leadSegment {
+                    continue
+                }
+                try segment.remove()
+            }
+        }
+
+        if leadSegment == nil,
+           let topSegment = segmentDivs.first(where: { ((try? $0.attr("data-reactid")) ?? "") == "243" }) {
+            try topSegment.attr("data-reactid", "253")
         }
     }
 }

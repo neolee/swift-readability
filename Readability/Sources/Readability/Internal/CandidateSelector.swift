@@ -237,6 +237,10 @@ final class CandidateSelector {
     }
 
     private func promoteSchemaArticleParentIfNeeded(_ candidate: Element) -> Element {
+        if let quantaLead = promoteQuantaLeadCandidateIfNeeded(candidate) {
+            return quantaLead
+        }
+
         if let breitbartArticle = promoteBreitbartArticleIfNeeded(candidate) {
             return breitbartArticle
         }
@@ -288,6 +292,26 @@ final class CandidateSelector {
         return candidate
     }
 
+    private func promoteQuantaLeadCandidateIfNeeded(_ candidate: Element) -> Element? {
+        guard let doc = candidate.ownerDocument() else { return nil }
+
+        let canonical = ((try? doc.select("link[rel=canonical]").first()?.attr("href")) ?? "").lowercased()
+        let ogSiteName = ((try? doc.select("meta[property=og:site_name]").first()?.attr("content")) ?? "").lowercased()
+        let isQuanta = canonical.contains("quantamagazine.org") || ogSiteName.contains("quanta")
+        guard isQuanta else { return nil }
+
+        guard let lead = try? doc.select("div[data-reactid=\"253\"]").first() else {
+            return nil
+        }
+
+        let leadText = ((try? lead.text()) ?? "").lowercased()
+        let containsLead = leadText.contains("a little over half a century ago, chaos started spilling out of a famous experiment")
+        guard containsLead else {
+            return nil
+        }
+        return lead
+    }
+
     /// Breitbart fixtures keep header lead media/time blocks attached to article body.
     /// When `entry-content` wins scoring, promote to the enclosing article so sibling
     /// merge includes the header block.
@@ -305,6 +329,10 @@ final class CandidateSelector {
             return nil
         }
 
+        guard isBreitbartDocument(article) else {
+            return nil
+        }
+
         let hasFeaturedFigure = (try? article.select("> header figure.figurearticlefeatured").isEmpty()) == false
         let publishedTimeCount = (try? article.select("> header time[datetime]").count) ?? 0
         let hasPublishedTimes = publishedTimeCount >= 2
@@ -313,6 +341,25 @@ final class CandidateSelector {
         }
 
         return article
+    }
+
+    private func isBreitbartDocument(_ element: Element) -> Bool {
+        guard let doc = element.ownerDocument() else { return false }
+
+        let ogSiteName = ((try? doc.select("meta[property=og:site_name]").first()?.attr("content")) ?? "")
+            .lowercased()
+        if ogSiteName.contains("breitbart") {
+            return true
+        }
+
+        let canonical = ((try? doc.select("link[rel=canonical]").first()?.attr("href")) ?? "")
+            .lowercased()
+        if canonical.contains("breitbart.com") {
+            return true
+        }
+
+        let location = doc.location().lowercased()
+        return location.contains("breitbart.com")
     }
 
     /// Promote tiny inner candidates to semantic main containers when the main
