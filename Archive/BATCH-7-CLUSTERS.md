@@ -17,18 +17,15 @@ Failing cases from baseline:
 - `wikipedia-3`
 - `wikipedia-4`
 
-## Current Snapshot (after C1 partial + C2 done)
+## Current Snapshot (after mozilla-2 + mercurial fix)
 
-- `RealWorldCompatibilityTests`: 70 tests total, 5 failing cases (7 issues)
+- `RealWorldCompatibilityTests`: 70 tests total, 2 failing cases (2 issues)
 - `MozillaCompatibilityTests`: PASS (119 tests)
-- Failure delta: `6 cases / 12 issues -> 5 cases / 7 issues`
+- Failure delta: `6 cases / 12 issues -> 2 cases / 2 issues`
 
 Remaining failing cases:
-- `wikipedia-2` (content, excerpt)
+- `wikipedia-2` (content)
 - `wikipedia-3` (content)
-- `wikipedia-4` (excerpt)
-- `mercurial` (content, excerpt)
-- `mozilla-2` (content attr)
 
 ## Cluster B7-C1 - Wikipedia Lead-Block / Shortdescription Drift
 
@@ -44,7 +41,7 @@ Remaining failing cases:
 - Status: PARTIAL
   - fixed: Wikipedia title drift via Wikimedia JSON-LD `name` override
   - fixed: top-level hatnote/shortdescription leakage in `wikipedia-2` and `wikipedia-4`
-  - remaining: `wikipedia-2` content/excerpt, `wikipedia-3` content, `wikipedia-4` excerpt
+  - remaining: `wikipedia-2` content, `wikipedia-3` content
 
 ## Cluster B7-C2 - Wikia Byline Time Suffix Drift
 
@@ -65,7 +62,7 @@ Remaining failing cases:
   - candidate extraction diverges in mid-article sequence selection
   - excerpt should remain `Contents`
 - Priority: P1
-- Status: OPEN
+- Status: DONE
 
 ## Cluster B7-C4 - Mozilla-2 Root Attribute Parity
 
@@ -75,14 +72,11 @@ Remaining failing cases:
 - Signals:
   - descriptor matches but root attribute count/value differs
 - Priority: P2
-- Status: OPEN
+- Status: DONE
 
 ## Planned Iteration Order
 
-1. B7-C1 (Wikipedia lead-block/title drift)
-2. B7-C3 (Mercurial structure drift)
-3. B7-C2 (Wikia byline suffix)
-4. B7-C4 (Mozilla-2 attribute parity)
+1. B7-C1 (Wikipedia remaining structure drift)
 
 ## Iteration Protocol
 

@@ -19,6 +19,7 @@ enum SiteRuleRegistry {
             BuzzFeedLeadImageSuperlistRule.self,
             ArsIntroHeaderWrapperRule.self,
             FirefoxNightlyHeaderPlaceholderRule.self,
+            WikipediaGovernmentPortraitCaptionRule.self,
             WikipediaMathDisplayBlockRule.self,
             EHowFoundHelpfulHeaderRule.self,
             QQVoteContainerRule.self
@@ -133,7 +134,9 @@ enum SiteRuleRegistry {
             CityLabPromoSummarySectionRule.self,
             TheVergeZoomWrapperAccessibilityRule.self,
             LiberationArticleBodyWrapperRule.self,
-            WordPressPrevNextNavigationRule.self
+            WordPressPrevNextNavigationRule.self,
+            MercurialExampleSectionRule.self,
+            WikipediaHermitianListPruneRule.self
         ]
         try applyArticleCleanerRules(rules, to: articleContent, context: context)
     }

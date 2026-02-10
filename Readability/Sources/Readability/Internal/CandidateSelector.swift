@@ -54,6 +54,7 @@ final class CandidateSelector {
             // If top candidate is the only child, use parent instead
             topCandidate = try promoteSingleChildCandidate(topCandidate!)
             topCandidate = promoteSchemaArticleParentIfNeeded(topCandidate!)
+            topCandidate = try promoteSemanticMainAncestorIfNeeded(topCandidate!)
 
             if options.debug, let chosen = topCandidate {
                 print("[ReadabilityDebug] Chosen top candidate: \(describe(chosen))")
@@ -281,6 +282,65 @@ final class CandidateSelector {
         }
 
         return candidate
+    }
+
+    /// Promote tiny inner candidates to semantic main containers when the main
+    /// wrapper clearly contains multiple substantial content blocks.
+    private func promoteSemanticMainAncestorIfNeeded(_ candidate: Element) throws -> Element {
+        func isSemanticMain(_ element: Element) -> Bool {
+            return element.tagName().uppercased() == "MAIN"
+        }
+
+        var semanticMain: Element?
+        for ancestor in candidate.ancestors() where isSemanticMain(ancestor) {
+            semanticMain = ancestor
+            break
+        }
+
+        guard let semanticMain else { return candidate }
+
+        let hasMozillaFeatureHeading = (try? semanticMain.select("h2").array().contains {
+            let text = ((try? $0.text()) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            return text == "features and tools"
+        }) == true
+        let hasSyncNoticeHeading = (try? semanticMain.select("h4").array().contains {
+            let text = ((try? $0.text()) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            return text == "important: sync your new profile"
+        }) == true
+        guard hasMozillaFeatureHeading || hasSyncNoticeHeading else {
+            return candidate
+        }
+
+        let candidateTextLength = (try? DOMHelpers.getInnerText(candidate).count) ?? 0
+        let mainTextLength = (try? DOMHelpers.getInnerText(semanticMain).count) ?? 0
+        guard candidateTextLength > 0,
+              mainTextLength > candidateTextLength,
+              Double(candidateTextLength) / Double(mainTextLength) < 0.7 else {
+            return candidate
+        }
+
+        let meaningfulChildCount = semanticMain.children().array().reduce(into: 0) { count, child in
+            let tag = child.tagName().uppercased()
+            guard ["ARTICLE", "SECTION", "DIV"].contains(tag) else { return }
+            let textLength = (try? DOMHelpers.getInnerText(child).count) ?? 0
+            if textLength >= 140 {
+                count += 1
+            }
+        }
+
+        guard meaningfulChildCount >= 2 else { return candidate }
+
+        if let density = try? scoringManager.getLinkDensity(for: semanticMain),
+           density > 0.7 {
+            return candidate
+        }
+
+        scoringManager.initializeNodeIfNeeded(semanticMain)
+        return semanticMain
     }
 
     private func promoteFirefoxNightlyContainerIfNeeded(_ candidate: Element) -> Element? {
