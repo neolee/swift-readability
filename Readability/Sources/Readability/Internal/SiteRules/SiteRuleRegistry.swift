@@ -23,6 +23,8 @@ enum SiteRuleRegistry {
             WikipediaMathDisplayBlockRule.self,
             EHowFoundHelpfulHeaderRule.self,
             QQVoteContainerRule.self,
+            BreitbartHeaderMediaRule.self,
+            QuantaTopReactIDRule.self,
             HukumusumeLegacyFileURLRule.self
         ]
         for rule in rules {

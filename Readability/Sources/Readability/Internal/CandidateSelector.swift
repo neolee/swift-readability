@@ -237,6 +237,10 @@ final class CandidateSelector {
     }
 
     private func promoteSchemaArticleParentIfNeeded(_ candidate: Element) -> Element {
+        if let breitbartArticle = promoteBreitbartArticleIfNeeded(candidate) {
+            return breitbartArticle
+        }
+
         if let nightlyContainer = promoteFirefoxNightlyContainerIfNeeded(candidate) {
             return nightlyContainer
         }
@@ -282,6 +286,33 @@ final class CandidateSelector {
         }
 
         return candidate
+    }
+
+    /// Breitbart fixtures keep header lead media/time blocks attached to article body.
+    /// When `entry-content` wins scoring, promote to the enclosing article so sibling
+    /// merge includes the header block.
+    private func promoteBreitbartArticleIfNeeded(_ candidate: Element) -> Element? {
+        guard candidate.tagName().uppercased() == "DIV" else { return nil }
+        let className = ((try? candidate.className()) ?? "").lowercased()
+        guard className.contains("entry-content"),
+              let article = candidate.parent(),
+              article.tagName().uppercased() == "ARTICLE" else {
+            return nil
+        }
+
+        let articleClass = ((try? article.className()) ?? "").lowercased()
+        guard articleClass.contains("the-article") || articleClass.contains("post-") else {
+            return nil
+        }
+
+        let hasFeaturedFigure = (try? article.select("> header figure.figurearticlefeatured").isEmpty()) == false
+        let publishedTimeCount = (try? article.select("> header time[datetime]").count) ?? 0
+        let hasPublishedTimes = publishedTimeCount >= 2
+        guard hasFeaturedFigure && hasPublishedTimes else {
+            return nil
+        }
+
+        return article
     }
 
     /// Promote tiny inner candidates to semantic main containers when the main
