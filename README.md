@@ -1,19 +1,15 @@
 # Swift Readability
 
-A pure Swift implementation of Mozilla's Readability.js, providing article extraction for HTML documents without WKWebView dependencies.
+Pure Swift port of Mozilla Readability, focused on output parity and production use without `WKWebView`.
 
-## Features
+## Requirements
 
-- **Pure Swift Implementation** — Built entirely in Swift using SwiftSoup, no JavaScript or WebView required
-- **Concurrency-Friendly** — No `@MainActor` constraints, fully compatible with Swift's structured concurrency
-- **Cancellation Support** — Responsive to `Task` cancellation, no indefinite blocking on JavaScript execution
-- **WKWebView-Free** — Eliminates WebView-based deadlocks and timeout issues present in other implementations
-- **Tested Against Mozilla Original** — Aligns with Mozilla's official test suite for consistent behavior
-- **Configurable** — Fine-tune extraction parameters via `ReadabilityOptions`
+- Swift tools `6.2`
+- Platforms: `macOS 13+`, `iOS 16+`
 
 ## Installation
 
-Add Swift Readability to your `Package.swift`:
+Add this package in `Package.swift`:
 
 ```swift
 dependencies: [
@@ -21,101 +17,123 @@ dependencies: [
 ]
 ```
 
-Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
-
-## Usage
+## Public API
 
 ```swift
-import Readability
-
-// Parse HTML string
-let html = "<html>...</html>"
-let result = try await Readability().parse(html: html, baseURL: url)
-
-// Or parse from URL
-let result = try await Readability().parse(url: articleURL)
-
-print(result.title)         // Article title
-print(result.content)       // Extracted HTML content
-print(result.textContent)   // Plain text content
-print(result.byline)        // Author name
-print(result.excerpt)       // First paragraph for preview
+public struct Readability {
+    public init(html: String, baseURL: URL? = nil, options: ReadabilityOptions = .default) throws
+    public func parse() throws -> ReadabilityResult
+}
 ```
 
-## Configuration
+```swift
+public struct ReadabilityResult: Sendable {
+    public let title: String
+    public let byline: String?
+    public let dir: String?
+    public let lang: String?
+    public let content: String
+    public let textContent: String
+    public let excerpt: String?
+    public let length: Int
+    public let siteName: String?
+    public let publishedTime: String?
+}
+```
 
-Customize extraction behavior via `ReadabilityOptions`:
+## Minimal Usage
+
+```swift
+import Foundation
+import Readability
+
+let html: String = ...
+let baseURL = URL(string: "https://example.com/article")
+
+let readability = try Readability(html: html, baseURL: baseURL)
+let result = try readability.parse()
+
+print(result.title)
+print(result.textContent)
+```
+
+`Readability` is single-use. Calling `parse()` twice on the same instance throws `ReadabilityError.alreadyParsed`.
+
+## Options
 
 ```swift
 var options = ReadabilityOptions()
-options.nbTopCandidates = 5      // Number of top candidates to consider
-options.charThreshold = 500      // Minimum character count for valid content
-options.keepClasses = false      // Preserve CSS classes in output
-options.disableJSONLD = false    // Skip JSON-LD metadata parsing
+options.nbTopCandidates = 5
+options.charThreshold = 500
+options.keepClasses = false
+options.disableJSONLD = false
+options.classesToPreserve = ["caption"]
+options.linkDensityModifier = 0.0
 
-let readability = Readability(options: options)
+let readability = try Readability(html: html, baseURL: baseURL, options: options)
+let result = try readability.parse()
 ```
+
+Option notes:
+- `maxElemsToParse`: currently deferred/no-op.
+- `useCustomSerializer`: currently deferred/no-op.
+- `allowedVideoRegex`: defaults to Mozilla-compatible built-in pattern when empty.
 
 ## Error Handling
 
 ```swift
 do {
-    let result = try await Readability().parse(html: html, baseURL: nil)
+    let parser = try Readability(html: html, baseURL: baseURL)
+    let result = try parser.parse()
+    print(result.title)
 } catch ReadabilityError.noContent {
-    print("Could not find article content")
-} catch ReadabilityError.contentTooShort {
-    print("Extracted content is too brief")
+    print("No readable article content found.")
+} catch ReadabilityError.contentTooShort(let actual, let threshold) {
+    print("Content too short: \(actual) < \(threshold)")
+} catch ReadabilityError.alreadyParsed {
+    print("Create a new Readability instance for each parse.")
 } catch {
-    print("Parsing failed: \(error)")
+    print("Parse failed: \(error)")
 }
 ```
 
-## Why This Library?
+## Compatibility Scope
 
-Existing Swift Readability implementations often wrap JavaScript execution in `WKWebView`, causing:
+This project tracks Mozilla parity with strict fixture-based tests:
+- `MozillaCompatibilityTests`
+- `RealWorldCompatibilityTests`
 
-- **Main thread blocking** — Forced `@MainActor` isolation
-- **Uncancellable operations** — `withCheckedThrowingContinuation` doesn't respond to `Task` cancellation
-- **Deadlocks** — JavaScript execution that never returns can hang `TaskGroup` indefinitely
-- **Unreliable timeouts** — No way to force-terminate stuck WebView operations
+Current imported suites are passing in this repository state.
 
-This implementation solves all these issues by porting the algorithm to native Swift.
+## Performance and Benchmarking
 
-## Algorithm Overview
+Use `ReadabilityCLI` as benchmark entrypoint:
+- `/Users/neo/Code/ML/readability/ReadabilityCLI/README.md`
+- `/Users/neo/Code/ML/readability/ReadabilityCLI/Benchmark/README.md`
 
-Based on Mozilla's Readability.js (~2,500 LOC), the extraction process:
+## Known Limitations
 
-1. **Pre-process** — Remove scripts, styles, and normalize document structure
-2. **Score Nodes** — Calculate content scores based on text density, link ratio, and semantic hints
-3. **Select Best** — Choose top candidate and merge related siblings
-4. **Clean Up** — Remove clutter (ads, navigation, social widgets)
-5. **Extract Metadata** — Parse JSON-LD, Open Graph, and meta tags
+- Parsing quality depends on source HTML quality; heavily script-dependent pages may not have enough static content.
+- Some site-specific cleanup is handled via `SiteRules`; behavior is fixture-driven to reduce broad regressions.
+- Two `ReadabilityOptions` fields are reserved/deferred (`maxElemsToParse`, `useCustomSerializer`).
 
-## Testing
+## Troubleshooting
 
-The library is tested against Mozilla's official test suite, covering 50+ real-world websites including news, blogs, and forums.
-
-```swift
-// Example test
-func testArticleExtraction() async throws {
-    let html = loadTestResource("news-article")
-    let result = try await Readability().parse(html: html, baseURL: nil)
-    
-    XCTAssertEqual(result.title, "Expected Title")
-    XCTAssertTrue(result.textContent.contains("Expected content"))
-}
-```
-
-## Requirements
-
-- Swift 5.9+
-- iOS 13+ / macOS 10.15+ / watchOS 6+ / tvOS 13+
+- `ReadabilityError.noContent`:
+  - Check whether the input HTML contains server-rendered article text.
+  - Lower `charThreshold` only if your content is intentionally short.
+- Unexpected author/title metadata:
+  - Toggle `disableJSONLD` to compare JSON-LD vs meta-tag extraction behavior.
+- Output contains unwanted classes:
+  - Set `keepClasses = false` and only whitelist required classes with `classesToPreserve`.
+- Result mismatch against fixtures:
+  - Run `cd Readability && swift test --filter MozillaCompatibilityTests` first, then `RealWorldCompatibilityTests`.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE.md) for details.
+Open sourced under MIT license. See [LICENSE.md](LICENSE.md).
 
 ## Acknowledgments
 
-- [Mozilla Readability](https://github.com/mozilla/readability) — The original JavaScript implementation
-- [SwiftSoup](https://github.com/scinfu/SwiftSoup) — HTML parsing library for Swift
+- [Mozilla Readability](https://github.com/mozilla/readability)
+- [SwiftSoup](https://github.com/scinfu/SwiftSoup)

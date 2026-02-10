@@ -4,38 +4,38 @@ This checklist is for preparing the first production release of the Swift Readab
 
 ## 1. API and Behavior Freeze
 
-- [ ] Confirm public API signatures are stable (`Readability`, `ReadabilityOptions`, `ReadabilityResult`).
-- [ ] Confirm default option behavior is documented and tested.
+- [x] Confirm public API signatures are stable (`Readability`, `ReadabilityOptions`, `ReadabilityResult`).
+- [x] Confirm default option behavior is documented and tested.
 - [ ] Add/refresh compatibility baseline tests for representative fixtures.
-- [ ] Run full test gates and record the final pass state:
-  - [ ] `swift test --filter RealWorldCompatibilityTests`
-  - [ ] `swift test --filter MozillaCompatibilityTests`
+- [x] Run full test gates and record the final pass state:
+  - [x] `swift test --filter RealWorldCompatibilityTests`
+  - [x] `swift test --filter MozillaCompatibilityTests`
 
 ## 2. Documentation (Blocking)
 
-- [ ] Write/update the root `README.md` for production usage.
-- [ ] Validate `ReadabilityCLI/README.md` still matches current CLI behavior.
-- [ ] Ensure `README.md` includes installation and Swift version requirements.
-- [ ] Ensure `README.md` includes a minimal usage example (`init` + `parse()`).
-- [ ] Ensure `README.md` documents `ReadabilityOptions` and tuning guidance.
-- [ ] Ensure `README.md` documents known limitations and compatibility scope.
-- [ ] Ensure `README.md` includes troubleshooting for common parsing failures.
+- [x] Write/update the root `README.md` for production usage.
+- [x] Validate `ReadabilityCLI/README.md` still matches current CLI behavior.
+- [x] Ensure `README.md` includes installation and Swift version requirements.
+- [x] Ensure `README.md` includes a minimal usage example (`init` + `parse()`).
+- [x] Ensure `README.md` documents `ReadabilityOptions` and tuning guidance.
+- [x] Ensure `README.md` documents known limitations and compatibility scope.
+- [x] Ensure `README.md` includes troubleshooting for common parsing failures.
 
 ## 3. Performance (Blocking)
 
-- [ ] Add a reproducible performance baseline test plan and fixture set.
-- [ ] Measure parse time on representative small/medium/large inputs.
-- [ ] Measure memory profile for the same fixture set.
+- [x] Add a reproducible performance baseline test plan and fixture set.
+- [x] Measure parse time on representative small/medium/large inputs.
+- [x] Measure memory profile for the same fixture set.
 - [ ] Record baseline results in a committed report file.
 - [ ] Define a simple regression gate policy (for example, max allowed delta).
-- [ ] Run one post-change comparison to prove the baseline pipeline works.
-- [ ] Run benchmark pipeline:
-  - [ ] `bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium`
-- [ ] Confirm required reports exist:
-  - [ ] `ReadabilityCLI/Benchmark/reports/analysis/benchmark-medium.md`
-  - [ ] `ReadabilityCLI/Benchmark/reports/analysis/time-profiler-medium-phases.md`
-- [ ] Validate allocations trace data:
-  - [ ] `bash ReadabilityCLI/Benchmark/scripts/validate_allocations_trace.sh medium`
+- [x] Run one post-change comparison to prove the baseline pipeline works.
+- [x] Run benchmark pipeline:
+  - [x] `bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium`
+- [x] Confirm required reports exist:
+  - [x] `ReadabilityCLI/Benchmark/reports/analysis/benchmark-medium.md`
+  - [x] `ReadabilityCLI/Benchmark/reports/analysis/time-profiler-medium-phases.md`
+- [x] Validate allocations trace data:
+  - [x] `bash ReadabilityCLI/Benchmark/scripts/validate_allocations_trace.sh medium`
 - [ ] If allocations validation fails, include non-blocking status report and reason:
   - [ ] `ReadabilityCLI/Benchmark/reports/analysis/allocations-medium-status.md`
 
@@ -50,6 +50,12 @@ This checklist is for preparing the first production release of the Swift Readab
 - [ ] Verify error handling behavior for invalid HTML and empty content.
 - [ ] Confirm no temporary debug code or debug-only tests remain.
 - [ ] Confirm working tree is clean except intentional release files.
+
+## Current Status Note
+
+- Performance optimization work is intentionally paused after low-yield iterations.
+- Codebase has been restored to the last verified stable extraction behavior.
+- Next validation phase is external integration in a real project.
 
 ## 6. Final Release Decision
 
