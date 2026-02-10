@@ -29,6 +29,15 @@ This checklist is for preparing the first production release of the Swift Readab
 - [ ] Record baseline results in a committed report file.
 - [ ] Define a simple regression gate policy (for example, max allowed delta).
 - [ ] Run one post-change comparison to prove the baseline pipeline works.
+- [ ] Run benchmark pipeline:
+  - [ ] `bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium`
+- [ ] Confirm required reports exist:
+  - [ ] `ReadabilityCLI/Benchmark/reports/analysis/benchmark-medium.md`
+  - [ ] `ReadabilityCLI/Benchmark/reports/analysis/time-profiler-medium-phases.md`
+- [ ] Validate allocations trace data:
+  - [ ] `bash ReadabilityCLI/Benchmark/scripts/validate_allocations_trace.sh medium`
+- [ ] If allocations validation fails, include non-blocking status report and reason:
+  - [ ] `ReadabilityCLI/Benchmark/reports/analysis/allocations-medium-status.md`
 
 ## 4. Release Notes and Versioning
 

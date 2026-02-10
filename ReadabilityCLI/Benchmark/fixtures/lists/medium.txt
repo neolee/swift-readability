@@ -1,0 +1,8 @@
+../../../../Readability/Tests/ReadabilityTests/Resources/realworld-pages/cnn/source.html
+../../../../Readability/Tests/ReadabilityTests/Resources/realworld-pages/wapo-1/source.html
+../../../../Readability/Tests/ReadabilityTests/Resources/realworld-pages/guardian-1/source.html
+../../../../Readability/Tests/ReadabilityTests/Resources/realworld-pages/theverge/source.html
+../../../../Readability/Tests/ReadabilityTests/Resources/realworld-pages/citylab-1/source.html
+../../../../Readability/Tests/ReadabilityTests/Resources/realworld-pages/cnet/source.html
+../../../../Readability/Tests/ReadabilityTests/Resources/realworld-pages/webmd-1/source.html
+../../../../Readability/Tests/ReadabilityTests/Resources/realworld-pages/firefox-nightly-blog/source.html
