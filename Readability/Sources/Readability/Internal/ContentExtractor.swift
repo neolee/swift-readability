@@ -7,6 +7,7 @@ final class ContentExtractor {
     private let doc: Document
     private let options: ReadabilityOptions
     private let articleTitle: String
+    private let sourceURL: URL?
     private var flags: UInt32
     private var attempts: [ExtractionAttempt]
     private var pageCacheHtml: String?
@@ -22,10 +23,16 @@ final class ContentExtractor {
         let flags: UInt32
     }
 
-    init(doc: Document, options: ReadabilityOptions, articleTitle: String = "") {
+    init(
+        doc: Document,
+        options: ReadabilityOptions,
+        articleTitle: String = "",
+        sourceURL: URL? = nil
+    ) {
         self.doc = doc
         self.options = options
         self.articleTitle = articleTitle
+        self.sourceURL = sourceURL
         self.flags = Configuration.flagStripUnlikelies |
                      Configuration.flagWeightClasses |
                      Configuration.flagCleanConditionally
@@ -128,7 +135,12 @@ final class ContentExtractor {
         from body: Element,
         scoringManager: NodeScoringManager
     ) throws -> (content: Element, byline: String?, neededToCreate: Bool, dir: String?) {
-        let cleaner = NodeCleaner(options: options)
+        let cleaner = NodeCleaner(
+            options: options,
+            shouldKeepBylineContainer: { [doc, sourceURL] node in
+                try SiteRuleRegistry.shouldKeepBylineContainer(node, sourceURL: sourceURL, document: doc)
+            }
+        )
         cleaner.setArticleTitle(articleTitle)
         let selector = CandidateSelector(options: options, scoringManager: scoringManager)
 

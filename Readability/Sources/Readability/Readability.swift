@@ -31,7 +31,6 @@ public struct Readability {
         lifecycleState.hasParsed = true
 
         let sourceURL = detectSourceURL()
-        let knownSiteBylineHint = detectKnownSiteBylineHint(sourceURL: sourceURL)
 
         // Match Mozilla: upgrade lazy/placeholder images from <noscript> first.
         try unwrapNoscriptImages()
@@ -51,7 +50,7 @@ public struct Readability {
         }
 
         // Extract article content using new ContentExtractor
-        let extractor = ContentExtractor(doc: doc, options: options, articleTitle: title)
+        let extractor = ContentExtractor(doc: doc, options: options, articleTitle: title, sourceURL: sourceURL)
         let (articleContent, extractedByline, _, articleDir, articleLang) = try extractor.extract()
 
         // Post-process with ArticleCleaner
@@ -102,10 +101,10 @@ public struct Readability {
         } else {
             byline = extractedByline
         }
-        let finalByline = try normalizeBylineForKnownSites(
+        let finalByline = try SiteRuleRegistry.applyBylineRules(
             byline,
             sourceURL: sourceURL,
-            knownSiteBylineHint: knownSiteBylineHint
+            document: doc
         )
 
         return ReadabilityResult(
@@ -443,57 +442,6 @@ public struct Readability {
             return url
         }
         return nil
-    }
-
-    private func detectKnownSiteBylineHint(sourceURL: URL?) -> String? {
-        let host = sourceURL?.host?.lowercased() ?? ""
-
-        if host.contains("royalroad.com"),
-           let followButton = (try? doc.select("button[data-title]").first()) ?? nil {
-            let dataTitle = ((try? followButton.attr("data-title")) ?? "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .lowercased()
-            if dataTitle == "follow author" {
-                return "Follow Author"
-            }
-        }
-
-        return nil
-    }
-
-    private func normalizeBylineForKnownSites(
-        _ byline: String?,
-        sourceURL: URL?,
-        knownSiteBylineHint: String?
-    ) throws -> String? {
-        let host = sourceURL?.host?.lowercased() ?? ""
-        let normalizedByline = byline?.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if host.contains("royalroad.com"),
-           let knownSiteBylineHint,
-           !knownSiteBylineHint.isEmpty {
-            return knownSiteBylineHint
-        }
-
-        if host.contains("royalroad.com"),
-           let followButton = (try? doc.select("button[data-title]").first()) ?? nil {
-            let dataTitle = ((try? followButton.attr("data-title")) ?? "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .lowercased()
-            if dataTitle == "follow author" {
-                return "Follow Author"
-            }
-        }
-
-        if host.hasSuffix(".tumblr.com"),
-           let candidate = normalizedByline?.lowercased() {
-            let blogName = host.replacingOccurrences(of: ".tumblr.com", with: "")
-            if candidate == blogName || candidate == "@\(blogName)" {
-                return nil
-            }
-        }
-
-        return normalizedByline
     }
 
     // MARK: - Document Preparation

@@ -13,16 +13,12 @@ enum SimplyFoundMediaContainerRule: ArticleCleanerSiteRule {
     static let id = "simplyfound-media-container"
 
     static func apply(to articleContent: Element, context _: ArticleCleanerSiteRuleContext) throws {
-        let mediaContainers = try articleContent.select("div.media-container")
-        let carousels = try articleContent.select("div[id^=snippet-][id$=-image-carousel]")
+        let snippetCarousels = try articleContent.select("div[id^=snippet-][id$=-image-carousel]")
+        guard !snippetCarousels.isEmpty() else { return }
 
-        guard !mediaContainers.isEmpty() || !carousels.isEmpty() else { return }
-
-        for container in mediaContainers.reversed() {
+        for container in try articleContent.select("div.media-container").reversed() {
+            guard container.parent() != nil else { continue }
             try container.remove()
-        }
-        for carousel in carousels.reversed() {
-            try carousel.remove()
         }
     }
 }

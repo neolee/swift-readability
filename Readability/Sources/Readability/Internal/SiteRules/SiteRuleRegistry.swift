@@ -26,6 +26,38 @@ enum SiteRuleRegistry {
         }
     }
 
+    static func applyBylineRules(
+        _ byline: String?,
+        sourceURL: URL?,
+        document: Document
+    ) throws -> String? {
+        let rules: [BylineSiteRule.Type] = [
+            RoyalRoadFollowAuthorBylineRule.self,
+            TumblrBlogHandleBylineRule.self
+        ]
+        var current = byline
+        for rule in rules {
+            current = try rule.apply(byline: current, sourceURL: sourceURL, document: document)
+        }
+        return current
+    }
+
+    static func shouldKeepBylineContainer(
+        _ node: Element,
+        sourceURL: URL?,
+        document: Document
+    ) throws -> Bool {
+        let rules: [BylineContainerRetentionSiteRule.Type] = [
+            EHowAuthorProfileBylineRetentionRule.self
+        ]
+        for rule in rules {
+            if try rule.shouldKeepBylineContainer(node, sourceURL: sourceURL, document: document) {
+                return true
+            }
+        }
+        return false
+    }
+
     static func applyUnwantedElementRules(
         to articleContent: Element,
         context: ArticleCleanerSiteRuleContext

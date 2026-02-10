@@ -19,26 +19,7 @@ enum EHowAuthorProfileRule: ArticleCleanerSiteRule {
                 try child.remove()
             }
         }
-        for container in try articleContent.select("div") {
-            let children = container.children().array()
-            let hasAuthorProfile = children.contains { child in
-                child.tagName().lowercased() == "div" &&
-                    ((try? child.attr("data-type")) ?? "").lowercased() == "authorprofile"
-            }
-            guard hasAuthorProfile else { continue }
-
-            let hasScoreBlock = children.contains { child in
-                child.tagName().lowercased() == "div" &&
-                    ((try? child.attr("data-score")) ?? "").lowercased() == "true"
-            }
-            guard hasScoreBlock else { continue }
-
-            for headline in children where
-                (headline.tagName().lowercased() == "h1" || headline.tagName().lowercased() == "h2") &&
-                ((try? headline.attr("itemprop")) ?? "").lowercased().contains("headline") {
-                try headline.remove()
-            }
-        }
+        try EHowRuleHelpers.removeLegacyHeadlineSiblings(in: articleContent)
 
         for profile in try articleContent.select("div[data-type=AuthorProfile]") {
             guard profile.parent() != nil else { continue }

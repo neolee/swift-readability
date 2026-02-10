@@ -25,3 +25,11 @@ struct ArticleCleanerSiteRuleContext {
 protocol SerializationSiteRule: SiteRule {
     static func apply(to articleContent: Element) throws
 }
+
+protocol BylineSiteRule: SiteRule {
+    static func apply(byline: String?, sourceURL: URL?, document: Document) throws -> String?
+}
+
+protocol BylineContainerRetentionSiteRule: SiteRule {
+    static func shouldKeepBylineContainer(_ node: Element, sourceURL: URL?, document: Document) throws -> Bool
+}

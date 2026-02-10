@@ -5,11 +5,16 @@ import SwiftSoup
 /// Mirrors Mozilla Readability.js cleanup functionality
 final class NodeCleaner {
     private let options: ReadabilityOptions
+    private let shouldKeepBylineContainerHook: (Element) throws -> Bool
     private var articleTitle: String = ""
     private var articleByline: String?
 
-    init(options: ReadabilityOptions) {
+    init(
+        options: ReadabilityOptions,
+        shouldKeepBylineContainer: @escaping (Element) throws -> Bool = { _ in false }
+    ) {
         self.options = options
+        self.shouldKeepBylineContainerHook = shouldKeepBylineContainer
     }
 
     /// Set the article title for duplicate detection
@@ -198,7 +203,7 @@ final class NodeCleaner {
             return false
         }
 
-        if shouldKeepBylineContainer(node) {
+        if (try? shouldKeepBylineContainerHook(node)) == true {
             return false
         }
 
@@ -333,33 +338,6 @@ final class NodeCleaner {
             return true
         }
         return false
-    }
-
-    /// Keep eHow-style author profile containers in content while still
-    /// extracting byline text from them.
-    private func shouldKeepBylineContainer(_ node: Element) -> Bool {
-        guard let profile = enclosingAuthorProfile(for: node) else { return false }
-        let hasAvatarImage = ((try? profile.select("img").isEmpty()) == false)
-        let hasTime = ((try? profile.select("time[datetime], time").isEmpty()) == false)
-        return hasAvatarImage && hasTime
-    }
-
-    private func enclosingAuthorProfile(for node: Element) -> Element? {
-        var current: Element? = node
-        while let element = current {
-            guard element.tagName().uppercased() == "DIV" else {
-                current = element.parent()
-                continue
-            }
-            let dataType = ((try? element.attr("data-type")) ?? "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .lowercased()
-            if dataType == "authorprofile" {
-                return element
-            }
-            current = element.parent()
-        }
-        return nil
     }
 
     private func isWithinCommentsContainer(_ node: Element) -> Bool {
