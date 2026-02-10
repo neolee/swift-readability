@@ -537,11 +537,11 @@ final class CandidateSelector {
     ///   - element: Element that was scored
     ///   - score: The score to propagate
     func propagateScoreToAncestors(_ element: Element, score: Double) {
-        let ancestors = element.ancestors(maxDepth: 5)
-
-        for (index, ancestor) in ancestors.enumerated() {
+        var index = 0
+        var current = element.parent()
+        while let ancestor = current, index < 5 {
             // Skip nodes without valid parent
-            guard ancestor.parent() != nil else { continue }
+            guard ancestor.parent() != nil else { break }
 
             // Initialize ancestor if needed
             if !scoringManager.isInitialized(ancestor) {
@@ -560,6 +560,8 @@ final class CandidateSelector {
 
             let ancestorScore = score / scoreDivider
             scoringManager.addToScore(ancestorScore, for: ancestor)
+            index += 1
+            current = ancestor.parent()
         }
     }
 }

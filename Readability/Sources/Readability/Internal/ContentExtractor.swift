@@ -4,6 +4,10 @@ import SwiftSoup
 /// Extracts article content with multi-attempt fallback support
 /// Implements Mozilla Readability.js grabArticle logic with FLAG-based retry
 final class ContentExtractor {
+    private static let phrasingTagsUppercase = Set(Configuration.phrasingElements.map { $0.uppercased() })
+    private static let headingTags = Set(["H1", "H2", "H3", "H4", "H5", "H6"])
+    private static let phrasingContainerTags = Set(["A", "DEL", "INS"])
+
     private let doc: Document
     private let options: ReadabilityOptions
     private let articleTitle: String
@@ -173,9 +177,10 @@ final class ContentExtractor {
 
         // Phase 3: Select top candidate from all scored elements
         // Get all elements that have been initialized (have scores)
-        let scoredElements = try body.select("*").filter { element in
-            scoringManager.isInitialized(element)
-        }
+        let scoredElements = collectInitializedElementsForCandidateSelection(
+            from: body,
+            scoringManager: scoringManager
+        )
 
         let (topCandidate, neededToCreate) = try selector.selectTopCandidate(
             from: scoredElements,
@@ -267,6 +272,7 @@ final class ContentExtractor {
         var elements: [Element] = []
         let defaultTags = Set(Configuration.defaultTagsToScore.map { $0.uppercased() })
         let blockTags = Set(Configuration.divToPElements.map { $0.uppercased() })
+        var hasChildBlockCache: [ObjectIdentifier: Bool] = [:]
 
         var node: Element? = body
         while let current = node {
@@ -279,13 +285,13 @@ final class ContentExtractor {
                 continue
             }
 
-            if ["H1", "H2", "H3", "H4", "H5", "H6"].contains(tag),
+            if Self.headingTags.contains(tag),
                DOMTraversal.isElementWithoutContent(current) {
                 node = DOMTraversal.removeAndGetNext(current)
                 continue
             }
 
-            if defaultTags.contains(current.tagName().uppercased()) {
+            if defaultTags.contains(tag) {
                 elements.append(current)
             }
 
@@ -328,18 +334,24 @@ final class ContentExtractor {
                     childNode = nextSibling
                 }
 
+                let shouldPreserveFigureWrapper = shouldPreserveFigureImageWrapper(current)
+
                 if hasSingleTagInsideElement(current, tag: "P"),
                    try getLinkDensity(current) < 0.25,
                    !shouldPreserveSingleParagraphWrapper(current),
-                   !shouldPreserveFigureImageWrapper(current) {
+                   !shouldPreserveFigureWrapper {
                     if let newNode = current.children().first {
                         try current.replaceWith(newNode)
                         elements.append(newNode)
                         node = DOMTraversal.getNextNode(newNode)
                         continue
                     }
-                } else if !hasChildBlockElement(current, blockTags: blockTags) {
-                    if shouldPreserveFigureImageWrapper(current) {
+                } else if !hasChildBlockElement(
+                    current,
+                    blockTags: blockTags,
+                    cache: &hasChildBlockCache
+                ) {
+                    if shouldPreserveFigureWrapper {
                         node = DOMTraversal.getNextNode(current)
                         continue
                     }
@@ -372,16 +384,28 @@ final class ContentExtractor {
         return true
     }
 
-    private func hasChildBlockElement(_ element: Element, blockTags: Set<String>) -> Bool {
+    private func hasChildBlockElement(
+        _ element: Element,
+        blockTags: Set<String>,
+        cache: inout [ObjectIdentifier: Bool]
+    ) -> Bool {
+        let key = ObjectIdentifier(element)
+        if let cached = cache[key] {
+            return cached
+        }
+
         for childNode in element.getChildNodes() {
             guard let child = childNode as? Element else { continue }
             if blockTags.contains(child.tagName().uppercased()) {
+                cache[key] = true
                 return true
             }
-            if hasChildBlockElement(child, blockTags: blockTags) {
+            if hasChildBlockElement(child, blockTags: blockTags, cache: &cache) {
+                cache[key] = true
                 return true
             }
         }
+        cache[key] = false
         return false
     }
 
@@ -391,13 +415,12 @@ final class ContentExtractor {
         }
         guard let element = node as? Element else { return false }
 
-        let phrasingTags = Set(Configuration.phrasingElements.map { $0.uppercased() })
         let tagName = element.tagName().uppercased()
-        if phrasingTags.contains(tagName) {
+        if Self.phrasingTagsUppercase.contains(tagName) {
             return true
         }
 
-        if ["A", "DEL", "INS"].contains(tagName) {
+        if Self.phrasingContainerTags.contains(tagName) {
             for child in element.children() where !isPhrasingContent(child) {
                 return false
             }
@@ -405,6 +428,21 @@ final class ContentExtractor {
         }
 
         return false
+    }
+
+    private func collectInitializedElementsForCandidateSelection(
+        from root: Element,
+        scoringManager: NodeScoringManager
+    ) -> [Element] {
+        var initialized: [Element] = []
+        var node: Element? = root
+        while let current = node {
+            if scoringManager.isInitialized(current) {
+                initialized.append(current)
+            }
+            node = DOMTraversal.getNextNode(current)
+        }
+        return initialized
     }
 
     private func getLinkDensity(_ element: Element) throws -> Double {
