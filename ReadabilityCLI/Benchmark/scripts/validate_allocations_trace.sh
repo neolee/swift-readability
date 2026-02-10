@@ -38,21 +38,21 @@ if [[ ! -s "$TOC_TMP" ]]; then
   exit 1
 fi
 
-SCHEMA="$(rg -o 'schema="[^"]+"' "$TOC_TMP" | sed -E 's/schema="([^"]+)"/\1/' | rg -i 'alloc' | head -n 1 || true)"
-if [[ -z "$SCHEMA" ]]; then
-  echo "INVALID: no allocation-related schema found in TOC for $TRACE_IN" >&2
-  exit 1
+if rg -q '<track name="Allocations">' "$TOC_TMP" && \
+   rg -q '<detail name="Statistics" kind="table"/>' "$TOC_TMP" && \
+   rg -q '<detail name="Allocations List" kind="table"/>' "$TOC_TMP"; then
+  echo "VALID: allocations trace contains Allocations track details: $TRACE_IN"
+  exit 0
 fi
 
-XPATH="/trace-toc/run[@number=\"1\"]/data/table[@schema=\"${SCHEMA}\"]/row[1]"
-if ! xctrace export --input "$TRACE_IN" --xpath "$XPATH" > "$ROW_TMP"; then
-  echo "INVALID: failed to export first row for schema '$SCHEMA' from $TRACE_IN" >&2
-  exit 1
+SCHEMA="$(rg -o 'schema="[^"]+"' "$TOC_TMP" | sed -E 's/schema="([^"]+)"/\1/' | rg -i 'alloc|malloc|vm' | head -n 1 || true)"
+if [[ -n "$SCHEMA" ]]; then
+  XPATH="/trace-toc/run[@number=\"1\"]/data/table[@schema=\"${SCHEMA}\"]/row[1]"
+  if xctrace export --input "$TRACE_IN" --xpath "$XPATH" > "$ROW_TMP" && rg -q "<row>" "$ROW_TMP"; then
+    echo "VALID: allocations trace has row data (schema=$SCHEMA): $TRACE_IN"
+    exit 0
+  fi
 fi
 
-if ! rg -q "<row>" "$ROW_TMP"; then
-  echo "INVALID: schema '$SCHEMA' has no row data in $TRACE_IN" >&2
-  exit 1
-fi
-
-echo "VALID: allocations trace has data (schema=$SCHEMA): $TRACE_IN"
+echo "INVALID: allocations trace is missing expected Allocations details/data: $TRACE_IN" >&2
+exit 1

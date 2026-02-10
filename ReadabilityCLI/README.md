@@ -7,7 +7,7 @@
 
 ## Basic Usage
 
-Parse from stdin:
+Parse from `stdin`:
 
 ```bash
 cat test.html | swift run ReadabilityCLI --text-only 2> /dev/null

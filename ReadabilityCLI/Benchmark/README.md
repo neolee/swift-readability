@@ -20,6 +20,10 @@ This directory contains a reproducible benchmark pipeline for `ReadabilityCLI` a
 From repository root:
 
 ```bash
+BENCH_ALLOC_TIME_LIMIT=40s \
+BENCH_ALLOC_ITERATIONS=10 \
+BENCH_ALLOC_HOLD_SECONDS=12 \
+BENCH_ALLOC_MAX_RETRIES=3 \
 bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium
 ```
 
@@ -29,8 +33,8 @@ This runs:
 3. time-profiler trace recording (with signposts enabled)
 4. signpost XML export from trace
 5. phase-level markdown summary generation from signposts
-6. allocations trace recording
-7. allocations trace data validation
+6. allocations trace recording (with debug signing pre-step)
+7. allocations trace validation
 
 ## Expected Outputs
 
@@ -40,7 +44,8 @@ For `medium`, a successful run should produce:
   - `ReadabilityCLI/Benchmark/reports/raw/benchmark-medium.json`
   - `ReadabilityCLI/Benchmark/reports/raw/time-profiler-medium.trace`
   - `ReadabilityCLI/Benchmark/reports/raw/time-profiler-medium-poi-signposts.xml`
-  - `ReadabilityCLI/Benchmark/reports/raw/allocations-medium.trace` (if allocations attach succeeds)
+  - `ReadabilityCLI/Benchmark/reports/raw/allocations-medium.trace`
+  - `ReadabilityCLI/Benchmark/reports/raw/allocations-medium.log`
 - Human-readable:
   - `ReadabilityCLI/Benchmark/reports/analysis/benchmark-medium.md`
   - `ReadabilityCLI/Benchmark/reports/analysis/time-profiler-medium-phases.md`
@@ -67,7 +72,7 @@ For `medium`, a successful run should produce:
 
 ## Known Problem and Fix in This Pipeline
 
-### Problem: `Allocations` sometimes fails to attach
+### Problem: `Allocations` attach flakiness on CLI targets
 
 Observed error:
 - `Failed to attach to target process`
@@ -75,8 +80,12 @@ Observed error:
 ### Current mitigation (already implemented in script)
 
 `run_xctrace_allocations.sh` now:
-- increases default run duration/workload (`120s`, `20` iterations)
-- retries up to `3` times
+- signs benchmark binary with `get-task-allow=true` before recording
+  - entitlement file:
+    - `ReadabilityCLI/Benchmark/scripts/allocations-debug.entitlements`
+- verifies target entitlements before running `xctrace`
+- retries recording (`BENCH_ALLOC_MAX_RETRIES`, default `3`)
+- treats "recording completed + no attach/recording error in log + trace exists" as success
 - writes a log file:
   - `ReadabilityCLI/Benchmark/reports/raw/allocations-<size>.log`
 
@@ -100,11 +109,24 @@ If all retries fail, the script exits non-zero and points to the log file.
 
 This keeps benchmark/time-profiler report generation stable even when allocations attach is flaky.
 
+### Validation rule used by `validate_allocations_trace.sh`
+
+Validation passes when:
+
+- trace exists and TOC export succeeds
+- trace TOC includes `Allocations` track with:
+  - `Statistics` detail
+  - `Allocations List` detail
+
+Fallback path:
+
+- if an allocation-like schema exists in TOC and row export returns at least one `<row>`, validation also passes
+
 ## Regression Workflow
 
 Recommended order after parser changes:
 
-1. `bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium`
+1. `BENCH_ALLOC_TIME_LIMIT=40s BENCH_ALLOC_ITERATIONS=10 BENCH_ALLOC_HOLD_SECONDS=12 BENCH_ALLOC_MAX_RETRIES=3 bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium`
 2. Compare:
    - `ReadabilityCLI/Benchmark/reports/analysis/benchmark-medium.md`
    - `ReadabilityCLI/Benchmark/reports/analysis/time-profiler-medium-phases.md`
@@ -122,6 +144,10 @@ Recommended order after parser changes:
 Standard release-oriented performance check:
 
 ```bash
+BENCH_ALLOC_TIME_LIMIT=40s \
+BENCH_ALLOC_ITERATIONS=10 \
+BENCH_ALLOC_HOLD_SECONDS=12 \
+BENCH_ALLOC_MAX_RETRIES=3 \
 bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium
 bash ReadabilityCLI/Benchmark/scripts/validate_allocations_trace.sh medium
 ```
