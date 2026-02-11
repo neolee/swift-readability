@@ -31,7 +31,8 @@ enum VisibilityRules {
     }
 
     /// Strict removal visibility used during preprocessing/cleanup.
-    /// Any hidden/style-hidden/aria-hidden element should be removed.
+    /// Hidden/style-hidden nodes are removed; aria-hidden nodes are removed
+    /// except media/math fallbacks that must survive for content parity.
     static func shouldRemoveAsHidden(_ element: Element) -> Bool {
         if element.hasAttr("hidden") || hasStyleHidden(element) {
             return true
@@ -59,7 +60,7 @@ enum VisibilityRules {
         return ariaHidden == "true"
     }
 
-    /// Keep aria-hidden media/fallback elements that still carry article content
+    /// Keep aria-hidden media/math nodes that carry meaningful article content
     /// (for example Wikimedia math fallback images).
     private static func shouldKeepAriaHiddenMedia(_ element: Element) -> Bool {
         let tag = element.tagName().lowercased()
@@ -68,7 +69,7 @@ enum VisibilityRules {
         }
 
         let className = ((try? element.className()) ?? "").lowercased()
-        if className.contains("fallback-image") || className.contains("mwe-math") {
+        if className.contains("mwe-math") {
             return true
         }
 
