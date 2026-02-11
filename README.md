@@ -107,9 +107,9 @@ Current imported suites are passing in this repository state.
 
 ## Performance and Benchmarking
 
-Use `ReadabilityCLI` as benchmark entrypoint:
-- `/Users/neo/Code/ML/readability/ReadabilityCLI/README.md`
-- `/Users/neo/Code/ML/readability/ReadabilityCLI/Benchmark/README.md`
+Use `CLI` as benchmark entry point:
+- `./CLI/README.md`
+- `./CLI/Benchmark/README.md`
 
 ## Known Limitations
 
@@ -127,7 +127,7 @@ Use `ReadabilityCLI` as benchmark entrypoint:
 - Output contains unwanted classes:
   - Set `keepClasses = false` and only whitelist required classes with `classesToPreserve`.
 - Result mismatch against fixtures:
-  - Run `cd Readability && swift test --filter MozillaCompatibilityTests` first, then `RealWorldCompatibilityTests`.
+  - Run `swift test --filter MozillaCompatibilityTests` first, then `RealWorldCompatibilityTests`.
 
 ## License
 

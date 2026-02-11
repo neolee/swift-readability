@@ -3,9 +3,9 @@ set -euo pipefail
 
 SIZE="${1:-medium}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-CLI_DIR="$ROOT/ReadabilityCLI"
-LIST="$ROOT/ReadabilityCLI/Benchmark/fixtures/lists/${SIZE}.txt"
-TRACE_OUT="$ROOT/ReadabilityCLI/Benchmark/reports/raw/time-profiler-${SIZE}.trace"
+CLI_DIR="$ROOT/CLI"
+LIST="$ROOT/CLI/Benchmark/fixtures/lists/${SIZE}.txt"
+TRACE_OUT="$ROOT/CLI/Benchmark/reports/raw/time-profiler-${SIZE}.trace"
 
 if [[ ! -f "$LIST" ]]; then
   echo "missing fixture list: $LIST" >&2

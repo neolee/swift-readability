@@ -8,13 +8,13 @@ let package = Package(
         .macOS(.v13)
     ],
     dependencies: [
-        .package(path: "../Readability")
+        .package(path: "..")
     ],
     targets: [
         .executableTarget(
             name: "ReadabilityCLI",
             dependencies: [
-                "Readability"
+                .product(name: "Readability", package: "readability")
             ]
         )
     ]

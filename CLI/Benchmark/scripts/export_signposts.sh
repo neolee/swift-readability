@@ -3,8 +3,8 @@ set -euo pipefail
 
 SIZE="${1:-medium}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-TRACE_IN="$ROOT/ReadabilityCLI/Benchmark/reports/raw/time-profiler-${SIZE}.trace"
-OUT_XML="$ROOT/ReadabilityCLI/Benchmark/reports/raw/time-profiler-${SIZE}-poi-signposts.xml"
+TRACE_IN="$ROOT/CLI/Benchmark/reports/raw/time-profiler-${SIZE}.trace"
+OUT_XML="$ROOT/CLI/Benchmark/reports/raw/time-profiler-${SIZE}-poi-signposts.xml"
 
 if [[ ! -d "$TRACE_IN" ]]; then
   echo "missing trace directory: $TRACE_IN" >&2

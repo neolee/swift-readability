@@ -10,8 +10,8 @@ if [[ "$ARG" == *.trace ]]; then
   LOG_IN="$(dirname "$TRACE_IN")/${base_name}.log"
 else
   SIZE="$ARG"
-  TRACE_IN="$ROOT/ReadabilityCLI/Benchmark/reports/raw/allocations-${SIZE}.trace"
-  LOG_IN="$ROOT/ReadabilityCLI/Benchmark/reports/raw/allocations-${SIZE}.log"
+  TRACE_IN="$ROOT/CLI/Benchmark/reports/raw/allocations-${SIZE}.trace"
+  LOG_IN="$ROOT/CLI/Benchmark/reports/raw/allocations-${SIZE}.log"
 fi
 
 if [[ ! -d "$TRACE_IN" ]]; then

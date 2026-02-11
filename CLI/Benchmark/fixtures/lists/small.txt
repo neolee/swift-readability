@@ -1,0 +1,5 @@
+../../../../Tests/ReadabilityTests/Resources/realworld-pages/wikipedia/source.html
+../../../../Tests/ReadabilityTests/Resources/realworld-pages/medium-1/source.html
+../../../../Tests/ReadabilityTests/Resources/realworld-pages/yahoo-1/source.html
+../../../../Tests/ReadabilityTests/Resources/realworld-pages/ehow-1/source.html
+../../../../Tests/ReadabilityTests/Resources/realworld-pages/royal-road/source.html

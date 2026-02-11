@@ -171,12 +171,12 @@ import Testing
 1. **Two Package Directories**: Always `cd` into correct directory before `swift` commands
 2. **SwiftSoup Tag Replacement**: Cannot change tag names directly - create new `Element` and move children
 3. **Concurrency**: Never add `@MainActor` - this defeats the purpose of `WKWebView`-free implementation
-4. **Path Dependencies**: `ReadabilityCLI` uses `../Readability` path dependency
+4. **Path Dependencies**: `CLI` uses `..` path dependency
 
 ### Site-Specific Rule Architecture
 
 To reduce regression risk in real-world fixtures, all site-specific cleanup logic should be isolated under:
-- `Readability/Sources/Readability/Internal/SiteRules/`
+- `Sources/Readability/Internal/SiteRules/`
 
 Current mechanism:
 - Shared protocols live in `SiteRule.swift`
@@ -255,17 +255,17 @@ Validation requirements for any new/modified site rule:
 
 **Run All Tests:**
 ```bash
-cd Readability && swift test
+swift test
 ```
 
 **Run Compatibility Tests Only:**
 ```bash
-cd Readability && swift test --filter MozillaCompatibilityTests
+swift test --filter MozillaCompatibilityTests
 ```
 
 **Run Specific Test:**
 ```bash
-cd Readability && swift test --filter "001 - Title matches expected exactly"
+swift test --filter "001 - Title matches expected exactly"
 ```
 
 ### Test Infrastructure
@@ -327,7 +327,7 @@ When a test fails:
 When working on `MozillaCompatibilityTests`, use this workflow to keep iterations small and verifiable:
 
 1. Reproduce with a single test first:
-   - `cd Readability && swift test --filter testLinksInTables`
+   - `swift test --filter testLinksInTables`
    - Only run full `MozillaCompatibilityTests` after the targeted case is stable.
 
 2. Diagnose structurally, not by string output:
@@ -350,7 +350,7 @@ When working on `MozillaCompatibilityTests`, use this workflow to keep iteration
 
 6. Verify no regression after each fix:
    - Run the targeted test(s)
-   - Then run `cd Readability && swift test --filter MozillaCompatibilityTests`
+   - Then run `swift test --filter MozillaCompatibilityTests`
    - Track failure count deltas explicitly (e.g., `10 -> 9`).
 
 ### Real-world Debugging Playbook (Stage 3-R)
@@ -386,8 +386,8 @@ When working on `RealWorldCompatibilityTests`, use this workflow to keep scope c
 
 ### Commands
 ```bash
-cd Readability && swift build && swift test
-cd ReadabilityCLI && swift run ReadabilityCLI <url> --text-only
+swift build && swift test
+cd CLI && swift run ReadabilityCLI <url> --text-only
 ```
 
 ### Key Files

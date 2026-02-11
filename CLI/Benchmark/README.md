@@ -24,7 +24,7 @@ BENCH_ALLOC_TIME_LIMIT=40s \
 BENCH_ALLOC_ITERATIONS=10 \
 BENCH_ALLOC_HOLD_SECONDS=12 \
 BENCH_ALLOC_MAX_RETRIES=3 \
-bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium
+bash CLI/Benchmark/scripts/run_all.sh medium
 ```
 
 This runs:
@@ -41,34 +41,34 @@ This runs:
 For `medium`, a successful run should produce:
 
 - Raw:
-  - `ReadabilityCLI/Benchmark/reports/raw/benchmark-medium.json`
-  - `ReadabilityCLI/Benchmark/reports/raw/time-profiler-medium.trace`
-  - `ReadabilityCLI/Benchmark/reports/raw/time-profiler-medium-poi-signposts.xml`
-  - `ReadabilityCLI/Benchmark/reports/raw/allocations-medium.trace`
-  - `ReadabilityCLI/Benchmark/reports/raw/allocations-medium.log`
+  - `CLI/Benchmark/reports/raw/benchmark-medium.json`
+  - `CLI/Benchmark/reports/raw/time-profiler-medium.trace`
+  - `CLI/Benchmark/reports/raw/time-profiler-medium-poi-signposts.xml`
+  - `CLI/Benchmark/reports/raw/allocations-medium.trace`
+  - `CLI/Benchmark/reports/raw/allocations-medium.log`
 - Human-readable:
-  - `ReadabilityCLI/Benchmark/reports/analysis/benchmark-medium.md`
-  - `ReadabilityCLI/Benchmark/reports/analysis/time-profiler-medium-phases.md`
-  - `ReadabilityCLI/Benchmark/reports/analysis/allocations-medium-status.md` (only if allocations failed)
+  - `CLI/Benchmark/reports/analysis/benchmark-medium.md`
+  - `CLI/Benchmark/reports/analysis/time-profiler-medium-phases.md`
+  - `CLI/Benchmark/reports/analysis/allocations-medium-status.md` (only if allocations failed)
 
 ## Script Reference
 
 - End-to-end pipeline:
-  - `bash ReadabilityCLI/Benchmark/scripts/run_all.sh <small|medium|large>`
+  - `bash CLI/Benchmark/scripts/run_all.sh <small|medium|large>`
 - Raw benchmark only:
-  - `bash ReadabilityCLI/Benchmark/scripts/run_benchmark.sh <small|medium|large>`
+  - `bash CLI/Benchmark/scripts/run_benchmark.sh <small|medium|large>`
 - Benchmark summary:
-  - `bash ReadabilityCLI/Benchmark/scripts/summarize_benchmark.sh <raw.json> <report.md>`
+  - `bash CLI/Benchmark/scripts/summarize_benchmark.sh <raw.json> <report.md>`
 - Record time profiler trace:
-  - `bash ReadabilityCLI/Benchmark/scripts/run_xctrace_time_profiler.sh <small|medium|large>`
+  - `bash CLI/Benchmark/scripts/run_xctrace_time_profiler.sh <small|medium|large>`
 - Export signposts from time profiler trace:
-  - `bash ReadabilityCLI/Benchmark/scripts/export_signposts.sh <small|medium|large>`
+  - `bash CLI/Benchmark/scripts/export_signposts.sh <small|medium|large>`
 - Generate phase summary from signposts XML:
-  - `bash ReadabilityCLI/Benchmark/scripts/summarize_signposts.sh <input.xml> <report.md>`
+  - `bash CLI/Benchmark/scripts/summarize_signposts.sh <input.xml> <report.md>`
 - Record allocations trace:
-  - `bash ReadabilityCLI/Benchmark/scripts/run_xctrace_allocations.sh <small|medium|large>`
+  - `bash CLI/Benchmark/scripts/run_xctrace_allocations.sh <small|medium|large>`
 - Validate allocations trace data:
-  - `bash ReadabilityCLI/Benchmark/scripts/validate_allocations_trace.sh <small|medium|large>`
+  - `bash CLI/Benchmark/scripts/validate_allocations_trace.sh <small|medium|large>`
 
 ## Known Problem and Fix in This Pipeline
 
@@ -82,12 +82,12 @@ Observed error:
 `run_xctrace_allocations.sh` now:
 - signs benchmark binary with `get-task-allow=true` before recording
   - entitlement file:
-    - `ReadabilityCLI/Benchmark/scripts/allocations-debug.entitlements`
+    - `CLI/Benchmark/scripts/allocations-debug.entitlements`
 - verifies target entitlements before running `xctrace`
 - retries recording (`BENCH_ALLOC_MAX_RETRIES`, default `3`)
 - treats "recording completed + no attach/recording error in log + trace exists" as success
 - writes a log file:
-  - `ReadabilityCLI/Benchmark/reports/raw/allocations-<size>.log`
+  - `CLI/Benchmark/reports/raw/allocations-<size>.log`
 
 Tune via environment variables when needed:
 
@@ -96,7 +96,7 @@ BENCH_ALLOC_TIME_LIMIT=180s \
 BENCH_ALLOC_ITERATIONS=30 \
 BENCH_ALLOC_HOLD_SECONDS=12 \
 BENCH_ALLOC_MAX_RETRIES=5 \
-bash ReadabilityCLI/Benchmark/scripts/run_xctrace_allocations.sh medium
+bash CLI/Benchmark/scripts/run_xctrace_allocations.sh medium
 ```
 
 If all retries fail, the script exits non-zero and points to the log file.
@@ -105,7 +105,7 @@ If all retries fail, the script exits non-zero and points to the log file.
 
 `run_all.sh` treats allocations record/validation failure as non-blocking and writes:
 
-- `ReadabilityCLI/Benchmark/reports/analysis/allocations-<size>-status.md`
+- `CLI/Benchmark/reports/analysis/allocations-<size>-status.md`
 
 This keeps benchmark/time-profiler report generation stable even when allocations attach is flaky.
 
@@ -126,18 +126,18 @@ Fallback path:
 
 Recommended order after parser changes:
 
-1. `BENCH_ALLOC_TIME_LIMIT=40s BENCH_ALLOC_ITERATIONS=10 BENCH_ALLOC_HOLD_SECONDS=12 BENCH_ALLOC_MAX_RETRIES=3 bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium`
+1. `BENCH_ALLOC_TIME_LIMIT=40s BENCH_ALLOC_ITERATIONS=10 BENCH_ALLOC_HOLD_SECONDS=12 BENCH_ALLOC_MAX_RETRIES=3 bash CLI/Benchmark/scripts/run_all.sh medium`
 2. Compare:
-   - `ReadabilityCLI/Benchmark/reports/analysis/benchmark-medium.md`
-   - `ReadabilityCLI/Benchmark/reports/analysis/time-profiler-medium-phases.md`
+   - `CLI/Benchmark/reports/analysis/benchmark-medium.md`
+   - `CLI/Benchmark/reports/analysis/time-profiler-medium-phases.md`
 3. If phase hotspot shifts unexpectedly, inspect:
-   - `ReadabilityCLI/Benchmark/reports/raw/time-profiler-medium.trace`
-   - `ReadabilityCLI/Benchmark/reports/raw/time-profiler-medium-poi-signposts.xml`
+   - `CLI/Benchmark/reports/raw/time-profiler-medium.trace`
+   - `CLI/Benchmark/reports/raw/time-profiler-medium-poi-signposts.xml`
 4. Confirm allocations status:
    - Pass condition: no `allocations-<size>-status.md` file generated by `run_all.sh`
    - If status file exists, inspect:
-     - `ReadabilityCLI/Benchmark/reports/analysis/allocations-<size>-status.md`
-     - `ReadabilityCLI/Benchmark/reports/raw/allocations-<size>.log`
+     - `CLI/Benchmark/reports/analysis/allocations-<size>-status.md`
+     - `CLI/Benchmark/reports/raw/allocations-<size>.log`
 
 ## Acceptance Commands
 
@@ -148,8 +148,8 @@ BENCH_ALLOC_TIME_LIMIT=40s \
 BENCH_ALLOC_ITERATIONS=10 \
 BENCH_ALLOC_HOLD_SECONDS=12 \
 BENCH_ALLOC_MAX_RETRIES=3 \
-bash ReadabilityCLI/Benchmark/scripts/run_all.sh medium
-bash ReadabilityCLI/Benchmark/scripts/validate_allocations_trace.sh medium
+bash CLI/Benchmark/scripts/run_all.sh medium
+bash CLI/Benchmark/scripts/validate_allocations_trace.sh medium
 ```
 
 Acceptance criteria:
