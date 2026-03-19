@@ -38,7 +38,7 @@ final class ArticleCleaner {
         try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
         try removeShortLinkHeavyDivs(articleContent)
         try removeRelatedLinkCollectionDivs(articleContent)
-        try SiteRuleRegistry.applyPreConversionRules(to: articleContent, context: siteRuleContext)
+        try SiteRuleRegistry.applyArticleCleanerRules(phase: .preConversion, to: articleContent, context: siteRuleContext)
         try removeSingleItemPromoLists(articleContent)
         try removeEmptyContainerDivs(articleContent)
         try removeShortRoleNoteCallouts(articleContent)
@@ -957,7 +957,7 @@ final class ArticleCleaner {
 
     /// Remove share/social elements from article content
     private func removeShareElements(_ element: Element) throws {
-        try SiteRuleRegistry.applyShareRules(to: element, context: siteRuleContext)
+        try SiteRuleRegistry.applyArticleCleanerRules(phase: .shareCleanup, to: element, context: siteRuleContext)
     }
 
     private func collapseSingleDivWrappers(_ root: Element) throws {
@@ -1076,7 +1076,7 @@ final class ArticleCleaner {
 
         // Remove empty paragraphs
         try removeEmptyParagraphs(articleContent)
-        try SiteRuleRegistry.applyPostParagraphRules(to: articleContent, context: siteRuleContext)
+        try SiteRuleRegistry.applyArticleCleanerRules(phase: .postParagraph, to: articleContent, context: siteRuleContext)
         try mergeFragmentedParagraphDivs(articleContent)
 
         // Remove ad placeholders that survived extraction.
@@ -1086,7 +1086,7 @@ final class ArticleCleaner {
         try replaceH1WithH2(articleContent)
 
         // Keep parity with Mozilla on known NYTimes wrapper tag normalization.
-        try SiteRuleRegistry.applyPostProcessRules(to: articleContent, context: siteRuleContext)
+        try SiteRuleRegistry.applyArticleCleanerRules(phase: .postProcess, to: articleContent, context: siteRuleContext)
 
         // Flatten single-cell tables
         try handleSingleCellTables(articleContent)

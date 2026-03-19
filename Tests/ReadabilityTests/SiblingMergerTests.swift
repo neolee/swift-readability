@@ -358,4 +358,37 @@ struct SiblingMergerTests {
         #expect(div.hasAttr("data-foo"))
         #expect(try div.attr("data-foo") == "bar")
     }
+
+    @Test("mergeSiblings extracts leading associated content before generic sibling merge")
+    func testExtractLeadingAssociatedContentPhase() throws {
+        let html = """
+        <div id="parent">
+            <div id="lead-wrapper">
+                <figure class="wp-block-post-featured-image"><img src="hero.jpg" alt="hero"></figure>
+                <p class="meta">metadata that should not be merged</p>
+            </div>
+            <div class="entry-content" id="top">
+                <p>Main content with enough text and commas, for scoring purposes and extraction stability.</p>
+            </div>
+        </div>
+        """
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let top = try doc.select("#top").first()!
+
+        let scoringManager = NodeScoringManager()
+        scoringManager.initializeNode(top)
+        scoringManager.addToScore(100, for: top)
+
+        let merger = SiblingMerger(options: .default, scoringManager: scoringManager)
+        let article = try merger.mergeSiblings(topCandidate: top, in: doc)
+
+        let extractedFigure = try article.select("figure.wp-block-post-featured-image")
+        #expect(extractedFigure.count == 1)
+
+        let metadataParagraph = try article.select("p.meta")
+        #expect(metadataParagraph.isEmpty())
+
+        let leadWrapper = try article.select("#lead-wrapper")
+        #expect(leadWrapper.isEmpty())
+    }
 }

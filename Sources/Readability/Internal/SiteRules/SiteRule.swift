@@ -5,6 +5,19 @@ protocol SiteRule {
     static var id: String { get }
 }
 
+enum ArticleCleanerSiteRulePhase: String {
+    case unwantedElements = "unwanted-elements"
+    case preConversion = "pre-conversion"
+    case shareCleanup = "share-cleanup"
+    case postParagraph = "post-paragraph"
+    case postProcess = "post-process"
+}
+
+enum SiblingMergeSiteRulePhase: String {
+    case leadingAssociatedContent = "leading-associated-content"
+    case siblingInclude = "sibling-include"
+}
+
 protocol ArticleCleanerSiteRule: SiteRule {
     static func apply(to articleContent: Element, context: ArticleCleanerSiteRuleContext) throws
 }

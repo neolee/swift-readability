@@ -13,6 +13,11 @@ final class SiblingMerger {
         let siteRuleDecisionID: String?
     }
 
+    private struct LeadingAssociatedContent {
+        let elements: [Element]
+        let consumedSiblingIDs: Set<ObjectIdentifier>
+    }
+
     private let options: ReadabilityOptions
     private let scoringManager: NodeScoringManager
     private let inspectionContext: InspectionContext?
@@ -59,55 +64,16 @@ final class SiblingMerger {
         // Get top candidate's class name for bonus calculation
         let topCandidateClassName = (try? topCandidate.className()) ?? ""
 
-        // Collect elements to prepend to the topCandidate clone (applied below, without
-        // modifying the original document across multi-pass retries).
-        var pendingPrepends: [Element] = []
+        let leadingAssociatedContent = try collectLeadingAssociatedContent(
+            from: siblings,
+            before: topCandidate,
+            in: doc,
+            topCandidateClassName: topCandidateClassName,
+            threshold: siblingScoreThreshold
+        )
 
         for sibling in siblings {
-            let siblingScore = scoringManager.getContentScore(for: sibling)
-            let contentBonus = siblingClassBonus(
-                for: sibling,
-                topCandidate: topCandidate,
-                topCandidateClassName: topCandidateClassName
-            )
-            let visible = DOMHelpers.isProbablyVisible(sibling)
-
-            // Check if a site rule wants to extract a sub-element from this sibling.
-            // Collect extracted elements — they will be prepended to the topCandidate's
-            // clone rather than to the original element, so the source DOM stays intact.
-            if let extraction = try SiteRuleRegistry.siblingExtraction(
-                sibling,
-                topCandidate: topCandidate,
-                inspectionContext: inspectionContext
-            ) {
-                let extracted = extraction.element
-                let extractedClasses = ((try? extracted.className()) ?? "")
-                let alteredExtracted: Element
-                if extracted.tagName().uppercased() == "FIGURE" && extractedClasses.contains(preservedExtractedFigureClass) {
-                    alteredExtracted = try DOMHelpers.cloneElement(extracted, in: doc)
-                    let sanitizedClasses = extractedClasses
-                        .split(separator: " ")
-                        .filter { $0 != Substring(preservedExtractedFigureClass) }
-                        .joined(separator: " ")
-                    if sanitizedClasses.isEmpty {
-                        try alteredExtracted.removeAttr("class")
-                    } else {
-                        try alteredExtracted.attr("class", sanitizedClasses)
-                    }
-                } else {
-                    alteredExtracted = try alterToDivIfNeeded(extracted, in: doc)
-                }
-                inspectionContext?.recordSiblingDecision(
-                    sibling: sibling,
-                    score: siblingScore,
-                    bonus: contentBonus,
-                    threshold: siblingScoreThreshold,
-                    visible: visible,
-                    decision: "extract",
-                    reason: "site-rule-extract",
-                    siteRuleDecisionID: extraction.ruleID
-                )
-                pendingPrepends.append(alteredExtracted)
+            if leadingAssociatedContent.consumedSiblingIDs.contains(ObjectIdentifier(sibling)) {
                 continue
             }
 
@@ -133,10 +99,9 @@ final class SiblingMerger {
                 // Alter tag if needed (convert to DIV unless in exceptions)
                 let alteredSibling = try alterToDivIfNeeded(sibling, in: doc)
 
-                // If this is the topCandidate, prepend any extracted leading elements
-                // so they appear at the top of the content div (in original order).
-                if sibling === topCandidate && !pendingPrepends.isEmpty {
-                    for prepend in pendingPrepends.reversed() {
+                // Apply extracted leading associated content without mutating the source DOM.
+                if sibling === topCandidate && !leadingAssociatedContent.elements.isEmpty {
+                    for prepend in leadingAssociatedContent.elements.reversed() {
                         try alteredSibling.prependChild(prepend)
                     }
                 }
@@ -254,6 +219,74 @@ final class SiblingMerger {
             reason: "rejected",
             siteRuleDecisionID: nil
         )
+    }
+
+    private func collectLeadingAssociatedContent(
+        from siblings: Elements,
+        before topCandidate: Element,
+        in doc: Document,
+        topCandidateClassName: String,
+        threshold: Double
+    ) throws -> LeadingAssociatedContent {
+        var elements: [Element] = []
+        var consumedSiblingIDs: Set<ObjectIdentifier> = []
+
+        for sibling in siblings {
+            if sibling === topCandidate {
+                break
+            }
+
+            let siblingScore = scoringManager.getContentScore(for: sibling)
+            let contentBonus = siblingClassBonus(
+                for: sibling,
+                topCandidate: topCandidate,
+                topCandidateClassName: topCandidateClassName
+            )
+            let visible = DOMHelpers.isProbablyVisible(sibling)
+
+            guard let extraction = try SiteRuleRegistry.siblingExtraction(
+                sibling,
+                topCandidate: topCandidate,
+                inspectionContext: inspectionContext
+            ) else {
+                continue
+            }
+
+            inspectionContext?.recordSiblingDecision(
+                sibling: sibling,
+                score: siblingScore,
+                bonus: contentBonus,
+                threshold: threshold,
+                visible: visible,
+                decision: "extract",
+                reason: "site-rule-extract",
+                siteRuleDecisionID: extraction.ruleID
+            )
+
+            elements.append(try prepareLeadingAssociatedElement(extraction.element, in: doc))
+            consumedSiblingIDs.insert(ObjectIdentifier(sibling))
+        }
+
+        return LeadingAssociatedContent(elements: elements, consumedSiblingIDs: consumedSiblingIDs)
+    }
+
+    private func prepareLeadingAssociatedElement(_ extracted: Element, in doc: Document) throws -> Element {
+        let extractedClasses = ((try? extracted.className()) ?? "")
+        if extracted.tagName().uppercased() == "FIGURE" && extractedClasses.contains(preservedExtractedFigureClass) {
+            let alteredExtracted = try DOMHelpers.cloneElement(extracted, in: doc)
+            let sanitizedClasses = extractedClasses
+                .split(separator: " ")
+                .filter { $0 != Substring(preservedExtractedFigureClass) }
+                .joined(separator: " ")
+            if sanitizedClasses.isEmpty {
+                try alteredExtracted.removeAttr("class")
+            } else {
+                try alteredExtracted.attr("class", sanitizedClasses)
+            }
+            return alteredExtracted
+        }
+
+        return try alterToDivIfNeeded(extracted, in: doc)
     }
 
     // MARK: - Paragraph Special Handling

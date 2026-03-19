@@ -84,36 +84,79 @@ enum SiteRuleRegistry {
         to articleContent: Element,
         context: ArticleCleanerSiteRuleContext
     ) throws {
-        let rules: [ArticleCleanerSiteRule.Type] = [
-            WashingtonPostGalleryEmbedRule.self,
-            YahooSlideshowModalRule.self,
-            YahooBreakingNewsModuleRule.self,
-            BBCVideoPlaceholderRule.self,
-            AktualneTwitterEmbedRule.self,
-            AktualneInlinePhotoRule.self,
-            QQSharePanelRule.self,
-            HeraldSunReadMoreLinkRule.self,
-            LiberationRelatedAsideRule.self,
-            LiberationAuthorsContainerRule.self,
-            NYTimesLivePanelsRule.self,
-            SeattleTimesSectionRailRule.self,
-            NYTimesContinueReadingWrapperRule.self,
-            WashingtonPostViewGraphicPromoRule.self,
-            CNNLegacyStoryTopRule.self,
-            MedicalNewsTodayRelatedInlineRule.self,
-            CNETPlaylistOverlayRule.self,
-            CityLabPromoSignupRule.self,
-            EngadgetSlideshowIconRule.self,
-            WikipediaLeadMetaNoiseRule.self,
-            FirefoxNightlyCommentFormRule.self,
-            MozillaCustomizeSyncSectionRule.self,
-            EHowAuthorProfileRule.self,
-            SimplyFoundMediaContainerRule.self,
-            FolhaGalleryWidgetRule.self,
-            PixnetArticleKeywordRule.self,
-            WebMDReviewedByRule.self
-        ]
-        try applyArticleCleanerRules(rules, to: articleContent, context: context)
+        try applyArticleCleanerRules(phase: .unwantedElements, to: articleContent, context: context)
+    }
+
+    static func applyArticleCleanerRules(
+        phase: ArticleCleanerSiteRulePhase,
+        to articleContent: Element,
+        context: ArticleCleanerSiteRuleContext
+    ) throws {
+        try applyArticleCleanerRules(articleCleanerRules(for: phase), to: articleContent, context: context)
+    }
+
+    private static func articleCleanerRules(for phase: ArticleCleanerSiteRulePhase) -> [ArticleCleanerSiteRule.Type] {
+        switch phase {
+        case .unwantedElements:
+            return [
+                WashingtonPostGalleryEmbedRule.self,
+                YahooSlideshowModalRule.self,
+                YahooBreakingNewsModuleRule.self,
+                BBCVideoPlaceholderRule.self,
+                AktualneTwitterEmbedRule.self,
+                AktualneInlinePhotoRule.self,
+                QQSharePanelRule.self,
+                HeraldSunReadMoreLinkRule.self,
+                LiberationRelatedAsideRule.self,
+                LiberationAuthorsContainerRule.self,
+                NYTimesLivePanelsRule.self,
+                SeattleTimesSectionRailRule.self,
+                NYTimesContinueReadingWrapperRule.self,
+                WashingtonPostViewGraphicPromoRule.self,
+                CNNLegacyStoryTopRule.self,
+                MedicalNewsTodayRelatedInlineRule.self,
+                CNETPlaylistOverlayRule.self,
+                CityLabPromoSignupRule.self,
+                EngadgetSlideshowIconRule.self,
+                WikipediaLeadMetaNoiseRule.self,
+                FirefoxNightlyCommentFormRule.self,
+                MozillaCustomizeSyncSectionRule.self,
+                EHowAuthorProfileRule.self,
+                SimplyFoundMediaContainerRule.self,
+                FolhaGalleryWidgetRule.self,
+                PixnetArticleKeywordRule.self,
+                WebMDReviewedByRule.self
+            ]
+        case .preConversion:
+            return [
+                NYTimesRelatedLinkCardsRule.self
+            ]
+        case .shareCleanup:
+            return [
+                GuardianShareElementsRule.self
+            ]
+        case .postParagraph:
+            return [
+                NYTimesSplitPrintInfoRule.self
+            ]
+        case .postProcess:
+            return [
+                NYTimesCollectionHighlightsRule.self,
+                NYTimesSpanishCardSummaryRule.self,
+                NYTimesPhotoViewerWrapperRule.self,
+                EngadgetBuyLinkRule.self,
+                EngadgetBreakoutTypeRule.self,
+                EngadgetReviewSummaryWrapperRule.self,
+                YahooStoryContainerRule.self,
+                CityLabPromoSummarySectionRule.self,
+                TheVergeZoomWrapperAccessibilityRule.self,
+                LiberationArticleBodyWrapperRule.self,
+                WordPressPrevNextNavigationRule.self,
+                MercurialExampleSectionRule.self,
+                WikipediaHermitianListPruneRule.self,
+                EbbPreviousLinkRule.self
+            ]
+        }
     }
 
     /// Returns the explicit sibling inclusion decision, if any site rule produced one.
@@ -128,7 +171,7 @@ enum SiteRuleRegistry {
         for rule in rules {
             if let decision = try rule.shouldIncludeSibling(sibling, topCandidate: topCandidate) {
                 inspectionContext?.recordSiteRuleDecision(
-                    phase: "sibling-include",
+                    phase: SiblingMergeSiteRulePhase.siblingInclude.rawValue,
                     ruleID: rule.id,
                     target: sibling,
                     action: decision ? "include" : "exclude",
@@ -153,7 +196,7 @@ enum SiteRuleRegistry {
         for rule in rules {
             if let extracted = try rule.extractFromSibling(sibling, topCandidate: topCandidate) {
                 inspectionContext?.recordSiteRuleDecision(
-                    phase: "sibling-extract",
+                    phase: SiblingMergeSiteRulePhase.leadingAssociatedContent.rawValue,
                     ruleID: rule.id,
                     target: sibling,
                     action: "extract",
@@ -170,52 +213,27 @@ enum SiteRuleRegistry {
         to articleContent: Element,
         context: ArticleCleanerSiteRuleContext
     ) throws {
-        let rules: [ArticleCleanerSiteRule.Type] = [
-            NYTimesRelatedLinkCardsRule.self
-        ]
-        try applyArticleCleanerRules(rules, to: articleContent, context: context)
+        try applyArticleCleanerRules(phase: .preConversion, to: articleContent, context: context)
     }
 
     static func applyShareRules(
         to articleContent: Element,
         context: ArticleCleanerSiteRuleContext
     ) throws {
-        let rules: [ArticleCleanerSiteRule.Type] = [
-            GuardianShareElementsRule.self
-        ]
-        try applyArticleCleanerRules(rules, to: articleContent, context: context)
+        try applyArticleCleanerRules(phase: .shareCleanup, to: articleContent, context: context)
     }
 
     static func applyPostProcessRules(
         to articleContent: Element,
         context: ArticleCleanerSiteRuleContext
     ) throws {
-        let rules: [ArticleCleanerSiteRule.Type] = [
-            NYTimesCollectionHighlightsRule.self,
-            NYTimesSpanishCardSummaryRule.self,
-            NYTimesPhotoViewerWrapperRule.self,
-            EngadgetBuyLinkRule.self,
-            EngadgetBreakoutTypeRule.self,
-            EngadgetReviewSummaryWrapperRule.self,
-            YahooStoryContainerRule.self,
-            CityLabPromoSummarySectionRule.self,
-            TheVergeZoomWrapperAccessibilityRule.self,
-            LiberationArticleBodyWrapperRule.self,
-            WordPressPrevNextNavigationRule.self,
-            MercurialExampleSectionRule.self,
-            WikipediaHermitianListPruneRule.self,
-            EbbPreviousLinkRule.self
-        ]
-        try applyArticleCleanerRules(rules, to: articleContent, context: context)
+        try applyArticleCleanerRules(phase: .postProcess, to: articleContent, context: context)
     }
 
     static func applyPostParagraphRules(
         to articleContent: Element,
         context: ArticleCleanerSiteRuleContext
     ) throws {
-        let rules: [ArticleCleanerSiteRule.Type] = [
-            NYTimesSplitPrintInfoRule.self
-        ]
-        try applyArticleCleanerRules(rules, to: articleContent, context: context)
+        try applyArticleCleanerRules(phase: .postParagraph, to: articleContent, context: context)
     }
 }
