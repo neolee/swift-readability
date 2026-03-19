@@ -12,7 +12,7 @@ import Readability
 struct ReadabilityCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Issue Capture & Ground Truth Calibration Pipeline.",
-        subcommands: [Fetch.self, Parse.self, Commit.self, Clean.self]
+        subcommands: [Fetch.self, Parse.self, Review.self, Commit.self, Clean.self]
     )
 }
 
@@ -253,6 +253,147 @@ struct Parse: AsyncParsableCommand {
         print("  cp .staging/\(caseName)/draft-expected-metadata.json .staging/\(caseName)/expected-metadata.json")
         print("  (edit as needed)")
         print("  swift run ReadabilityCLI commit \(caseName)")
+    }
+}
+
+// MARK: - review
+
+struct Review: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Generate a side-by-side HTML report and open it in the browser."
+    )
+
+    @Argument(help: "The case name to review.")
+    var caseName: String
+
+    mutating func run() async throws {
+        let fm = FileManager.default
+        let src = stagingCaseDir(for: caseName)
+        guard fm.fileExists(atPath: src.appendingPathComponent("swift-out.html").path) else {
+            throw ValidationError("No parse results for '\(caseName)'. Run 'parse \(caseName)' first.")
+        }
+
+        func read(_ name: String) -> String? {
+            try? String(contentsOf: src.appendingPathComponent(name), encoding: .utf8)
+        }
+
+        // Each column carries a flag indicating whether the content is already a full HTML document
+        // (source.html) or an extracted fragment that needs wrapping.
+        var columns: [(label: String, content: String, isFullDoc: Bool)] = []
+        if let c = read("source.html")         { columns.append(("Source HTML", c, true)) }
+        if let c = read("swift-out.html")      { columns.append(("Swift Readability", c, false)) }
+        if let c = read("mozilla-out.html")    { columns.append(("Mozilla Readability.js", c, false)) }
+        if let c = read("draft-expected.html") { columns.append(("Draft Expected", c, false)) }
+
+        // Wrap an extracted body fragment into a minimal standalone document for iframe rendering.
+        func wrapDoc(_ body: String) -> String {
+            """
+            <!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+            body{font-family:-apple-system,system-ui,sans-serif;line-height:1.7;
+            padding:20px 24px;color:#1a1a1a;max-width:760px;margin:0 auto;}
+            img{max-width:100%;height:auto;}
+            figure{margin:1em 0;}figcaption{font-size:.85em;color:#666;}
+            </style></head><body>\(body)</body></html>
+            """
+        }
+
+        // HTML-escape a full document for use as a `srcdoc` attribute value.
+        // Using srcdoc (rather than src=) guarantees cross-browser local file loading.
+        func srcdocEscape(_ s: String) -> String {
+            s.replacingOccurrences(of: "&", with: "&amp;")
+             .replacingOccurrences(of: "\"", with: "&quot;")
+        }
+
+        let colsHTML = columns.map { label, content, isFullDoc in
+            let doc = isFullDoc ? content : wrapDoc(content)
+            let encoded = srcdocEscape(doc)
+            return """
+                <div class="col">
+                  <div class="col-label">\(label)</div>
+                  <iframe srcdoc="\(encoded)"></iframe>
+                </div>
+                """
+        }.joined(separator: "\n")
+
+        let report = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <title>Review: \(caseName)</title>
+        <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+          font-family: system-ui, sans-serif;
+          background: #18181b;
+          color: #e4e4e7;
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          overflow: hidden;
+        }
+        header {
+          padding: 8px 16px;
+          background: #09090b;
+          border-bottom: 1px solid #27272a;
+          font-size: 13px;
+          flex-shrink: 0;
+        }
+        header .dim { color: #52525b; }
+        header strong { color: #f4f4f5; }
+        .cols {
+          display: flex;
+          flex: 1;
+          gap: 1px;
+          background: #27272a;
+          overflow: hidden;
+        }
+        .col {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          background: #fff;
+          min-width: 0;
+        }
+        .col-label {
+          background: #27272a;
+          color: #a1a1aa;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+          padding: 5px 12px;
+          flex-shrink: 0;
+        }
+        iframe {
+          flex: 1;
+          border: none;
+          width: 100%;
+        }
+        </style>
+        </head>
+        <body>
+        <header><span class="dim">review /</span> <strong>\(caseName)</strong></header>
+        <div class="cols">
+        \(colsHTML)
+        </div>
+        </body>
+        </html>
+        """
+
+        let reportURL = stagingRootDir().appendingPathComponent("report.html")
+        try report.write(to: reportURL, atomically: true, encoding: .utf8)
+
+        let open = Process()
+        open.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        open.arguments = [reportURL.path]
+        try open.run()
+        open.waitUntilExit()
+
+        print("Columns: \(columns.map(\.label).joined(separator: " | "))")
+        print("Report:  \(reportURL.path)")
     }
 }
 

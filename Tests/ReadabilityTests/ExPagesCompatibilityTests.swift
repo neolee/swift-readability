@@ -15,6 +15,37 @@ struct ExPagesCompatibilityTests {
     )
 
     // MARK: - Tests
-    //
-    // (empty — add test methods here as cases are committed)
+
+    // MARK: 1a23-1 · Holpxay Calculator (1a23.com)
+
+    @Test("1a23-1 - Title matches expected")
+    func test1a231Title() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "1a23-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case '1a23-1'")
+            return
+        }
+        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("1a23-1 - Byline matches expected")
+    func test1a231Byline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "1a23-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case '1a23-1'")
+            return
+        }
+        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("1a23-1 - Content matches expected HTML")
+    func test1a231Content() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "1a23-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case '1a23-1'")
+            return
+        }
+        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
 }

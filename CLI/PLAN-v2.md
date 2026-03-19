@@ -66,7 +66,7 @@ A complete case lifecycle may produce the following files within the staging dir
 
 ## 5. Subcommand Design
 
-The pipeline is composed of six atomic subcommands plus one diagnostic tool.
+The pipeline is composed of seven atomic subcommands plus one diagnostic tool.
 
 ### 5.1 `fetch` — Snapshot Acquisition
 **Goal**: Freeze the page at the moment a problem is observed, eliminating the effect of dynamic content changes.
@@ -86,21 +86,21 @@ The pipeline is composed of six atomic subcommands plus one diagnostic tool.
   2. **Mozilla side**: Invoke the JS bridge script at `CLI/scripts/mozilla-bridge.js` via `Process`, using Node.js and `ref/mozilla-readability`. Write `mozilla-out.html` and `mozilla-result.json` to staging. The bridge script accepts the path to `source.html` as input and emits JSON to stdout.
 - **Output**: Four comparison files written to the staging directory.
 
-### 5.3 `judge` — Ground Truth Draft Generation
+### 5.3 `review` — Side-by-Side Visual Comparison
+**Goal**: Let the developer see at a glance how the Swift and Mozilla outputs differ, before deciding what the correct ground truth should be.
+- **Syntax**: `ReadabilityCLI review <case-name>`
+- **Process**:
+  1. Read whatever output files are present in staging: `swift-out.html`, `mozilla-out.html`, and `draft-expected.html` (if it exists).
+  2. Generate a self-contained `report.html` with one column per available file; each column renders the extracted content in an iframe.
+  3. Open `report.html` in the default browser.
+- **Design rationale**: Uses `srcdoc` iframes (not `src=`) to guarantee cross-browser local file loading without an HTTP server.
+- **Output**: `report.html` written to the shared location `CLI/.staging/report.html` (overwritten on every invocation). Not stored per-case. No other files overwritten.
+
+### 5.4 `judge` — Ground Truth Draft Generation
 **Goal**: Provide a starting point for "what the correct output should look like", reducing manual effort.
 - **Syntax**: `ReadabilityCLI judge <case-name> [--strategy <mozilla|ai>]`
 - **Strategies**: `mozilla` (default): copies `mozilla-out.html` as `draft-expected.html`; `ai` (Phase 3, experimental): details TBD when implemented.
 - **Output**: `draft-expected.html` and `draft-expected-metadata.json` written to staging.
-
-### 5.4 `review` — Visual Diff for Human Sign-Off
-**Goal**: Let the developer inspect the draft ground truth visually before committing.
-- **Syntax**: `ReadabilityCLI review <case-name>`
-- **Process**:
-  1. Generate a static three-column `report.html`: Column A = `source.html`, Column B = `swift-out.html`, Column C = `draft-expected.html`.
-  2. Open `report.html` in the default browser.
-  3. Developer edits draft files directly in their editor if needed, then manually renames them to `expected.*`.
-- **Design rationale**: Static file approach — no HTTP server, no network exposure.
-- **Output**: `report.html` written to the shared location `CLI/.staging/report.html` (overwritten on every invocation) and opened in browser. It is not stored inside the per-case staging directory. No other files overwritten.
 
 ### 5.5 `commit` — Test Case Promotion
 **Goal**: Copy a finalized case into the library's test suite so development can begin against it.
@@ -162,20 +162,19 @@ The `expected-metadata.json` format matches the Mozilla test page schema exactly
 1. **Clean up the current CLI**: Delete benchmark components, the profiling infrastructure, and `Instrumentation.swift` from the main library.
 2. **Add `swift-argument-parser`** to `CLI/Package.swift` and rebuild the CLI with a multi-subcommand architecture.
 3. **Add `CLI/.staging/` to `.gitignore`**.
-4. **Implement `fetch`, `parse`, `commit`, `clean`**:
+4. **Implement `fetch`, `parse`, `review`, `commit`, `clean`**:
    - Write the Mozilla JS bridge script at `CLI/scripts/mozilla-bridge.js`.
    - Run `npm install` in `CLI/scripts/` to install `jsdom`.
    - Implement Node.js detection and subprocess invocation in the `parse` command.
 5. **Create `ExPagesCompatibilityTests.swift`** as an empty-but-compilable placeholder, to be filled case-by-case.
 
-From Phase 1 onward, `judge` and `review` remain **manual**: the developer opens staging files in their editor, edits `draft-expected.html` as needed, renames the final versions to `expected.*`, then calls `commit`.
+From Phase 1 onward, `judge` remains **manual**: copy `mozilla-out.html` to `draft-expected.html`, edit as needed, rename to `expected.*`, then call `commit`.
 
 ### Phase 2: Diagnostics System
 1. Design a `DiagnosticsTrace` protocol in the main library, distinct from the deleted performance signpost infrastructure.
 2. Extend `ReadabilityOptions` with an optional diagnostics callback (disabled by default, zero overhead when not set).
 3. Implement the `inspect` command using this callback.
 
-### Phase 3: Assisted Calibration (Judge & Review)
+### Phase 3: Assisted Calibration (Judge)
 1. Implement the `judge --strategy mozilla` default in code (manual copy in Phase 1).
-2. Implement the `review` command: generate `report.html` from a static template and open it in the default browser.
-3. (Experimental) Define the `judge --strategy ai` interface — opt-in flag, explicit user confirmation before any external call, no raw content forwarded without acknowledgment — and implement when requirements are clear.
+2. (Experimental) Define the `judge --strategy ai` interface — opt-in flag, explicit user confirmation before any external call, no raw content forwarded without acknowledgment — and implement when requirements are clear.
