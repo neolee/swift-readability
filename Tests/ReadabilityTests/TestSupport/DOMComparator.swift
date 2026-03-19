@@ -1,5 +1,6 @@
 import Foundation
 import SwiftSoup
+@testable import Readability
 
 /// DOM comparison utility for Mozilla compatibility assertions.
 enum DOMComparator {
@@ -26,8 +27,8 @@ enum DOMComparator {
             let maxCount = max(actualNodes.count, expectedNodes.count)
             for index in 0..<maxCount {
                 guard index < actualNodes.count, index < expectedNodes.count else {
-                    let actualTail = actualNodes.suffix(3).map { "\(nodeDescription($0)) @ \(nodePath($0))" }.joined(separator: " | ")
-                    let expectedTail = expectedNodes.suffix(3).map { "\(nodeDescription($0)) @ \(nodePath($0))" }.joined(separator: " | ")
+                    let actualTail = actualNodes.suffix(3).map { "\(DOMDebugFormatting.structuralNodeDescription($0)) @ \(DOMDebugFormatting.nodePath($0))" }.joined(separator: " | ")
+                    let expectedTail = expectedNodes.suffix(3).map { "\(DOMDebugFormatting.structuralNodeDescription($0)) @ \(DOMDebugFormatting.nodePath($0))" }.joined(separator: " | ")
                     return (
                         false,
                         "DOM node count mismatch at index \(index). Expected \(expectedNodes.count) nodes, got \(actualNodes.count) nodes. Expected tail: \(expectedTail). Actual tail: \(actualTail)."
@@ -37,11 +38,11 @@ enum DOMComparator {
                 let actualNode = actualNodes[index]
                 let expectedNode = expectedNodes[index]
 
-                let actualDesc = nodeDescription(actualNode)
-                let expectedDesc = nodeDescription(expectedNode)
+                let actualDesc = DOMDebugFormatting.structuralNodeDescription(actualNode)
+                let expectedDesc = DOMDebugFormatting.structuralNodeDescription(expectedNode)
                 if actualDesc != expectedDesc {
-                    let actualPath = nodePath(actualNode)
-                    let expectedPath = nodePath(expectedNode)
+                    let actualPath = DOMDebugFormatting.nodePath(actualNode)
+                    let expectedPath = DOMDebugFormatting.nodePath(expectedNode)
                     if let actualTextNode = actualNode as? TextNode,
                        let expectedTextNode = expectedNode as? TextNode {
                         let actualContext = (actualTextNode.parent() as? Element).flatMap { try? $0.outerHtml() } ?? ""
@@ -76,8 +77,8 @@ enum DOMComparator {
                     let actualAttrs = attributesForNode(actualElement)
                     let expectedAttrs = attributesForNode(expectedElement)
                     if actualAttrs.count != expectedAttrs.count {
-                        let actualPath = nodePath(actualElement)
-                        let expectedPath = nodePath(expectedElement)
+                        let actualPath = DOMDebugFormatting.nodePath(actualElement)
+                        let expectedPath = DOMDebugFormatting.nodePath(expectedElement)
                         return (
                             false,
                             "Attribute count mismatch at index \(index) for \(actualElement.tagName().lowercased()). Expected \(expectedAttrs.count), got \(actualAttrs.count). Expected attrs: \(expectedAttrs), Actual attrs: \(actualAttrs). Expected path: \(expectedPath). Actual path: \(actualPath)."
@@ -85,16 +86,16 @@ enum DOMComparator {
                     }
                     for (key, expectedValue) in expectedAttrs {
                         guard let actualValue = actualAttrs[key] else {
-                            let actualPath = nodePath(actualElement)
-                            let expectedPath = nodePath(expectedElement)
+                            let actualPath = DOMDebugFormatting.nodePath(actualElement)
+                            let expectedPath = DOMDebugFormatting.nodePath(expectedElement)
                             return (
                                 false,
                                 "Missing attribute at index \(index): '\(key)' on \(actualElement.tagName().lowercased()). Expected path: \(expectedPath). Actual path: \(actualPath)."
                             )
                         }
                         if actualValue != expectedValue {
-                            let actualPath = nodePath(actualElement)
-                            let expectedPath = nodePath(expectedElement)
+                            let actualPath = DOMDebugFormatting.nodePath(actualElement)
+                            let expectedPath = DOMDebugFormatting.nodePath(expectedElement)
                             return (
                                 false,
                                 "Attribute mismatch at index \(index): '\(key)'. Expected '\(preview(expectedValue))', got '\(preview(actualValue))'. Expected path: \(expectedPath). Actual path: \(actualPath)."
@@ -144,26 +145,6 @@ enum DOMComparator {
         return textNode.getWholeText().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    private static func nodeDescription(_ node: Node) -> String {
-        if node is TextNode {
-            // Node shape comparison should treat text nodes structurally;
-            // text content is compared separately with normalized whitespace.
-            return "#text"
-        }
-        if let element = node as? Element {
-            var desc = element.tagName().lowercased()
-            let id = element.id()
-            if !id.isEmpty {
-                desc += "#\(id)"
-            }
-            if let className = try? element.className(), !className.isEmpty {
-                desc += ".(\(className))"
-            }
-            return desc
-        }
-        return "node(\(node.nodeName()))"
-    }
-
     private static func attributesForNode(_ element: Element) -> [String: String] {
         var attrs: [String: String] = [:]
         guard let attributes = element.getAttributes() else { return attrs }
@@ -187,32 +168,4 @@ enum DOMComparator {
         return String(text.prefix(limit)) + "..."
     }
 
-    private static func nodePath(_ node: Node) -> String {
-        var parts: [String] = []
-        var current: Node? = node
-
-        while let n = current {
-            if let element = n as? Element {
-                let tag = element.tagName().lowercased()
-                var position = 1
-                if let parent = element.parent() {
-                    for sibling in parent.getChildNodes() {
-                        guard sibling !== element else { break }
-                        if let siblingElement = sibling as? Element,
-                           siblingElement.tagName().lowercased() == tag {
-                            position += 1
-                        }
-                    }
-                }
-                parts.append("\(tag)[\(position)]")
-            } else if n is TextNode {
-                parts.append("text()")
-            } else {
-                parts.append(n.nodeName())
-            }
-            current = n.parent()
-        }
-
-        return "/" + parts.reversed().joined(separator: "/")
-    }
 }

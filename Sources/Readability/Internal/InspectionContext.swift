@@ -124,16 +124,16 @@ final class InspectionContext {
     func recordCandidateContext(candidate: Element) {
         let parent = candidate.parent()
         currentPass?.candidateContext = RawCandidateContext(
-            candidateDescriptor: InspectionDOMHelpers.elementDescriptor(candidate),
+            candidateDescriptor: DOMDebugFormatting.conciseElementDescriptor(candidate),
             candidatePath: InspectionDOMHelpers.nodePath(candidate),
-            parentDescriptor: parent.map(InspectionDOMHelpers.elementDescriptor),
+            parentDescriptor: parent.map(DOMDebugFormatting.conciseElementDescriptor),
             parentPath: parent.map(InspectionDOMHelpers.nodePath),
             ancestorChain: candidate.ancestors().map {
-                "\(InspectionDOMHelpers.elementDescriptor($0)) @ \(InspectionDOMHelpers.nodePath($0))"
+                "\(DOMDebugFormatting.conciseElementDescriptor($0)) @ \(InspectionDOMHelpers.nodePath($0))"
             },
             siblingDescriptors: parent.map {
                 $0.children().map {
-                    "\(InspectionDOMHelpers.elementDescriptor($0)) @ \(InspectionDOMHelpers.nodePath($0))"
+                    "\(DOMDebugFormatting.conciseElementDescriptor($0)) @ \(InspectionDOMHelpers.nodePath($0))"
                 }
             } ?? []
         )
@@ -151,7 +151,7 @@ final class InspectionContext {
     ) {
         currentPass?.siblingDecisions.append(
             RawSiblingDecision(
-                descriptor: InspectionDOMHelpers.elementDescriptor(sibling),
+                descriptor: DOMDebugFormatting.conciseElementDescriptor(sibling),
                 path: InspectionDOMHelpers.nodePath(sibling),
                 tagName: sibling.tagName().lowercased(),
                 className: ((try? sibling.className()) ?? ""),
@@ -178,10 +178,10 @@ final class InspectionContext {
             RawSiteRuleDecision(
                 phase: phase,
                 ruleID: ruleID,
-                targetDescriptor: InspectionDOMHelpers.elementDescriptor(target),
+                targetDescriptor: DOMDebugFormatting.conciseElementDescriptor(target),
                 targetPath: InspectionDOMHelpers.nodePath(target),
                 action: action,
-                resultDescriptor: result.map(InspectionDOMHelpers.elementDescriptor),
+                resultDescriptor: result.map(DOMDebugFormatting.conciseElementDescriptor),
                 resultPath: result.flatMap { $0.parent() != nil ? InspectionDOMHelpers.nodePath($0) : nil },
                 reason: reason
             )
@@ -189,7 +189,7 @@ final class InspectionContext {
     }
 
     func recordContentSnapshot(articleContent: Element, selectedCandidate: Element, contentLength: Int) {
-        let articleChildren = articleContent.children().map(InspectionDOMHelpers.elementDescriptor)
+        let articleChildren = articleContent.children().map(DOMDebugFormatting.conciseElementDescriptor)
         let leadingSource: Elements
         if articleContent.children().count == 1,
            let onlyChild = articleContent.children().first,
@@ -199,10 +199,10 @@ final class InspectionContext {
             leadingSource = articleContent.children()
         }
         currentPass?.contentSnapshot = RawContentSnapshot(
-            selectedCandidateDescriptor: InspectionDOMHelpers.elementDescriptor(selectedCandidate),
+            selectedCandidateDescriptor: DOMDebugFormatting.conciseElementDescriptor(selectedCandidate),
             selectedCandidatePath: InspectionDOMHelpers.nodePath(selectedCandidate),
             articleChildDescriptors: articleChildren,
-            leadingBlockDescriptors: Array(leadingSource.prefix(8)).map(InspectionDOMHelpers.elementDescriptor),
+            leadingBlockDescriptors: Array(leadingSource.prefix(8)).map(DOMDebugFormatting.conciseElementDescriptor),
             contentLength: contentLength
         )
     }

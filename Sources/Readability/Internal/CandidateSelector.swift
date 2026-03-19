@@ -217,7 +217,7 @@ final class CandidateSelector {
         let scoreThreshold = lastScore / 3
 
         inspectionContext?.recordPromotionStep(
-            descriptor: InspectionDOMHelpers.elementDescriptor(candidate),
+            descriptor: DOMDebugFormatting.conciseElementDescriptor(candidate),
             path: InspectionDOMHelpers.nodePath(candidate),
             score: lastScore,
             action: "initial (threshold \u{2265} \(String(format: "%.3f", scoreThreshold)))"
@@ -237,7 +237,7 @@ final class CandidateSelector {
             // If score is too low, stop
             if parentScore < scoreThreshold {
                 inspectionContext?.recordPromotionStep(
-                    descriptor: InspectionDOMHelpers.elementDescriptor(parent),
+                    descriptor: DOMDebugFormatting.conciseElementDescriptor(parent),
                     path: InspectionDOMHelpers.nodePath(parent),
                     score: parentScore,
                     action: "below threshold, stopped"
@@ -249,7 +249,7 @@ final class CandidateSelector {
             if parentScore > lastScore {
                 if shouldKeepArticleCandidate(currentCandidate) {
                     inspectionContext?.recordPromotionStep(
-                        descriptor: InspectionDOMHelpers.elementDescriptor(parent),
+                        descriptor: DOMDebugFormatting.conciseElementDescriptor(parent),
                         path: InspectionDOMHelpers.nodePath(parent),
                         score: parentScore,
                         action: "guard kept original"
@@ -257,7 +257,7 @@ final class CandidateSelector {
                     break
                 }
                 inspectionContext?.recordPromotionStep(
-                    descriptor: InspectionDOMHelpers.elementDescriptor(parent),
+                    descriptor: DOMDebugFormatting.conciseElementDescriptor(parent),
                     path: InspectionDOMHelpers.nodePath(parent),
                     score: parentScore,
                     action: "rose \u{2192} PROMOTED"
@@ -267,7 +267,7 @@ final class CandidateSelector {
             }
 
             inspectionContext?.recordPromotionStep(
-                descriptor: InspectionDOMHelpers.elementDescriptor(parent),
+                descriptor: DOMDebugFormatting.conciseElementDescriptor(parent),
                 path: InspectionDOMHelpers.nodePath(parent),
                 score: parentScore,
                 action: "fell, continue"
@@ -539,7 +539,7 @@ final class CandidateSelector {
             )
         }
         return InspectionContext.RawCandidateInfo(
-            descriptor: InspectionDOMHelpers.elementDescriptor(element),
+            descriptor: DOMDebugFormatting.conciseElementDescriptor(element),
             path: InspectionDOMHelpers.nodePath(element),
             depth: InspectionDOMHelpers.elementDepth(element),
             finalScore: finalScore,

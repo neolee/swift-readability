@@ -1,8 +1,9 @@
 import Foundation
 import SwiftSoup
 
-enum InspectionDOMHelpers {
-    static func elementDescriptor(_ element: Element) -> String {
+enum DOMDebugFormatting {
+    /// Concise descriptor used by inspect output and candidate summaries.
+    static func conciseElementDescriptor(_ element: Element) -> String {
         let tag = element.tagName().lowercased()
         let id = element.id()
         let firstClass = ((try? element.className()) ?? "")
@@ -14,6 +15,25 @@ enum InspectionDOMHelpers {
             desc += ".\(firstClass)"
         }
         return desc
+    }
+
+    /// Structural node descriptor used by DOM comparison and mismatch reporting.
+    static func structuralNodeDescription(_ node: Node) -> String {
+        if node is TextNode {
+            return "#text"
+        }
+        if let element = node as? Element {
+            var desc = element.tagName().lowercased()
+            let id = element.id()
+            if !id.isEmpty {
+                desc += "#\(id)"
+            }
+            if let className = try? element.className(), !className.isEmpty {
+                desc += ".(\(className))"
+            }
+            return desc
+        }
+        return "node(\(node.nodeName()))"
     }
 
     static func elementDepth(_ element: Element) -> Int {
@@ -55,3 +75,5 @@ enum InspectionDOMHelpers {
         return "/" + parts.reversed().joined(separator: "/")
     }
 }
+
+typealias InspectionDOMHelpers = DOMDebugFormatting
