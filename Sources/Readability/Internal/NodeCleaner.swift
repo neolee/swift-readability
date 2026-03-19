@@ -49,6 +49,12 @@ final class NodeCleaner {
 
             // Check for unlikely candidates
             if shouldRemoveAsUnlikelyCandidate(current, matchString: matchString) {
+                // Before removing, rescue any WordPress featured image buried inside this
+                // container.  Some WordPress block-editor layouts nest the featured image
+                // inside a header-like wrapper whose class matches the "header" unlikely
+                // pattern.  Inserting the figure as a sibling before the removal keeps it
+                // in the candidate tree so the sibling-merge phase can include it.
+                try rescueWordPressFeaturedImage(from: current)
                 node = DOMTraversal.removeAndGetNext(current)
                 continue
             }
@@ -148,6 +154,36 @@ final class NodeCleaner {
         }
 
         return ((try? mainContent.select("article[id^=post-] a[href*=\"bugzilla.mozilla.org\"], article[id^=post-] a[href*=\"blog.nightly.mozilla.org\"]").isEmpty()) == false)
+    }
+
+    /// Rescue a WordPress featured image from inside a container that is about to be
+    /// removed as an unlikely candidate.
+    ///
+    /// If the container holds a `figure.wp-block-post-featured-image`, extract it and
+    /// insert a wrapper `<div>` containing a clone of the figure as a preceding sibling
+    /// before the removal happens.  Wrapping in a `<div>` lets `WordPressFeaturedImageExtractRule`
+    /// recognise the rescued sibling and prepend the figure into the content element —
+    /// producing the same output structure as cases where the featured image already lives
+    /// in a dedicated wrapper div (e.g. 1a23-1).
+    private func rescueWordPressFeaturedImage(from element: Element) throws {
+        guard let figure = try element.select("figure.wp-block-post-featured-image").first() else { return }
+        guard DOMHelpers.isProbablyVisible(figure) else { return }
+        guard let parent = element.parent() else { return }
+        let doc = figure.ownerDocument() ?? Document("")
+        let clone = try DOMHelpers.cloneElement(figure, in: doc)
+        // Wrap the clone in a <div> so WordPressFeaturedImageExtractRule can handle it
+        // through the collectLeadingAssociatedContent path (same as 1a23-1 layout).
+        let wrapper = try doc.createElement("div")
+        try wrapper.appendChild(clone)
+        // Insert the wrapper before the container element in its parent.
+        let siblings = parent.children()
+        guard let idx = siblings.firstIndex(where: { $0 === element }) else { return }
+        if idx == 0 {
+            try parent.prependChild(wrapper)
+        } else {
+            let before = siblings[idx - 1]
+            try before.after(wrapper.outerHtml())
+        }
     }
 
     /// Check if element should be removed by ARIA role
