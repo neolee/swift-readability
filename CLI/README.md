@@ -112,7 +112,9 @@ Outputs:
 - `swift-result.json`
 - `mozilla-out.html` when Node.js is available
 - `mozilla-result.json` when Node.js is available
-- `draft-expected-metadata.json` when Node.js is available
+- `draft-expected-metadata.json` when Mozilla returns extracted content
+
+If Mozilla Readability.js returns `null` for a staged page, `parse` no longer fails the whole command. Swift outputs are still written, `mozilla-result.json` records that Mozilla considered the page unreadable, and `review` can still be used with the available columns.
 
 Use `parse` after `inspect` to compare actual rendered extraction results.
 
@@ -239,7 +241,7 @@ swift run ReadabilityCLI clean <case>
 - `commit` does not remove staging data. This is intentional so you can diff or re-open the case.
 - `inspect` is intended for extraction reasoning, not for visual review.
 - `review` is intended for visual comparison, not for score diagnostics.
-- If Mozilla output is missing, check that `CLI/scripts/mozilla-bridge.js` exists and Node.js dependencies are installed in `CLI/scripts/`.
+- If Mozilla output is missing, check whether `mozilla-result.json` says Mozilla returned `null`, and otherwise verify that `CLI/scripts/mozilla-bridge.js` exists and Node.js dependencies are installed in `CLI/scripts/`.
 
 ## When To Run Which Tests
 

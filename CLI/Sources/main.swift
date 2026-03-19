@@ -216,11 +216,39 @@ struct Parse: AsyncParsableCommand {
         jsProcess.waitUntilExit()
 
         let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
-        if !errData.isEmpty,
-           let msg = String(data: errData, encoding: .utf8)?
-            .trimmingCharacters(in: .whitespacesAndNewlines), !msg.isEmpty {
-            printErr("JS bridge: \(msg)")
+        let bridgeMessage = String(data: errData, encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !bridgeMessage.isEmpty {
+            printErr("JS bridge: \(bridgeMessage)")
         }
+
+        if jsProcess.terminationStatus == 2 {
+            for fileName in ["mozilla-out.html", "draft-expected-metadata.json"] {
+                let fileURL = dest.appendingPathComponent(fileName)
+                if fm.fileExists(atPath: fileURL.path) {
+                    try fm.removeItem(at: fileURL)
+                }
+            }
+
+            let nullResult: [String: Any] = [
+                "readable": false,
+                "error": bridgeMessage.isEmpty
+                    ? "Readability.parse() returned null — page may not be readable"
+                    : bridgeMessage,
+            ]
+            let nullResultData = try JSONSerialization.data(
+                withJSONObject: nullResult,
+                options: [.prettyPrinted, .sortedKeys]
+            )
+            try nullResultData.write(to: dest.appendingPathComponent("mozilla-result.json"))
+
+            print("  mozilla-result.json  (Mozilla returned null)")
+            print("")
+            printErr("Note: Mozilla Readability.js returned null for this page. Swift output was still generated.")
+            print("Next:  swift run ReadabilityCLI review \(caseName)")
+            return
+        }
+
         guard jsProcess.terminationStatus == 0 else {
             throw ValidationError("Mozilla bridge exited with status \(jsProcess.terminationStatus).")
         }
