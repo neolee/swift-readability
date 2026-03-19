@@ -284,16 +284,8 @@ final class CandidateSelector {
     }
 
     private func promoteSchemaArticleParentIfNeeded(_ candidate: Element) -> Element {
-        if let quantaLead = promoteQuantaLeadCandidateIfNeeded(candidate) {
-            return quantaLead
-        }
-
-        if let breitbartArticle = promoteBreitbartArticleIfNeeded(candidate) {
-            return breitbartArticle
-        }
-
-        if let nightlyContainer = promoteFirefoxNightlyContainerIfNeeded(candidate) {
-            return nightlyContainer
+        if let promoted = SiteRuleRegistry.promotedCandidate(from: candidate) {
+            return promoted
         }
 
         if candidate.tagName().uppercased() == "SECTION" {
@@ -306,107 +298,9 @@ final class CandidateSelector {
                     return parent
                 }
             }
-
-            let sectionID = candidate.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            guard sectionID == "article-section-1",
-                  let parent = candidate.parent(),
-                  parent.tagName().uppercased() == "ARTICLE" else {
-                return candidate
-            }
-            let itemtype = ((try? parent.attr("itemtype")) ?? "").lowercased()
-            guard itemtype.contains("newsarticle") else {
-                return candidate
-            }
-            return parent
-        }
-
-        if candidate.tagName().uppercased() == "DIV",
-           candidate.children().count == 1,
-           let onlyChild = candidate.children().first,
-           onlyChild.tagName().uppercased() == "SECTION" {
-            let sectionID = onlyChild.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            guard sectionID == "article-section-1",
-                  let parent = candidate.parent(),
-                  parent.tagName().uppercased() == "ARTICLE" else {
-                return candidate
-            }
-            let itemtype = ((try? parent.attr("itemtype")) ?? "").lowercased()
-            if itemtype.contains("newsarticle") {
-                return parent
-            }
         }
 
         return candidate
-    }
-
-    private func promoteQuantaLeadCandidateIfNeeded(_ candidate: Element) -> Element? {
-        guard let doc = candidate.ownerDocument() else { return nil }
-
-        let canonical = ((try? doc.select("link[rel=canonical]").first()?.attr("href")) ?? "").lowercased()
-        let ogSiteName = ((try? doc.select("meta[property=og:site_name]").first()?.attr("content")) ?? "").lowercased()
-        let isQuanta = canonical.contains("quantamagazine.org") || ogSiteName.contains("quanta")
-        guard isQuanta else { return nil }
-
-        guard let lead = try? doc.select("div[data-reactid=\"253\"]").first() else {
-            return nil
-        }
-
-        let leadText = ((try? lead.text()) ?? "").lowercased()
-        let containsLead = leadText.contains("a little over half a century ago, chaos started spilling out of a famous experiment")
-        guard containsLead else {
-            return nil
-        }
-        return lead
-    }
-
-    /// Breitbart fixtures keep header lead media/time blocks attached to article body.
-    /// When `entry-content` wins scoring, promote to the enclosing article so sibling
-    /// merge includes the header block.
-    private func promoteBreitbartArticleIfNeeded(_ candidate: Element) -> Element? {
-        guard candidate.tagName().uppercased() == "DIV" else { return nil }
-        let className = ((try? candidate.className()) ?? "").lowercased()
-        guard className.contains("entry-content"),
-              let article = candidate.parent(),
-              article.tagName().uppercased() == "ARTICLE" else {
-            return nil
-        }
-
-        let articleClass = ((try? article.className()) ?? "").lowercased()
-        guard articleClass.contains("the-article") || articleClass.contains("post-") else {
-            return nil
-        }
-
-        guard isBreitbartDocument(article) else {
-            return nil
-        }
-
-        let hasFeaturedFigure = (try? article.select("> header figure.figurearticlefeatured").isEmpty()) == false
-        let publishedTimeCount = (try? article.select("> header time[datetime]").count) ?? 0
-        let hasPublishedTimes = publishedTimeCount >= 2
-        guard hasFeaturedFigure && hasPublishedTimes else {
-            return nil
-        }
-
-        return article
-    }
-
-    private func isBreitbartDocument(_ element: Element) -> Bool {
-        guard let doc = element.ownerDocument() else { return false }
-
-        let ogSiteName = ((try? doc.select("meta[property=og:site_name]").first()?.attr("content")) ?? "")
-            .lowercased()
-        if ogSiteName.contains("breitbart") {
-            return true
-        }
-
-        let canonical = ((try? doc.select("link[rel=canonical]").first()?.attr("href")) ?? "")
-            .lowercased()
-        if canonical.contains("breitbart.com") {
-            return true
-        }
-
-        let location = doc.location().lowercased()
-        return location.contains("breitbart.com")
     }
 
     /// Promote tiny inner candidates to semantic main containers when the main
@@ -468,25 +362,6 @@ final class CandidateSelector {
         return semanticMain
     }
 
-    private func promoteFirefoxNightlyContainerIfNeeded(_ candidate: Element) -> Element? {
-        let chain = [candidate] + candidate.ancestors(maxDepth: 8)
-        for node in chain {
-            let tag = node.tagName().uppercased()
-            guard (tag == "MAIN" || tag == "DIV"),
-                  node.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "content" else {
-                continue
-            }
-
-            guard let article = (try? node.select("> div.content > article[id^=post-]").first()) ?? nil else {
-                continue
-            }
-            let hasNightlyMarkers = ((try? article.select("a[href*=\"bugzilla.mozilla.org\"], a[href*=\"blog.nightly.mozilla.org\"]").isEmpty()) == false)
-            guard hasNightlyMarkers else { continue }
-            return node
-        }
-        return nil
-    }
-
     /// Keep explicit NYTimes article container from being promoted into layout wrappers.
     private func shouldKeepArticleCandidate(_ current: Element) -> Bool {
         guard current.tagName().uppercased() == "ARTICLE" else {
@@ -497,14 +372,7 @@ final class CandidateSelector {
             return true
         }
 
-        // CityLab real-world fixtures often score section#article-section-1 higher than
-        // the schema article wrapper, but Mozilla keeps the outer article container.
-        let itemtype = ((try? current.attr("itemtype")) ?? "").lowercased()
-        if itemtype.contains("newsarticle"),
-           (try? current.select("> section#article-section-1").isEmpty()) == false {
-            return true
-        }
-        return false
+        return SiteRuleRegistry.shouldKeepCandidate(current)
     }
 
     private func describe(_ element: Element) -> String {

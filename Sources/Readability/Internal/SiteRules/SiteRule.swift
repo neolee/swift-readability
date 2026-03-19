@@ -43,6 +43,18 @@ protocol BylineSiteRule: SiteRule {
     static func apply(byline: String?, sourceURL: URL?, document: Document) throws -> String?
 }
 
+protocol MetadataBylineSiteRule: SiteRule {
+    static func apply(currentByline: String?, sourceURL: URL?, document: Document) throws -> String?
+}
+
+protocol CandidatePromotionSiteRule: SiteRule {
+    static func promotedCandidate(from candidate: Element) -> Element?
+}
+
+protocol CandidateProtectionSiteRule: SiteRule {
+    static func shouldKeepCandidate(_ current: Element) -> Bool
+}
+
 protocol BylineContainerRetentionSiteRule: SiteRule {
     static func shouldKeepBylineContainer(_ node: Element, sourceURL: URL?, document: Document) throws -> Bool
 }

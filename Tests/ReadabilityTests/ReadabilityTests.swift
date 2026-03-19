@@ -169,4 +169,30 @@ struct ReadabilityTests {
         let result = try readability.parse()
         #expect(result.excerpt == metaDescription)
     }
+
+    @Test("parse falls back to Firefox Nightly author link when metadata byline is absent")
+    func testParseFallsBackToFirefoxNightlyAuthorLink() throws {
+        let html = """
+        <html>
+        <head>
+          <title>Firefox Nightly News</title>
+          <meta property="og:site_name" content="Firefox Nightly News">
+        </head>
+        <body>
+          <main id="content">
+            <article id="post-1">
+              <header>
+                <a rel="author" href="https://blog.nightly.mozilla.org/author/janedoe/">Jane Doe</a>
+              </header>
+              <p>This is a sufficiently long paragraph, with commas, to satisfy scoring and extraction behavior.</p>
+            </article>
+          </main>
+        </body>
+        </html>
+        """
+
+        let readability = try Readability(html: html)
+        let result = try readability.parse()
+        #expect(result.byline == "Jane Doe")
+    }
 }

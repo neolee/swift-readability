@@ -113,6 +113,36 @@ struct CandidateSelectorTests {
         #expect(candidate.id() == "common")
     }
 
+        @Test("selectTopCandidate promotes CityLab article container via site rule")
+        func testSelectTopCandidatePromotesCityLabArticleContainer() throws {
+                let html = """
+                <html>
+                <head>
+                    <meta property="og:site_name" content="CityLab">
+                    <link rel="canonical" href="https://www.citylab.com/article/example">
+                </head>
+                <body>
+                    <article id="story" itemtype="https://schema.org/NewsArticle">
+                        <section id="article-section-1">This is a CityLab article section with enough text, commas, and words to be chosen as the best candidate.</section>
+                    </article>
+                </body>
+                </html>
+                """
+                let doc = try SwiftSoup.parse(html)
+                let section = try doc.select("section#article-section-1").first()!
+                let article = try doc.select("article#story").first()!
+
+                let scoringManager = NodeScoringManager()
+                let selector = CandidateSelector(options: .default, scoringManager: scoringManager)
+                scoringManager.initializeNode(section)
+                scoringManager.addToScore(100, for: section)
+
+                let (candidate, neededToCreate) = try selector.selectTopCandidate(from: [section], in: doc)
+
+                #expect(neededToCreate == false)
+                #expect(candidate === article)
+        }
+
     // MARK: - Alternative Ancestor Analysis Tests
 
     @Test("findBetterTopCandidate finds common ancestor")
@@ -240,6 +270,27 @@ struct CandidateSelectorTests {
 
         // Should stop at body level
         #expect(promoted.id() == "parent")
+    }
+
+    @Test("promoteSingleChildCandidate keeps NYTimes story article in core")
+    func testPromoteSingleChildKeepsNYTimesStoryArticle() throws {
+        let html = """
+        <html><body>
+        <div id="site-content">
+            <article id="story">Content with enough text, commas, and words for scoring purposes in the protected article.</article>
+        </div>
+        </body></html>
+        """
+        let doc = try SwiftSoup.parse(html)
+        let article = try doc.select("article#story").first()!
+
+        let scoringManager = NodeScoringManager()
+        let selector = CandidateSelector(options: .default, scoringManager: scoringManager)
+        scoringManager.initializeNode(article)
+
+        let promoted = try selector.promoteSingleChildCandidate(article)
+
+        #expect(promoted === article)
     }
 
     // MARK: - Parent Score Traversal Tests

@@ -63,6 +63,46 @@ enum SiteRuleRegistry {
         return current
     }
 
+    static func applyMetadataBylineRules(
+        _ byline: String?,
+        sourceURL: URL?,
+        document: Document
+    ) throws -> String? {
+        let rules: [MetadataBylineSiteRule.Type] = [
+            FirefoxNightlyBylineRule.self
+        ]
+        var current = byline
+        for rule in rules {
+            current = try rule.apply(currentByline: current, sourceURL: sourceURL, document: document)
+        }
+        return current
+    }
+
+    static func promotedCandidate(from candidate: Element) -> Element? {
+        let rules: [CandidatePromotionSiteRule.Type] = [
+            QuantaLeadCandidatePromotionRule.self,
+            BreitbartArticleCandidatePromotionRule.self,
+            FirefoxNightlyContainerCandidatePromotionRule.self,
+            CityLabArticleContainerCandidateRule.self
+        ]
+        for rule in rules {
+            if let promoted = rule.promotedCandidate(from: candidate) {
+                return promoted
+            }
+        }
+        return nil
+    }
+
+    static func shouldKeepCandidate(_ current: Element) -> Bool {
+        let rules: [CandidateProtectionSiteRule.Type] = [
+            CityLabArticleContainerCandidateRule.self
+        ]
+        for rule in rules where rule.shouldKeepCandidate(current) {
+            return true
+        }
+        return false
+    }
+
     static func shouldKeepBylineContainer(
         _ node: Element,
         sourceURL: URL?,

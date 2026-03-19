@@ -177,6 +177,7 @@ public struct Readability {
 
     private func extractMetaMetadata() throws -> Metadata {
         var metadata = Metadata()
+        let sourceURL = detectSourceURL()
 
         let propertyPattern = "^\\s*(?:(dc|dcterm|og|twitter|parsely|weibo:(article|webpage))\\s*[-\\.:]\\s*)?(author|creator|pub-date|description|title|site_name)\\s*$"
 
@@ -249,17 +250,11 @@ public struct Readability {
                       values["twitter:creator"] ??
                       values["og:author"]
         metadata.byline = metaByline ?? socialByline ?? ogByline
-
-        // Firefox Nightly pages carry author in header anchor only.
-        // Use a strict site-gated fallback to keep behavior scoped.
-        if (metadata.byline == nil || metadata.byline?.isEmpty == true),
-           isFirefoxNightlyDocument(),
-           let link = (try? doc.select("main#content a[rel=author]").first()) ?? nil {
-            let text = (try? link.text().trimmingCharacters(in: .whitespacesAndNewlines)) ?? ""
-            if !text.isEmpty {
-                metadata.byline = text
-            }
-        }
+        metadata.byline = try SiteRuleRegistry.applyMetadataBylineRules(
+            metadata.byline,
+            sourceURL: sourceURL,
+            document: doc
+        )
 
         if var byline = metadata.byline {
             byline = byline.trimmingCharacters(in: .whitespaces)
@@ -313,17 +308,6 @@ public struct Readability {
             key = "dcterm:" + key.dropFirst(8)
         }
         return key
-    }
-
-    private func isFirefoxNightlyDocument() -> Bool {
-        let siteName = ((try? doc.select("meta[property='og:site_name']").first()?.attr("content")) ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-        if siteName == "firefox nightly news" {
-            return true
-        }
-        let title = ((try? doc.title()) ?? "").lowercased()
-        return title.contains("firefox nightly")
     }
 
     private func extractJSONLDMetadata() throws -> Metadata {
