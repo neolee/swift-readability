@@ -95,10 +95,21 @@ public struct InspectionReport: Sendable {
 
     /// Compact summary of the merged article content produced by one pass.
     public struct ContentSnapshotSummary: Sendable {
+        public struct BlockSummary: Sendable {
+            public let descriptor: String
+            public let path: String
+            public let childCount: Int
+            public let textPreview: String
+        }
+
         public let selectedCandidateDescriptor: String
         public let selectedCandidatePath: String
+        public let articleChildCount: Int
         public let articleChildDescriptors: [String]
-        public let leadingBlockDescriptors: [String]
+        public let usesSingleWrapper: Bool
+        public let wrapperDescriptor: String?
+        public let wrapperPath: String?
+        public let leadingBlocks: [BlockSummary]
         public let contentLength: Int
     }
 

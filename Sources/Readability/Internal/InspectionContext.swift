@@ -69,9 +69,20 @@ final class InspectionContext {
     struct RawContentSnapshot {
         let selectedCandidateDescriptor: String
         let selectedCandidatePath: String
+        let articleChildCount: Int
         let articleChildDescriptors: [String]
-        let leadingBlockDescriptors: [String]
+        let usesSingleWrapper: Bool
+        let wrapperDescriptor: String?
+        let wrapperPath: String?
+        let leadingBlocks: [RawContentBlock]
         let contentLength: Int
+    }
+
+    struct RawContentBlock {
+        let descriptor: String
+        let path: String
+        let childCount: Int
+        let textPreview: String
     }
 
     struct RawPass {
@@ -191,20 +202,48 @@ final class InspectionContext {
     func recordContentSnapshot(articleContent: Element, selectedCandidate: Element, contentLength: Int) {
         let articleChildren = articleContent.children().map(DOMDebugFormatting.conciseElementDescriptor)
         let leadingSource: Elements
+        let usesSingleWrapper: Bool
+        let wrapperDescriptor: String?
+        let wrapperPath: String?
         if articleContent.children().count == 1,
            let onlyChild = articleContent.children().first,
            onlyChild.tagName().uppercased() == "DIV" {
             leadingSource = onlyChild.children()
+            usesSingleWrapper = true
+            wrapperDescriptor = DOMDebugFormatting.conciseElementDescriptor(onlyChild)
+            wrapperPath = InspectionDOMHelpers.nodePath(onlyChild)
         } else {
             leadingSource = articleContent.children()
+            usesSingleWrapper = false
+            wrapperDescriptor = nil
+            wrapperPath = nil
         }
         currentPass?.contentSnapshot = RawContentSnapshot(
             selectedCandidateDescriptor: DOMDebugFormatting.conciseElementDescriptor(selectedCandidate),
             selectedCandidatePath: InspectionDOMHelpers.nodePath(selectedCandidate),
+            articleChildCount: articleContent.children().count,
             articleChildDescriptors: articleChildren,
-            leadingBlockDescriptors: Array(leadingSource.prefix(8)).map(DOMDebugFormatting.conciseElementDescriptor),
+            usesSingleWrapper: usesSingleWrapper,
+            wrapperDescriptor: wrapperDescriptor,
+            wrapperPath: wrapperPath,
+            leadingBlocks: Array(leadingSource.prefix(8)).map {
+                RawContentBlock(
+                    descriptor: DOMDebugFormatting.conciseElementDescriptor($0),
+                    path: InspectionDOMHelpers.nodePath($0),
+                    childCount: $0.children().count,
+                    textPreview: previewText(for: $0, limit: 80)
+                )
+            },
             contentLength: contentLength
         )
+    }
+
+    private func previewText(for element: Element, limit: Int) -> String {
+        let raw = ((try? element.text()) ?? "")
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard raw.count > limit else { return raw }
+        return String(raw.prefix(limit)) + "..."
     }
 
     func endPass(contentLength: Int, accepted: Bool) {
@@ -273,8 +312,19 @@ final class InspectionContext {
                 InspectionReport.ContentSnapshotSummary(
                     selectedCandidateDescriptor: $0.selectedCandidateDescriptor,
                     selectedCandidatePath: $0.selectedCandidatePath,
+                    articleChildCount: $0.articleChildCount,
                     articleChildDescriptors: $0.articleChildDescriptors,
-                    leadingBlockDescriptors: $0.leadingBlockDescriptors,
+                    usesSingleWrapper: $0.usesSingleWrapper,
+                    wrapperDescriptor: $0.wrapperDescriptor,
+                    wrapperPath: $0.wrapperPath,
+                    leadingBlocks: $0.leadingBlocks.map {
+                        InspectionReport.ContentSnapshotSummary.BlockSummary(
+                            descriptor: $0.descriptor,
+                            path: $0.path,
+                            childCount: $0.childCount,
+                            textPreview: $0.textPreview
+                        )
+                    },
                     contentLength: $0.contentLength
                 )
             },

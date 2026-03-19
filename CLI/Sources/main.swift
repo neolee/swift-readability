@@ -656,8 +656,24 @@ struct Inspect: AsyncParsableCommand {
             lines.append("Content snapshot:")
             lines.append("  selected: \(snapshot.selectedCandidateDescriptor) @ \(snapshot.selectedCandidatePath)")
             lines.append("  content-length: \(snapshot.contentLength)")
+            lines.append("  article-child-count: \(snapshot.articleChildCount)")
             lines.append("  article-children: \(snapshot.articleChildDescriptors.joined(separator: ", "))")
-            lines.append("  leading-blocks: \(snapshot.leadingBlockDescriptors.joined(separator: ", "))")
+            lines.append("  single-wrapper: \(snapshot.usesSingleWrapper ? "yes" : "no")")
+            if let wrapperDescriptor = snapshot.wrapperDescriptor,
+               let wrapperPath = snapshot.wrapperPath {
+                lines.append("  wrapper: \(wrapperDescriptor) @ \(wrapperPath)")
+            }
+            if !snapshot.leadingBlocks.isEmpty {
+                lines.append("  leading-blocks:")
+                for block in snapshot.leadingBlocks {
+                    var line = "    - \(block.descriptor) @ \(block.path)"
+                    line += "  children=\(block.childCount)"
+                    if !block.textPreview.isEmpty {
+                        line += "  text=\"\(block.textPreview)\""
+                    }
+                    lines.append(line)
+                }
+            }
         }
 
         // --- Class weight reference (passes where WEIGHT was active) ---
