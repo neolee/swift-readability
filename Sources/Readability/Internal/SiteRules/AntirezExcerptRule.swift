@@ -51,7 +51,7 @@ enum AntirezExcerptRule: ExcerptSiteRule {
         return currentExcerpt
     }
 
-    private static func collectRawText(from element: Element) -> String {
+    static func collectRawText(from element: Element) -> String {
         func collect(from node: Node, into output: inout String) {
             if let textNode = node as? TextNode {
                 output.append(textNode.getWholeText())

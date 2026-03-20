@@ -24,6 +24,7 @@ enum SiteRuleRegistry {
 
     static func applySerializationRules(to articleContent: Element) throws {
         let rules: [SerializationSiteRule.Type] = [
+            AntirezProsePreRule.self,
             TelegraphCaptionOnlyFigureRule.self,
             CityLabHeadlineTimestampRule.self,
             BuzzFeedLeadImageSuperlistRule.self,
