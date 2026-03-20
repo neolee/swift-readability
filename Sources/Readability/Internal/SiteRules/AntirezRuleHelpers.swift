@@ -81,4 +81,22 @@ enum AntirezRuleHelpers {
         let text = (try? node.text())?.lowercased() ?? ""
         return text.contains("views.")
     }
+
+    static func candidateArticleNodes(in root: Element) -> [Element] {
+        var articles: [Element] = []
+
+        if root.tagName().lowercased() == "article",
+           root.hasAttr("data-comment-id"),
+           root.hasAttr("id") {
+            articles.append(root)
+        }
+
+        if let nested = try? root.select("article[data-comment-id][id]").array() {
+            for article in nested where !articles.contains(where: { $0 === article }) {
+                articles.append(article)
+            }
+        }
+
+        return articles
+    }
 }

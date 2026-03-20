@@ -13,7 +13,7 @@ First production release of the Swift Readability library.
   - `1a23-1`
   - `1a23-2`
   - `1a23-3`
-  - `antirez`
+  - `antirez-1`
 
 ### Changed
 

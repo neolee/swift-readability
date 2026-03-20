@@ -1,0 +1,101 @@
+<!DOCTYPE html><html>
+<head>
+<meta charset="utf-8">
+<title>
+GNU and the AI reimplementations - &lt;antirez&gt;
+</title>
+<meta content="index" name="robots">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="/css/style.css?v=14" rel="stylesheet" type="text/css">
+<link href="/images/favicon.png" rel="shortcut icon">
+<link href="/rss" rel="alternate" type="application/rss+xml">
+<link href="http://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet" type="text/css">
+<script src="/js/jquery.1.6.4.min.js"></script><script src="/js/app.js?v=10"></script>
+</head>
+<body>
+<div id="container">
+<header><h1><a href="/">&lt;antirez&gt;</a></h1><nav></nav> <nav id="account"></nav></header><div id="content">
+<section id="newslist"><article data-news-id="162"><h2><a href="/news/162">GNU and the AI reimplementations</a></h2></article></section><topcomment><article class="comment" style="margin-left:0px" data-comment-id="162-" id="162-"><span class="info"><span class="username"><a href="/user/antirez">antirez</a></span> 12 days ago. 35092 views.  </span><pre>Those who cannot remember the past are condemned to repeat it. A sentence that I never really liked, and what is happening with AI, about software projects reimplementations, shows all the limits of such an idea. Many people are protesting the fairness of rewriting existing projects using AI. But, a good portion of such people, during the 90s, were already in the field: they followed the final part (started in the ‘80s) of the deeds of Richard Stallman, when he and his followers were reimplementing the UNIX userspace for the GNU project. The same people that now are against AI rewrites, back then, cheered for the GNU project actions (rightly, from my point of view – I cheered too).
+
+Stallman is not just a programming genius, he is also the kind of person that has a broad vision across disciplines, and among other things he was well versed in the copyright nuances. He asked the other programmers to reimplement the UNIX userspace in a specific way. A way that would make each tool unique, recognizable, compared to the original copy. Either faster, or more feature rich, or scriptable; qualities that would serve two different goals: to make GNU Hurd better and, at the same time, to provide a protective layer against litigations. If somebody would claim that the GNU implementations were not limited to copying ideas and behaviours (which is legal), but “protected expressions” (that is, the source code verbatim), the added features and the deliberate push towards certain design directions would provide a counter argument that judges could understand.
+
+He also asked to always reimplement the behavior itself, avoiding watching the actual implementation, using specifications and the real world mechanic of the tool, as tested manually by executing it. Still, it is fair to guess that many of the people working at the GNU project likely were exposed or had access to the UNIX source code.
+
+When Linus reimplemented UNIX, writing the Linux kernel, the situation was somewhat more complicated, with an additional layer of indirection. He was exposed to UNIX just as a user, but, apparently, had no access to the source code of UNIX. On the other hand, he was massively exposed to the Minix source code (an implementation of UNIX, but using a microkernel), and to the book describing such implementation as well. But, in turn, when Tanenbaum wrote Minix, he did so after being massively exposed to the UNIX source code. So, SCO (during the IBM litigation) had a hard time trying to claim that Linux contained any protected expressions. Yet, when Linus used Minix as an inspiration, not only was he very familiar with something (Minix) implemented with knowledge of the UNIX code, but (more interestingly) the license of Minix was restrictive, it became open source only in 2000. Still, even in such a setup, Tanenbaum protested about the architecture (in the famous exchange), not about copyright infringement. So, we could reasonably assume Tanenbaum considered rewrites fair, even if Linus was exposed to Minix (and having himself followed a similar process when writing Minix).
+
+# What the copyright law really says
+ 
+To put all this in the right context, let’s zoom in on the copyright&#39;s actual perimeters: the law says you must not copy “protected expressions”. In the case of the software, a protected expression is the code as it is, with the same structure, variables, functions, exact mechanics of how specific things are done, unless they are known algorithms (standard quicksort or a binary search can be implemented in a very similar way and they will not be a violation). The problem is when the business logic of the programs matches perfectly, almost line by line, the original implementation. Otherwise, the copy is lawful and must not obey the original license, as long as it is pretty clear that the code is doing something similar but with code that is not cut &amp; pasted or mechanically translated to some other language, or aesthetically modified just to look a bit different (look: this is exactly the kind of bad-faith maneuver a court will try to identify). I have the feeling that every competent programmer reading this post perfectly knows what a *reimplementation* is and how it looks. There will be inevitable similarities, but the code will be clearly not copied. If this is the legal setup, why do people care about clean room implementations? Well, the reality is: it is just an optimization in case of litigation, it makes it simpler to win in court, but being exposed to the original source code of some program, if the exposition is only used to gain knowledge about the ideas and behavior, is fine. Besides, we are all happy to have Linux today, and the GNU user space, together with many other open source projects that followed a similar path. I believe rules must be applied both when we agree with their ends, and when we don’t.
+
+# AI enters the scene
+
+So, reimplementations were always possible. What changes, now, is the fact they are brutally faster and cheaper to accomplish. In the past, you had to hire developers, or to be enthusiastic and passionate enough to create a reimplementation yourself, because of business aspirations or because you wanted to share it with the world at large.
+
+Now, you can start a coding agent and proceed in two ways: turn the implementation into a specification, and then in a new session ask the agent to reimplement it, possibly forcing specific qualities, like: make it faster, or make the implementation incredibly easy to follow and understand (that’s a good trick to end with an implementation very far from others, given the fact that a lot of code seems to be designed for the opposite goal), or more modular, or resolve this fundamental limitation of the original implementation: all hints that will make it much simpler to significantly diverge from the original design. LLMs, when used in this way, don’t produce copies of what they saw in the past, but yet at the end you can use an agent to verify carefully if there is any violation, and if any, replace the occurrences with novel code.
+
+Another, apparently less rigorous approach, but potentially very good in the real world, is to provide the source code itself, and ask the agent to reimplement it in a completely novel way, and use the source code both as specification and in order to drive the implementation as far as possible away from the code itself. Frontier LLMs are very capable, they can use something even to explicitly avoid copying it, and carefully try different implementation approaches.
+
+If you ever attempted something like the above, you know how the “uncompressed copy” really is an illusion: agents will write the software in a very “organic” way, committing errors, changing design many times because of limitations that become clear only later, starting with something small and adding features progressively, and often, during this already chaotic process, we massively steer their work with our prompts, hints, wishes. Many ideas are consolatory as they are false: the “uncompressed copy” is one of those. But still, now the process of rewriting is so simple to do, and many people are disturbed by this. There is a more fundamental truth here: the nature of software changed; the reimplementations under different licenses are just an instance of how such nature was transformed forever. Instead of combatting each manifestation of automatic programming, I believe it is better to build a new mental model, and adapt.
+
+# Beyond the law
+
+I believe that organized societies prosper if laws are followed, yet I do not blindly accept a rule just because it exists, and I question things based on my ethics: this is what allows individuals, societies, and the law itself to evolve. We must ask ourselves: is the copyright law ethically correct? Does the speed-up AI provides to an existing process, fundamentally change the process itself?
+
+One thing that allowed software to evolve much faster than most other human fields is the fact the discipline is less anchored to patents and protections (and this, in turn, is likely as it is because of a sharing culture around the software). If the copyright law were more stringent, we could likely not have what we have today. Is the protection of single individuals&#39; interests and companies more important than the general evolution of human culture? I don’t think so, and, besides, the copyright law is a common playfield: the rules are the same for all. Moreover, it is not a stretch to say that despite a more relaxed approach, software remains one of the fields where it is simpler to make money; it does not look like the business side was impacted by the ability to reimplement things. Probably, the contrary is true: think of how many businesses were made possible by an open source software stack (not that OSS is mostly made of copies, but it definitely inherited many ideas about past systems). I believe, even with AI, those fundamental tensions remain all valid. Reimplementations are cheap to make, but this is the new playfield for all of us, and just reimplementing things in an automated fashion, without putting something novel inside, in terms of ideas, engineering, functionalities, will have modest value in the long run. What will matter is the exact way you create something: Is it well designed, interesting to use, supported, somewhat novel, fast, documented and useful? Moreover, this time the inbalance of force is in the right direction: big corporations always had the ability to spend obscene amounts of money in order to copy systems, provide them in a way that is irresistible for users (free, for many years, for instance, to later switch model) and position themselves as leaders of ideas they didn’t really invent. Now, small groups of individuals can do the same to big companies&#39; software systems: they can compete on ideas now that a synthetic workforce is cheaper for many.
+
+# We stand on the shoulders of giants
+
+There is another fundamental idea that we all need to internalize. Software is created and evolved as an incremental continuous process, where each new innovation is building on what somebody else invented before us. We are all very quick to build something and believe we “own” it, which is correct, if we stop at the exact code we wrote. But we build things on top of work and ideas already done, and given that the current development of IT is due to the fundamental paradigm that makes ideas and behaviors not covered by copyright, we need to accept that reimplementations are a fair process. If they don’t contain any novelty, maybe they are a lazy effort? That’s possible, yet: they are fair, and nobody is violating anything. Yet, if we want to be good citizens of the ecosystem, we should try, when replicating some work, to also evolve it, invent something new: to specialize the implementation for a lower memory footprint, or to make it more useful in certain contexts, or less buggy: the Stallman way.
+
+In the case of AI, we are doing, almost collectively, the error of thinking that a technology is bad or good for software and humanity in isolation. AI can unlock a lot of good things in the field of open source software. Many passionate individuals write open source because they hate their day job, and want to make something they love, or they write open source because they want to be part of something bigger than economic interests. A lot of open source software is either written in the free time, or with severe constraints on the amount of people that are allocated for the project, or - even worse - with limiting conditions imposed by the companies paying for the developments. Now that code is every day less important than ideas, open source can be strongly accelerated by AI. The four hours allocated over the weekend will bring 10x the fruits, in the right hands (AI coding is not for everybody, as good coding and design is not for everybody). Linux device drivers can be implemented by automatically disassembling some proprietary blob, for instance. Or, what could be just a barely maintained library can turn into a project that can be well handled in a more reasonable amount of time.
+
+Before AI, we witnessed the commodification of software: less quality, focus only on the money, no care whatsoever for minimalism and respect for resources: just piles of mostly broken bloat. More hardware power, more bloat, less care. It was already going very badly. It is not obvious nor automatic that AI will make it worse, and the ability to reimplement other software systems is part of a bigger picture that may restore some interest and sanity in our field.</pre></article></topcomment><div id="disqus_thread_outdiv">
+<div id="disqus_thread"></div>
+</div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'antirezweblog'; // required: replace example with your forum shortname
+
+    // The following are highly recommended additional parameters. Remove the slashes in front to use.
+    var disqus_identifier = 'antirez_weblog_new_162';
+    var disqus_url = 'http://antirez.com/news/162';
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+</div>
+<footer><a href="/rss">rss feed</a> | <a href="http://twitter.com/antirezdotcom">twitter</a> | <a href="https://groups.google.com/forum/?fromgroups#!forum/redis-db">google group</a> | <a href="http://oldblog.antirez.com">old site</a></footer><script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'antirezweblog';
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>:
+
+</div>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-46379280-1', 'antirez.com');
+  ga('send', 'pageview');
+
+</script>
+</body>
+
+</html>

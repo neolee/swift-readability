@@ -7,7 +7,7 @@ import SwiftSoup
 /// - Scope: antirez leading article metadata strip
 /// - Phase: `unwanted` cleanup
 /// - Trigger: `article.comment > span.info` with username link and sibling `<pre>` article body
-/// - Evidence: `ex-pages/antirez`
+/// - Evidence: `ex-pages/antirez-*`
 /// - Risk if misplaced: removes legitimate inline metadata spans on unrelated pages
 enum AntirezLeadingInfoRule: ArticleCleanerSiteRule {
     static let id = "antirez-leading-info"

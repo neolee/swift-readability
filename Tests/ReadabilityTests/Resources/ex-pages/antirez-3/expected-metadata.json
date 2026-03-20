@@ -1,0 +1,6 @@
+{
+  "byline" : "antirez",
+  "length" : 24803,
+  "excerpt" : "I’m taking a few weeks of pause on my HNSWs developments (now working on some other data structure, news soon). At this point, the new type I added to Redis is stable and complete enough, it’s the perfect moment to reason about what I learned about HNSWs, and turn it into a blog post. That kind of brain dump that was so common pre-AI era, and now has become, maybe, a bit more rare. Well, after almost one year of thinking and implementing HNSWs and vector similarity stuff, it is time for some writing. However this is not going to be an intro on HNSWs: too many are present already. This is the “extra mile” instead. If you know HNSWs, I want to share with you my more “advanced” findings, especially in the context of making them fast enough to allow for a “Redis” experience: you know, Redis is designed for low latency and high performance, and HNSWs are kinda resistant to that, so there were challenges to expose HNSWs as an abstract data structure.",
+  "title" : "Scaling HNSWs - <antirez>"
+}

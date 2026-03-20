@@ -6,23 +6,33 @@ import SwiftSoup
 /// SiteRule Metadata:
 /// - Scope: antirez article markdown preformatted body
 /// - Phase: `serialization` cleanup
-/// - Trigger: antirez document with top-level `article[data-comment-id] > pre` body block
-/// - Evidence: `ex-pages/antirez`
+/// - Trigger: extracted `article[data-comment-id][id]` with matching `id`, trailing `-`, and a single top-level prose `<pre>` body
+/// - Evidence: `ex-pages/antirez-*`
 /// - Risk if misplaced: code examples on unrelated pages could be mislabeled as Markdown source
 enum AntirezProsePreRule: SerializationSiteRule {
     static let id = "antirez-prose-pre"
 
     static func apply(to articleContent: Element) throws {
-        guard let page = try serializedAntirezPage(in: articleContent) else {
-            return
-        }
+        for article in AntirezRuleHelpers.candidateArticleNodes(in: articleContent) {
+            let commentID = ((try? article.attr("data-comment-id")) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let articleID = article.id().trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !commentID.isEmpty,
+                  commentID == articleID,
+                  commentID.hasSuffix("-") else {
+                continue
+            }
 
-        for article in try page.select("topcomment > article[data-comment-id][id]") {
             let preBlocks = article.children().array().filter { child in
                 child.tagName().lowercased() == "pre"
             }
 
             guard preBlocks.count == 1, let pre = preBlocks.first else {
+                continue
+            }
+
+            let topLevelElements = article.children().array()
+            guard topLevelElements.count == 1, topLevelElements.first === pre else {
                 continue
             }
 
@@ -38,28 +48,5 @@ enum AntirezProsePreRule: SerializationSiteRule {
 
             try pre.attr("data-readability-pre-type", "markdown")
         }
-    }
-
-    private static func serializedAntirezPage(in articleContent: Element) throws -> Element? {
-        let page: Element
-        if articleContent.id() == "readability-page-1" {
-            page = articleContent
-        } else if let found = try articleContent.select("#readability-page-1").first() {
-            page = found
-        } else {
-            return nil
-        }
-
-        guard let content = try page.select("> div#content").first() else {
-            return nil
-        }
-
-        let hasNewsList = (try? content.select("> section#newslist > article[data-news-id]").isEmpty()) == false
-        let hasTopComment = (try? content.select("> topcomment > article[data-comment-id][id] > pre").isEmpty()) == false
-        guard hasNewsList && hasTopComment else {
-            return nil
-        }
-
-        return page
     }
 }

@@ -141,7 +141,7 @@ Current stable `<pre>` contract:
 - No `data-readability-pre-type`: preserve existing default handling for ordinary `<pre>` blocks.
 
 Current usage:
-- `antirez` emits `data-readability-pre-type="markdown"` on the extracted article-body `<pre>` because the source block contains Markdown prose rather than code.
+- `antirez-1` emits `data-readability-pre-type="markdown"` on the extracted article-body `<pre>` because the source block contains Markdown prose rather than code.
 
 ## Performance and Benchmarking
 

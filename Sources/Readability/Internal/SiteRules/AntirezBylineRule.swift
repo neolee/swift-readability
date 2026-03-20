@@ -7,7 +7,7 @@ import SwiftSoup
 /// - Scope: antirez article header metadata
 /// - Phase: `metadata byline` fallback
 /// - Trigger: `article.comment > span.info` with `span.username > a[href^='/user/']` and sibling `<pre>` body
-/// - Evidence: `ex-pages/antirez`
+/// - Evidence: `ex-pages/antirez-*`
 /// - Risk if misplaced: username-only blocks from unrelated pages could be misread as author byline
 enum AntirezBylineRule: MetadataBylineSiteRule {
     static let id = "antirez-byline"

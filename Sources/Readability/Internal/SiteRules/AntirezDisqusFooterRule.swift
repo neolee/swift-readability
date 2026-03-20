@@ -7,7 +7,7 @@ import SwiftSoup
 /// - Scope: antirez trailing comment promo footer
 /// - Phase: `unwanted` cleanup
 /// - Trigger: trailing `<p>` containing `https://disqus.com/` link and `blog comments powered by Disqus`
-/// - Evidence: `ex-pages/antirez`
+/// - Evidence: `ex-pages/antirez-*`
 /// - Risk if misplaced: could remove legitimate footer links if the exact Disqus promo text is reused elsewhere
 enum AntirezDisqusFooterRule: ArticleCleanerSiteRule {
     static let id = "antirez-disqus-footer"

@@ -7,7 +7,7 @@ import SwiftSoup
 /// - Scope: antirez excerpt fallback for preformatted article bodies
 /// - Phase: `excerpt` fallback
 /// - Trigger: antirez document, no existing excerpt, and article content contains a non-empty `<pre>` body
-/// - Evidence: `ex-pages/antirez`
+/// - Evidence: `ex-pages/antirez-*`
 /// - Risk if misplaced: preformatted non-article blocks could be used as excerpts on unrelated pages
 enum AntirezExcerptRule: ExcerptSiteRule {
     static let id = "antirez-excerpt"
