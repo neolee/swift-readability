@@ -14,6 +14,14 @@ struct ExPagesCompatibilityTests {
         classesToPreserve: ["caption"]
     )
 
+    private func parse(_ testCase: TestLoader.TestCase) throws -> ReadabilityResult {
+        try Readability(
+            html: testCase.sourceHTML,
+            baseURL: testCase.sourceURL,
+            options: defaultOptions
+        ).parse()
+    }
+
     // MARK: - Tests
 
     // MARK: 1a23-1 · Holpxay Calculator (1a23.com)
@@ -24,7 +32,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case '1a23-1'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.title == testCase.expectedMetadata.title)
     }
 
@@ -34,7 +42,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case '1a23-1'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.byline == testCase.expectedMetadata.byline)
     }
 
@@ -44,7 +52,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case '1a23-1'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
@@ -57,7 +65,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case '1a23-2'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.title == testCase.expectedMetadata.title)
     }
 
@@ -67,7 +75,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case '1a23-2'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.byline == testCase.expectedMetadata.byline)
     }
 
@@ -77,7 +85,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case '1a23-2'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
@@ -90,7 +98,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case '1a23-3'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.title == testCase.expectedMetadata.title)
     }
 
@@ -100,7 +108,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case '1a23-3'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.byline == testCase.expectedMetadata.byline)
     }
 
@@ -110,7 +118,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case '1a23-3'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
@@ -123,7 +131,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-1'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.title == testCase.expectedMetadata.title)
     }
 
@@ -133,7 +141,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-1'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.byline == testCase.expectedMetadata.byline)
     }
 
@@ -143,7 +151,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-1'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.excerpt == testCase.expectedMetadata.excerpt)
     }
 
@@ -153,7 +161,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-1'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
@@ -166,7 +174,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-2'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.title == testCase.expectedMetadata.title)
     }
 
@@ -176,7 +184,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-2'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.byline == testCase.expectedMetadata.byline)
     }
 
@@ -186,7 +194,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-2'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.excerpt == testCase.expectedMetadata.excerpt)
     }
 
@@ -196,7 +204,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-2'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
@@ -209,7 +217,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-3'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.title == testCase.expectedMetadata.title)
     }
 
@@ -219,7 +227,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-3'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.byline == testCase.expectedMetadata.byline)
     }
 
@@ -229,7 +237,7 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-3'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
         #expect(result.excerpt == testCase.expectedMetadata.excerpt)
     }
 
@@ -239,7 +247,40 @@ struct ExPagesCompatibilityTests {
             Issue.record("Failed to load test case 'antirez-3'")
             return
         }
-        let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
+
+    // MARK: mariozechner · Thoughts on slowing the fuck down (mariozechner.at)
+
+    @Test("mariozechner - Title matches expected")
+    func testMariozechnerTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "mariozechner", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'mariozechner'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("mariozechner - Excerpt matches expected")
+    func testMariozechnerExcerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "mariozechner", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'mariozechner'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("mariozechner - Content matches expected HTML")
+    func testMariozechnerContent() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "mariozechner", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'mariozechner'")
+            return
+        }
+        let result = try parse(testCase)
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }

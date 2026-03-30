@@ -3,7 +3,7 @@
 // Runs Mozilla Readability.js on a local HTML file and emits JSON to stdout.
 //
 // Usage:
-//   node mozilla-bridge.js <path-to-source.html>
+//   node mozilla-bridge.js <path-to-source.html> [page-url]
 //
 // Requires Node.js. Uses CJS + jsdom (not compatible with Deno).
 // First-time setup: run `npm install` in CLI/scripts/
@@ -20,8 +20,9 @@ const path = require("path");
 const fs   = require("fs");
 
 const sourcePath = process.argv[2];
+const pageURL = process.argv[3];
 if (!sourcePath) {
-  process.stderr.write("Error: missing argument — usage: mozilla-bridge.js <path-to-source.html>\n");
+  process.stderr.write("Error: missing argument — usage: mozilla-bridge.js <path-to-source.html> [page-url]\n");
   process.exit(1);
 }
 
@@ -64,7 +65,11 @@ vc.on("jsdomError", (e) => {
 
 let doc;
 try {
-  doc = new JSDOM(html, { virtualConsole: vc }).window.document;
+  const jsdomOptions = { virtualConsole: vc };
+  if (pageURL) {
+    jsdomOptions.url = pageURL;
+  }
+  doc = new JSDOM(html, jsdomOptions).window.document;
 } catch (e) {
   process.stderr.write("Error parsing HTML: " + e.message + "\n");
   process.exit(1);

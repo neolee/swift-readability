@@ -114,6 +114,8 @@ Outputs:
 - `mozilla-result.json` when Node.js is available
 - `draft-expected-metadata.json` when Mozilla returns extracted content
 
+`parse` uses the original page URL stored in `meta.json` as the document base URL for both Swift and Mozilla runs. This keeps relative `href`, `src`, `srcset`, and similar media URLs resolvable in staged output.
+
 If Mozilla Readability.js returns `null` for a staged page, `parse` no longer fails the whole command. Swift outputs are still written, `mozilla-result.json` records that Mozilla considered the page unreadable, and `review` can still be used with the available columns.
 
 Use `parse` after `inspect` to compare actual rendered extraction results.
@@ -152,6 +154,7 @@ Required staged files before commit:
 Behavior:
 
 - copies finalized files into `Tests/ReadabilityTests/Resources/ex-pages/<case>/`
+- copies `meta.json` too when present, so ex-pages tests can preserve the original page URL
 - prints a ready-to-paste test template for `ExPagesCompatibilityTests.swift`
 - leaves staging files in place until you explicitly clean them
 

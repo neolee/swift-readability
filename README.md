@@ -64,6 +64,12 @@ print(result.title)
 print(result.textContent)
 ```
 
+If your input HTML comes from a remote page and may contain relative `src`, `srcset`, `poster`, or `href` values, pass the original page URL as `baseURL`. Without it, relative media and links cannot be resolved into absolute URLs during serialization. 
+
+Note especially the trailing slash behavior: `https://example.com/article` and `https://example.com/article/` are treated as different base URLs, and the former will not resolve relative URLs in the source HTML that are based on the latter.
+
+Use the final page URL after redirects when possible. 
+
 `Readability` is single-use. Calling `parse()` twice on the same instance throws `ReadabilityError.alreadyParsed`.
 
 ## Diagnostics

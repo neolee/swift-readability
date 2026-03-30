@@ -2,11 +2,16 @@ import Foundation
 
 /// Utility for loading Mozilla test cases
 enum TestLoader {
+    private struct CaseMetadata: Decodable {
+        let url: String
+    }
+
     struct TestCase {
         let name: String
         let sourceHTML: String
         let expectedHTML: String
         let expectedMetadata: TestMetadata
+        let sourceURL: URL?
     }
 
     struct TestMetadata: Codable {
@@ -122,12 +127,22 @@ enum TestLoader {
             let expectedHTML = try String(contentsOf: expectedURL, encoding: .utf8)
             let metadataData = try Data(contentsOf: metadataURL)
             let metadata = try JSONDecoder().decode(TestMetadata.self, from: metadataData)
+            let caseMetaURL = testPageURL.appendingPathComponent("meta.json")
+            let sourcePageURL: URL?
+            if FileManager.default.fileExists(atPath: caseMetaURL.path),
+               let caseMetaData = try? Data(contentsOf: caseMetaURL),
+               let caseMetadata = try? JSONDecoder().decode(CaseMetadata.self, from: caseMetaData) {
+                sourcePageURL = URL(string: caseMetadata.url.trimmingCharacters(in: .whitespacesAndNewlines))
+            } else {
+                sourcePageURL = nil
+            }
 
             return TestCase(
                 name: name,
                 sourceHTML: sourceHTML,
                 expectedHTML: expectedHTML,
-                expectedMetadata: metadata
+                expectedMetadata: metadata,
+                sourceURL: sourcePageURL
             )
         } catch {
             print("Failed to load test case '\(name)': \(error)")

@@ -7,6 +7,11 @@ import Foundation
 import Readability
 import SwiftSoup
 
+private struct StagedCaseMetadata: Decodable {
+    let url: String
+    let fetchedAt: String?
+}
+
 // MARK: - Entry point
 
 @main
@@ -35,6 +40,18 @@ private func stagingCaseDir(for caseName: String) -> URL {
 private func stagingRootDir() -> URL {
     URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         .appendingPathComponent(".staging")
+}
+
+private func loadStagedCaseURL(for caseName: String) -> URL? {
+    let metaURL = stagingCaseDir(for: caseName).appendingPathComponent("meta.json")
+    guard let data = try? Data(contentsOf: metaURL),
+          let metadata = try? JSONDecoder().decode(StagedCaseMetadata.self, from: data) else {
+        return nil
+    }
+
+    let trimmedURL = metadata.url.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedURL.isEmpty else { return nil }
+    return URL(string: trimmedURL)
 }
 
 /// Detect Node.js on $PATH. The bridge script requires Node.js (CJS + jsdom).
@@ -166,10 +183,11 @@ struct Parse: AsyncParsableCommand {
         }
 
         let html = try String(contentsOf: sourceFile, encoding: .utf8)
+        let caseURL = loadStagedCaseURL(for: caseName)
 
         // Swift Readability
         printErr("Swift Readability ...")
-        let result = try Readability(html: html).parse()
+        let result = try Readability(html: html, baseURL: caseURL).parse()
         try result.content.write(
             to: dest.appendingPathComponent("swift-out.html"),
             atomically: true, encoding: .utf8)
@@ -201,9 +219,10 @@ struct Parse: AsyncParsableCommand {
         }
 
         printErr("Mozilla Readability.js (\(runtime.isDeno ? "deno" : "node")) ...")
+        let bridgeInput = [sourceFile.path] + (caseURL.map { [$0.absoluteString] } ?? [])
         let args: [String] = runtime.isDeno
-            ? ["run", "--allow-read", bridgePath.path, sourceFile.path]
-            : [bridgePath.path, sourceFile.path]
+            ? ["run", "--allow-read", bridgePath.path] + bridgeInput
+            : [bridgePath.path] + bridgeInput
 
         let jsProcess = Process()
         jsProcess.executableURL = URL(fileURLWithPath: runtime.path)
@@ -482,8 +501,10 @@ struct Commit: AsyncParsableCommand {
         for (fileName, from) in [
             ("source.html",            sourceFile),
             ("expected.html",          expectedHTML),
-            ("expected-metadata.json", expectedMeta)
+            ("expected-metadata.json", expectedMeta),
+            ("meta.json",              src.appendingPathComponent("meta.json"))
         ] {
+            guard fm.fileExists(atPath: from.path) else { continue }
             let to = destDir.appendingPathComponent(fileName)
             if fm.fileExists(atPath: to.path) { try fm.removeItem(at: to) }
             try fm.copyItem(at: from, to: to)
@@ -505,7 +526,7 @@ struct Commit: AsyncParsableCommand {
                     Issue.record("Failed to load test case '\(caseName)'")
                     return
                 }
-                let result = try Readability(html: testCase.sourceHTML, options: defaultOptions).parse()
+                let result = try Readability(html: testCase.sourceHTML, baseURL: testCase.sourceURL, options: defaultOptions).parse()
                 #expect(result.title == testCase.expectedMetadata.title)
             }
             """)
