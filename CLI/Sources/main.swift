@@ -725,6 +725,29 @@ struct Inspect: AsyncParsableCommand {
             }
         }
 
+        if !report.cleanupSnapshots.isEmpty {
+            lines.append("")
+            lines.append("Cleanup snapshots:")
+            for snapshot in report.cleanupSnapshots {
+                lines.append("  [\(snapshot.stage)]")
+                lines.append("    content-length: \(snapshot.contentLength)")
+                lines.append("    article-child-count: \(snapshot.articleChildCount)")
+                lines.append("    article-children: \(snapshot.articleChildDescriptors.joined(separator: ", "))")
+                if snapshot.leadingBlocks.isEmpty {
+                    continue
+                }
+                lines.append("    leading-blocks:")
+                for block in snapshot.leadingBlocks {
+                    var line = "    - \(block.descriptor) @ \(block.path)"
+                    line += "  children=\(block.childCount)"
+                    if !block.textPreview.isEmpty {
+                        line += "  text=\"\(block.textPreview)\""
+                    }
+                    lines.append(line)
+                }
+            }
+        }
+
         // --- Class weight reference (passes where WEIGHT was active) ---
         let weightPasses = report.passes.filter { $0.activeFlags.contains("WEIGHT") }
         if !weightPasses.isEmpty {

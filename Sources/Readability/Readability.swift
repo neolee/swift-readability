@@ -63,16 +63,64 @@ public struct Readability {
 
         // Extract article content using new ContentExtractor
         let extractor = ContentExtractor(doc: doc, options: options, articleTitle: title, sourceURL: sourceURL, inspectionContext: inspectionContext)
-        let (articleContent, extractedByline, _, articleDir, articleLang) = try extractor.extract()
+        let initialExtraction = try extractor.extract()
 
-        // Post-process with ArticleCleaner
-        let cleaner = ArticleCleaner(options: options)
-        try cleaner.prepArticle(articleContent)
-        try cleaner.postProcessArticle(articleContent)
-        try removeTitleMatchedHeaders(from: articleContent, title: title)
+        func cleanArticleContent(_ articleContent: Element, snapshotPrefix: String? = nil) throws -> String {
+            let cleaner = ArticleCleaner(options: options) { stage, element in
+                let stageName: String
+                if let snapshotPrefix {
+                    stageName = "\(snapshotPrefix).\(stage)"
+                } else {
+                    stageName = stage
+                }
+                inspectionContext?.recordCleanupSnapshot(stage: stageName, articleContent: element)
+            }
+            try cleaner.prepArticle(articleContent)
+            inspectionContext?.recordCleanupSnapshot(
+                stage: snapshotPrefix.map { "\($0).after-prepArticle" } ?? "after-prepArticle",
+                articleContent: articleContent
+            )
+            try cleaner.postProcessArticle(articleContent)
+            inspectionContext?.recordCleanupSnapshot(
+                stage: snapshotPrefix.map { "\($0).after-postProcessArticle" } ?? "after-postProcessArticle",
+                articleContent: articleContent
+            )
+            try removeTitleMatchedHeaders(from: articleContent, title: title)
+            inspectionContext?.recordCleanupSnapshot(
+                stage: snapshotPrefix.map { "\($0).after-removeTitleMatchedHeaders" } ?? "after-removeTitleMatchedHeaders",
+                articleContent: articleContent
+            )
+            return try articleContent.text()
+        }
 
-        // Get text content
-        let textContent = try articleContent.text()
+        var articleContent = initialExtraction.content
+        var extractedByline = initialExtraction.byline
+        var articleDir = initialExtraction.dir
+        var articleLang = initialExtraction.lang
+        var textContent = try cleanArticleContent(articleContent)
+
+        if textContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            for (index, attempt) in extractor.getAttemptsSortedByTextLength().enumerated() {
+                if attempt.articleContent === articleContent {
+                    continue
+                }
+
+                let candidateTextContent = try cleanArticleContent(
+                    attempt.articleContent,
+                    snapshotPrefix: "retry\(index + 1)"
+                )
+                if candidateTextContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    continue
+                }
+
+                articleContent = attempt.articleContent
+                extractedByline = attempt.byline
+                articleDir = attempt.dir
+                articleLang = attempt.lang
+                textContent = candidateTextContent
+                break
+            }
+        }
 
         // Extract excerpt: use metadata if available, otherwise from article
         let excerpt: String?

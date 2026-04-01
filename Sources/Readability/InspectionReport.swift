@@ -113,6 +113,30 @@ public struct InspectionReport: Sendable {
         public let contentLength: Int
     }
 
+    /// Final snapshot after article cleanup and title-header removal.
+    public struct FinalContentSnapshotSummary: Sendable {
+        public struct BlockSummary: Sendable {
+            public let descriptor: String
+            public let path: String
+            public let childCount: Int
+            public let textPreview: String
+        }
+
+        public let contentLength: Int
+        public let articleChildCount: Int
+        public let articleChildDescriptors: [String]
+        public let leadingBlocks: [BlockSummary]
+    }
+
+    /// Snapshot captured at a named cleanup stage.
+    public struct CleanupSnapshotSummary: Sendable {
+        public let stage: String
+        public let contentLength: Int
+        public let articleChildCount: Int
+        public let articleChildDescriptors: [String]
+        public let leadingBlocks: [FinalContentSnapshotSummary.BlockSummary]
+    }
+
     /// Data captured during one complete pass of the multi-pass extraction loop.
     public struct PassAttempt: Sendable {
         /// 1-indexed pass number.
@@ -147,4 +171,10 @@ public struct InspectionReport: Sendable {
 
     /// One entry per pass of the extraction loop, in ascending order.
     public let passes: [PassAttempt]
+
+    /// Final article snapshot after cleanup, before serialization.
+    public let finalContentSnapshot: FinalContentSnapshotSummary?
+
+    /// Intermediate snapshots captured during cleanup.
+    public let cleanupSnapshots: [CleanupSnapshotSummary]
 }

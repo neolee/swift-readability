@@ -5,9 +5,11 @@ import SwiftSoup
 /// Implements Mozilla Readability.js _prepArticle and related methods
 final class ArticleCleaner {
     private let options: ReadabilityOptions
+    private let debugSnapshot: ((String, Element) -> Void)?
 
-    init(options: ReadabilityOptions) {
+    init(options: ReadabilityOptions, debugSnapshot: ((String, Element) -> Void)? = nil) {
         self.options = options
+        self.debugSnapshot = debugSnapshot
     }
 
     private var siteRuleContext: ArticleCleanerSiteRuleContext {
@@ -26,26 +28,38 @@ final class ArticleCleaner {
     func prepArticle(_ articleContent: Element) throws {
         // Remove unwanted elements FIRST (before cleanStyles removes class attributes)
         try removeUnwantedElements(articleContent)
+        debugSnapshot?("prep.removeUnwantedElements", articleContent)
 
         // Clean styles
         try cleanStyles(articleContent)
+        debugSnapshot?("prep.cleanStyles", articleContent)
 
         // Fix lazy images
         try fixLazyImages(articleContent)
         try restoreFigureWrapperMetadataAttributes(articleContent)
+        debugSnapshot?("prep.fixLazyImages", articleContent)
 
         // Match Mozilla prep for form controls.
         try cleanElementsByTag(articleContent, tags: ["input", "textarea", "select", "button"])
+        debugSnapshot?("prep.cleanFormControls", articleContent)
         try removeShortLinkHeavyDivs(articleContent)
+        debugSnapshot?("prep.removeShortLinkHeavyDivs", articleContent)
         try removeRelatedLinkCollectionDivs(articleContent)
+        debugSnapshot?("prep.removeRelatedLinkCollectionDivs", articleContent)
         try SiteRuleRegistry.applyArticleCleanerRules(phase: .preConversion, to: articleContent, context: siteRuleContext)
+        debugSnapshot?("prep.preConversionSiteRules", articleContent)
         try removeSingleItemPromoLists(articleContent)
+        debugSnapshot?("prep.removeSingleItemPromoLists", articleContent)
         try removeEmptyContainerDivs(articleContent)
+        debugSnapshot?("prep.removeEmptyContainerDivs", articleContent)
         try removeShortRoleNoteCallouts(articleContent)
+        debugSnapshot?("prep.removeShortRoleNoteCallouts", articleContent)
 
         // Convert DIVs to Ps where appropriate
         try convertDivsToParagraphs(articleContent)
+        debugSnapshot?("prep.convertDivsToParagraphs", articleContent)
         try collapseSingleDivWrappers(articleContent)
+        debugSnapshot?("prep.collapseSingleDivWrappers", articleContent)
     }
 
     // MARK: - DIV to P Conversion

@@ -85,6 +85,14 @@ final class InspectionContext {
         let textPreview: String
     }
 
+    struct RawFinalContentSnapshot {
+        let stage: String
+        let contentLength: Int
+        let articleChildCount: Int
+        let articleChildDescriptors: [String]
+        let leadingBlocks: [RawContentBlock]
+    }
+
     struct RawPass {
         var passNumber: Int
         var flagBits: UInt32
@@ -104,6 +112,8 @@ final class InspectionContext {
 
     private var passes: [RawPass] = []
     private var currentPass: RawPass?
+    private var finalContentSnapshot: RawFinalContentSnapshot?
+    private var cleanupSnapshots: [RawFinalContentSnapshot] = []
 
     /// Flag bits of the currently active pass (used by CandidateSelector to branch on flag state).
     var currentPassFlagBits: UInt32 { currentPass?.flagBits ?? 0 }
@@ -254,10 +264,63 @@ final class InspectionContext {
         currentPass = nil
     }
 
+    func recordCleanupSnapshot(stage: String, articleContent: Element) {
+        let snapshot = RawFinalContentSnapshot(
+            stage: stage,
+            contentLength: ((try? articleContent.text()) ?? "").count,
+            articleChildCount: articleContent.children().count,
+            articleChildDescriptors: articleContent.children().map(DOMDebugFormatting.conciseElementDescriptor),
+            leadingBlocks: Array(articleContent.children().prefix(8)).map {
+                RawContentBlock(
+                    descriptor: DOMDebugFormatting.conciseElementDescriptor($0),
+                    path: InspectionDOMHelpers.nodePath($0),
+                    childCount: $0.children().count,
+                    textPreview: previewText(for: $0, limit: 80)
+                )
+            }
+        )
+
+        cleanupSnapshots.append(snapshot)
+        finalContentSnapshot = snapshot
+    }
+
     // MARK: - Report Construction
 
     func buildReport(charThreshold: Int) -> InspectionReport {
-        InspectionReport(passes: passes.map { buildPassAttempt($0, charThreshold: charThreshold) })
+        InspectionReport(
+            passes: passes.map { buildPassAttempt($0, charThreshold: charThreshold) },
+            finalContentSnapshot: finalContentSnapshot.map {
+                InspectionReport.FinalContentSnapshotSummary(
+                    contentLength: $0.contentLength,
+                    articleChildCount: $0.articleChildCount,
+                    articleChildDescriptors: $0.articleChildDescriptors,
+                    leadingBlocks: $0.leadingBlocks.map {
+                        InspectionReport.FinalContentSnapshotSummary.BlockSummary(
+                            descriptor: $0.descriptor,
+                            path: $0.path,
+                            childCount: $0.childCount,
+                            textPreview: $0.textPreview
+                        )
+                    }
+                )
+            },
+            cleanupSnapshots: cleanupSnapshots.map {
+                InspectionReport.CleanupSnapshotSummary(
+                    stage: $0.stage,
+                    contentLength: $0.contentLength,
+                    articleChildCount: $0.articleChildCount,
+                    articleChildDescriptors: $0.articleChildDescriptors,
+                    leadingBlocks: $0.leadingBlocks.map {
+                        InspectionReport.FinalContentSnapshotSummary.BlockSummary(
+                            descriptor: $0.descriptor,
+                            path: $0.path,
+                            childCount: $0.childCount,
+                            textPreview: $0.textPreview
+                        )
+                    }
+                )
+            }
+        )
     }
 
     private func buildPassAttempt(_ raw: RawPass, charThreshold: Int) -> InspectionReport.PassAttempt {

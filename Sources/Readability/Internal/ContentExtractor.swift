@@ -691,4 +691,13 @@ final class ContentExtractor {
             return (textLength: attempt.textLength, flags: flagNames.joined(separator: ", "))
         }
     }
+
+    func getAttemptsSortedByTextLength() -> [ExtractionAttempt] {
+        attempts.sorted { lhs, rhs in
+            if lhs.textLength == rhs.textLength {
+                return lhs.flags > rhs.flags
+            }
+            return lhs.textLength > rhs.textLength
+        }
+    }
 }
