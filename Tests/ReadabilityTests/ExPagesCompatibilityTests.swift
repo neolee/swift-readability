@@ -252,6 +252,49 @@ struct ExPagesCompatibilityTests {
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
 
+    // MARK: garymarcus-2 · Three reasons to think that the Claude Mythos announcement from Anthropic was overblown (garymarcus.substack.com)
+
+    @Test("garymarcus-2 - Title matches expected")
+    func testGarymarcus2Title() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-2", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-2'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("garymarcus-2 - Byline matches expected")
+    func testGarymarcus2Byline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-2", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-2'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("garymarcus-2 - Excerpt matches expected")
+    func testGarymarcus2Excerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-2", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-2'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("garymarcus-2 - Content matches expected HTML")
+    func testGarymarcus2Content() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-2", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-2'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
+
     // MARK: mariozechner · Thoughts on slowing the fuck down (mariozechner.at)
 
     @Test("mariozechner - Title matches expected")

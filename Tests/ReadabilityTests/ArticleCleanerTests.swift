@@ -318,6 +318,89 @@ struct ArticleCleanerTests {
         #expect(try article.text().contains("Body paragraph"))
     }
 
+    @Test("prepArticle removes Substack discussion and subscribe footer modules")
+    func testPrepArticleRemovesSubstackDiscussionAndFooter() throws {
+        let html = """
+        <article>
+            <div>
+                <p>Main body paragraph.</p>
+            </div>
+            <div id="discussion">
+                <h4>Discussion about this post</h4>
+                <div id="substack-comments">
+                    <div data-test-id="comment-input">
+                        <form></form>
+                    </div>
+                    <div role="article" aria-label="Comment by reader">
+                        <p>This should not survive extraction.</p>
+                    </div>
+                </div>
+                <a class="more-comments" href="https://example.substack.com/p/example/comments">53 more comments...</a>
+            </div>
+            <div>
+                <h3>Ready for more?</h3>
+                <form action="/api/v1/free?nojs=true" method="post">
+                    <input type="hidden" name="source" value="subscribe_footer">
+                    <input type="email" name="email">
+                </form>
+            </div>
+            <div aria-label="Top Posts Footer" role="region">
+                <p class="portable-archive-empty">No posts</p>
+            </div>
+        </article>
+        """
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let article = try doc.select("article").first()!
+
+        let cleaner = ArticleCleaner(options: .default)
+        try cleaner.prepArticle(article)
+
+        #expect((try article.select("div#discussion").isEmpty()) == true)
+        #expect((try article.text().contains("This should not survive extraction.")) == false)
+        #expect((try article.text().contains("53 more comments")) == false)
+        #expect((try article.text().contains("Ready for more?")) == false)
+        #expect((try article.text().contains("No posts")) == false)
+        #expect((try article.select("form[action*=\"/api/v1/free?nojs=true\"]").isEmpty()) == true)
+        #expect((try article.select("div[aria-label=\"Top Posts Footer\"]").isEmpty()) == true)
+        #expect(try article.text().contains("Main body paragraph."))
+    }
+
+    @Test("postProcessArticle normalizes Substack Twitter2ToDOM widgets")
+    func testPostProcessArticleNormalizesSubstackTwitterEmbed() throws {
+        let html = """
+        <article>
+            <a href="https://x.com/philogroves/status/2042195139477557499?s=61" target="_blank" rel="noopener noreferrer" data-component-name="Twitter2ToDOM">
+                <div data-attrs="{&quot;url&quot;:&quot;https://x.com/philogroves/status/2042195139477557499?s=61&quot;,&quot;full_text&quot;:&quot;Mythos' Firefox exploitation didn't actually have sandbox enabled and built on top of research from Opus. Shocker.&quot;,&quot;username&quot;:&quot;PhiloGroves&quot;,&quot;name&quot;:&quot;Philo Groves&quot;,&quot;profile_image_url&quot;:&quot;https://pbs.substack.com/profile_images/example.jpg&quot;,&quot;date&quot;:&quot;2026-04-09T10:57:18.000Z&quot;,&quot;photos&quot;:[{&quot;img_url&quot;:&quot;https://pbs.substack.com/media/HFdVfKcXsAAu_Xp.jpg&quot;,&quot;link_url&quot;:&quot;https://t.co/xwWUsb82hW&quot;}],&quot;quoted_tweet&quot;:{},&quot;reply_count&quot;:11,&quot;retweet_count&quot;:55,&quot;like_count&quot;:651,&quot;impression_count&quot;:83416,&quot;expanded_url&quot;:null,&quot;video_url&quot;:null,&quot;belowTheFold&quot;:false}">
+                    <div>
+                        <p><span>Philo Groves</span> <span>@PhiloGroves</span></p>
+                    </div>
+                    <p>Mythos' Firefox exploitation didn't actually have sandbox enabled and built on top of research from Opus. Shocker.</p>
+                    <p><img src="https://pbs.substack.com/media/HFdVfKcXsAAu_Xp.jpg" /></p>
+                    <div>
+                        <p><span>10:57 AM · Apr 9, 2026</span> <span> · </span> <span>83.4K Views</span></p>
+                        <p><span>11 Replies</span> <span> · </span> <span>55 Reposts</span> <span> · </span> <span>651 Likes</span></p>
+                    </div>
+                </div>
+            </a>
+        </article>
+        """
+        let doc = try SwiftSoup.parseBodyFragment(html)
+        let article = try doc.select("article").first()!
+
+        let cleaner = ArticleCleaner(options: .default)
+        try cleaner.postProcessArticle(article)
+
+        let blockquote = try article.select("blockquote").first()
+        #expect(blockquote != nil)
+        #expect((try article.select("a[data-component-name=\"Twitter2ToDOM\"]").isEmpty()) == true)
+        #expect((try blockquote?.attr("cite")) == "https://x.com/philogroves/status/2042195139477557499?s=61")
+        #expect(try article.text().contains("Mythos' Firefox exploitation didn't actually have sandbox enabled and built on top of research from Opus. Shocker."))
+        #expect(try article.text().contains("Philo Groves (@PhiloGroves) on X, Apr 9, 2026"))
+        #expect((try article.text().contains("83.4K Views")) == false)
+        #expect((try article.text().contains("55 Reposts")) == false)
+        #expect((try article.select("blockquote img[src=\"https://pbs.substack.com/media/HFdVfKcXsAAu_Xp.jpg\"]").isEmpty()) == false)
+    }
+
     @Test("prepArticle removes view-graphic promo block after gallery cleanup")
     func testPrepArticleRemovesViewGraphicPromoBlock() throws {
         let html = """
