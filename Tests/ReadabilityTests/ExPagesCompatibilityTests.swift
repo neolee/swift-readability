@@ -252,6 +252,49 @@ struct ExPagesCompatibilityTests {
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
 
+    // MARK: garymarcus-1 · The two wildest stories today in tech (garymarcus.substack.com)
+
+    @Test("garymarcus-1 - Title matches expected")
+    func testGarymarcus1Title() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-1'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("garymarcus-1 - Byline matches expected")
+    func testGarymarcus1Byline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-1'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("garymarcus-1 - Excerpt matches expected")
+    func testGarymarcus1Excerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-1'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("garymarcus-1 - Content matches expected HTML")
+    func testGarymarcus1Content() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-1'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
+
     // MARK: garymarcus-2 · Three reasons to think that the Claude Mythos announcement from Anthropic was overblown (garymarcus.substack.com)
 
     @Test("garymarcus-2 - Title matches expected")
