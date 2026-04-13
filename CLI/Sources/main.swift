@@ -28,6 +28,36 @@ private func metadataJSONObject(from result: ReadabilityResult, includeLength: B
     return json
 }
 
+private func failureJSONObject(for error: Error) -> [String: Any] {
+    [
+        "readable": false,
+        "error": String(describing: error)
+    ]
+}
+
+private func printParseFollowUp(caseName: String, swiftSucceeded: Bool, mozillaSucceeded: Bool) {
+    if swiftSucceeded {
+        if !mozillaSucceeded {
+            printErr("Note: Mozilla Readability.js returned null for this page. Swift output was still generated.")
+        }
+        print("Prepare expected.* from the Swift outputs, edit to the intended target state, then commit:")
+        print("  cp .staging/\(caseName)/swift-out.html .staging/\(caseName)/expected.html")
+        print("  cp .staging/\(caseName)/swift-expected-metadata.json .staging/\(caseName)/expected-metadata.json")
+        print("  (edit expected.html / expected-metadata.json as needed)")
+        print("  swift run ReadabilityCLI commit \(caseName)")
+        return
+    }
+
+    if mozillaSucceeded {
+        printErr("Note: Swift Readability failed, but Mozilla produced output for comparison.")
+        printErr("Fix or instrument the Swift extraction before preparing expected fixtures for this case.")
+        return
+    }
+
+    printErr("Note: Neither Swift nor Mozilla produced readable output for this staged source.")
+    printErr("This case likely needs source acquisition or runtime-rendering investigation before fixture promotion.")
+}
+
 // MARK: - Entry point
 
 @main
@@ -200,31 +230,52 @@ struct Parse: AsyncParsableCommand {
 
         let html = try String(contentsOf: sourceFile, encoding: .utf8)
         let caseURL = loadStagedCaseURL(for: caseName)
+        var swiftParseSucceeded = false
 
         // Swift Readability
         printErr("Swift Readability ...")
-        let result = try Readability(html: html, baseURL: caseURL).parse()
-        try result.content.write(
-            to: dest.appendingPathComponent("swift-out.html"),
-            atomically: true, encoding: .utf8)
+        do {
+            let result = try Readability(html: html, baseURL: caseURL).parse()
+            try result.content.write(
+                to: dest.appendingPathComponent("swift-out.html"),
+                atomically: true, encoding: .utf8)
 
-        let swiftMeta = metadataJSONObject(from: result, includeLength: true)
-        let swiftMetaData = try JSONSerialization.data(
-            withJSONObject: swiftMeta,
-            options: [.prettyPrinted, .sortedKeys]
-        )
-        try swiftMetaData.write(to: dest.appendingPathComponent("swift-result.json"))
+            let swiftMeta = metadataJSONObject(from: result, includeLength: true)
+            let swiftMetaData = try JSONSerialization.data(
+                withJSONObject: swiftMeta,
+                options: [.prettyPrinted, .sortedKeys]
+            )
+            try swiftMetaData.write(to: dest.appendingPathComponent("swift-result.json"))
 
-        let swiftExpectedMeta = metadataJSONObject(from: result, includeLength: false)
-        let swiftExpectedMetaData = try JSONSerialization.data(
-            withJSONObject: swiftExpectedMeta,
-            options: [.prettyPrinted, .sortedKeys]
-        )
-        try swiftExpectedMetaData.write(to: dest.appendingPathComponent("swift-expected-metadata.json"))
+            let swiftExpectedMeta = metadataJSONObject(from: result, includeLength: false)
+            let swiftExpectedMetaData = try JSONSerialization.data(
+                withJSONObject: swiftExpectedMeta,
+                options: [.prettyPrinted, .sortedKeys]
+            )
+            try swiftExpectedMetaData.write(to: dest.appendingPathComponent("swift-expected-metadata.json"))
 
-        print("  swift-out.html")
-        print("  swift-result.json")
-        print("  swift-expected-metadata.json")
+            print("  swift-out.html")
+            print("  swift-result.json")
+            print("  swift-expected-metadata.json")
+            swiftParseSucceeded = true
+        } catch {
+            for fileName in ["swift-out.html", "swift-expected-metadata.json"] {
+                let fileURL = dest.appendingPathComponent(fileName)
+                if fm.fileExists(atPath: fileURL.path) {
+                    try fm.removeItem(at: fileURL)
+                }
+            }
+
+            let swiftFailureData = try JSONSerialization.data(
+                withJSONObject: failureJSONObject(for: error),
+                options: [.prettyPrinted, .sortedKeys]
+            )
+            try swiftFailureData.write(to: dest.appendingPathComponent("swift-result.json"))
+
+            print("  swift-result.json  (Swift parse failed)")
+            printErr("Note: Swift Readability failed for this page: \(error)")
+            printErr("Continuing to Mozilla Readability.js for comparison.")
+        }
 
         // Mozilla Readability.js
         guard let runtime = detectJSRuntime() else {
@@ -232,11 +283,7 @@ struct Parse: AsyncParsableCommand {
             printErr("Note: node not found on $PATH. Mozilla comparison skipped.")
             printErr("Install Node.js and re-run 'parse \(caseName)'.")
             printErr("(The bridge script uses CJS + jsdom and requires Node.js.)")
-            print("Prepare expected.* from the Swift outputs, edit to the intended target state, then commit:")
-            print("  cp .staging/\(caseName)/swift-out.html .staging/\(caseName)/expected.html")
-            print("  cp .staging/\(caseName)/swift-expected-metadata.json .staging/\(caseName)/expected-metadata.json")
-            print("  (edit expected.html / expected-metadata.json as needed)")
-            print("  swift run ReadabilityCLI commit \(caseName)")
+            printParseFollowUp(caseName: caseName, swiftSucceeded: swiftParseSucceeded, mozillaSucceeded: false)
             return
         }
 
@@ -292,12 +339,7 @@ struct Parse: AsyncParsableCommand {
 
             print("  mozilla-result.json  (Mozilla returned null)")
             print("")
-            printErr("Note: Mozilla Readability.js returned null for this page. Swift output was still generated.")
-            print("Prepare expected.* from the Swift outputs, edit to the intended target state, then commit:")
-            print("  cp .staging/\(caseName)/swift-out.html .staging/\(caseName)/expected.html")
-            print("  cp .staging/\(caseName)/swift-expected-metadata.json .staging/\(caseName)/expected-metadata.json")
-            print("  (edit expected.html / expected-metadata.json as needed)")
-            print("  swift run ReadabilityCLI commit \(caseName)")
+            printParseFollowUp(caseName: caseName, swiftSucceeded: swiftParseSucceeded, mozillaSucceeded: false)
             return
         }
 
@@ -329,11 +371,16 @@ struct Parse: AsyncParsableCommand {
         print("  mozilla-result.json")
         print("  draft-expected-metadata.json")
         print("")
-        print("Review Swift and Mozilla outputs, then prepare expected.* from the Swift outputs:")
-        print("  cp .staging/\(caseName)/swift-out.html .staging/\(caseName)/expected.html")
-        print("  cp .staging/\(caseName)/swift-expected-metadata.json .staging/\(caseName)/expected-metadata.json")
-        print("  (edit expected.html / expected-metadata.json as needed to reach the intended target state)")
-        print("  swift run ReadabilityCLI commit \(caseName)")
+        if swiftParseSucceeded {
+            print("Review Swift and Mozilla outputs, then prepare expected.* from the Swift outputs:")
+            print("  cp .staging/\(caseName)/swift-out.html .staging/\(caseName)/expected.html")
+            print("  cp .staging/\(caseName)/swift-expected-metadata.json .staging/\(caseName)/expected-metadata.json")
+            print("  (edit expected.html / expected-metadata.json as needed to reach the intended target state)")
+            print("  swift run ReadabilityCLI commit \(caseName)")
+        } else {
+            printErr("Note: Mozilla produced output, but Swift failed for this staged source.")
+            printErr("Use the generated comparison files to debug the Swift extractor before promoting this case.")
+        }
     }
 }
 
