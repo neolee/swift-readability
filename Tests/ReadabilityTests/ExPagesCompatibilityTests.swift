@@ -780,6 +780,69 @@ struct ExPagesCompatibilityTests {
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
 
+    // MARK: soulhacker · 为什么你要学习类型系统 (soulhacker.me)
+
+    @Test("soulhacker - Title matches expected")
+    func testSoulhackerTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "soulhacker", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'soulhacker'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("soulhacker - Byline matches expected")
+    func testSoulhackerByline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "soulhacker", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'soulhacker'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("soulhacker - Excerpt matches expected")
+    func testSoulhackerExcerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "soulhacker", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'soulhacker'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("soulhacker - Site name matches expected")
+    func testSoulhackerSiteName() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "soulhacker", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'soulhacker'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.siteName == testCase.expectedMetadata.siteName)
+    }
+
+    @Test("soulhacker - Published time matches expected")
+    func testSoulhackerPublishedTime() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "soulhacker", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'soulhacker'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.publishedTime == testCase.expectedMetadata.publishedTime)
+    }
+
+    @Test("soulhacker - Content matches expected HTML")
+    func testSoulhackerContent() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "soulhacker", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'soulhacker'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
+
     // MARK: dfarq · Atari ST introduced April 8, 1985 (dfarq.homeip.net)
 
     @Test("dfarq - Title matches expected")

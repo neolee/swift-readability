@@ -6,6 +6,11 @@ import ArgumentParser
 import Foundation
 import Readability
 import SwiftSoup
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#endif
 
 private struct StagedCaseMetadata: Decodable {
     let url: String
@@ -35,10 +40,101 @@ private func failureJSONObject(for error: Error) -> [String: Any] {
     ]
 }
 
-private func printParseFollowUp(caseName: String, swiftSucceeded: Bool, mozillaSucceeded: Bool) {
+private struct RedirectedProcessResult {
+    let terminationStatus: Int32
+    let timedOut: Bool
+    let stdout: Data
+    let stderr: Data
+}
+
+private func runRedirectedProcess(
+    executableURL: URL,
+    arguments: [String],
+    stdoutURL: URL,
+    stderrURL: URL,
+    timeoutSeconds: TimeInterval
+) async throws -> RedirectedProcessResult {
+    let fm = FileManager.default
+    for fileURL in [stdoutURL, stderrURL] {
+        if fm.fileExists(atPath: fileURL.path) {
+            try fm.removeItem(at: fileURL)
+        }
+        guard fm.createFile(atPath: fileURL.path, contents: nil) else {
+            throw ValidationError("Could not create temporary file at \(fileURL.path)")
+        }
+    }
+
+    let stdoutHandle = try FileHandle(forWritingTo: stdoutURL)
+    let stderrHandle = try FileHandle(forWritingTo: stderrURL)
+    defer {
+        try? stdoutHandle.close()
+        try? stderrHandle.close()
+    }
+
+    let process = Process()
+    process.executableURL = executableURL
+    process.arguments = arguments
+    process.standardOutput = stdoutHandle
+    process.standardError = stderrHandle
+
+    try process.run()
+
+    let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
+    let pollNanos: UInt64 = 100_000_000
+    var elapsedNanos: UInt64 = 0
+    var timedOut = false
+
+    while process.isRunning {
+        if elapsedNanos >= timeoutNanos {
+            timedOut = true
+            process.terminate()
+            break
+        }
+        try await Task.sleep(nanoseconds: pollNanos)
+        elapsedNanos += pollNanos
+    }
+
+    if timedOut {
+        var graceNanos: UInt64 = 0
+        let graceLimitNanos: UInt64 = 2_000_000_000
+        while process.isRunning && graceNanos < graceLimitNanos {
+            try await Task.sleep(nanoseconds: pollNanos)
+            graceNanos += pollNanos
+        }
+        if process.isRunning {
+            forceKill(process)
+        }
+    }
+
+    process.waitUntilExit()
+
+    return RedirectedProcessResult(
+        terminationStatus: process.terminationStatus,
+        timedOut: timedOut,
+        stdout: try Data(contentsOf: stdoutURL),
+        stderr: try Data(contentsOf: stderrURL)
+    )
+}
+
+private func forceKill(_ process: Process) {
+#if canImport(Darwin)
+    Darwin.kill(process.processIdentifier, SIGKILL)
+#elseif canImport(Glibc)
+    Glibc.kill(process.processIdentifier, SIGKILL)
+#else
+    process.terminate()
+#endif
+}
+
+private func printParseFollowUp(
+    caseName: String,
+    swiftSucceeded: Bool,
+    mozillaSucceeded: Bool,
+    mozillaFailureNote: String? = nil
+) {
     if swiftSucceeded {
         if !mozillaSucceeded {
-            printErr("Note: Mozilla Readability.js returned null for this page. Swift output was still generated.")
+            printErr("Note: \(mozillaFailureNote ?? "Mozilla Readability.js returned null for this page. Swift output was still generated.")")
         }
         print("Prepare expected.* from the Swift outputs, edit to the intended target state, then commit:")
         print("  cp .staging/\(caseName)/swift-out.html .staging/\(caseName)/expected.html")
@@ -340,7 +436,14 @@ struct Parse: AsyncParsableCommand {
     @Argument(help: "The case name to parse.")
     var caseName: String
 
+    @Option(name: .long, help: "Timeout in seconds for the Mozilla Readability.js bridge. Defaults to 30.")
+    var mozillaTimeout: Double = 30
+
     mutating func run() async throws {
+        guard mozillaTimeout >= 0.1 else {
+            throw ValidationError("--mozilla-timeout must be at least 0.1 seconds.")
+        }
+
         let fm = FileManager.default
         let dest = stagingCaseDir(for: caseName)
         let sourceFile = dest.appendingPathComponent("source.html")
@@ -420,56 +523,113 @@ struct Parse: AsyncParsableCommand {
             ? ["run", "--allow-read", bridgePath.path] + bridgeInput
             : [bridgePath.path] + bridgeInput
 
-        let jsProcess = Process()
-        jsProcess.executableURL = URL(fileURLWithPath: runtime.path)
-        jsProcess.arguments = args
-        let outPipe = Pipe()
-        let errPipe = Pipe()
-        jsProcess.standardOutput = outPipe
-        jsProcess.standardError = errPipe
-        try jsProcess.run()
-        jsProcess.waitUntilExit()
+        let stdoutURL = dest.appendingPathComponent("mozilla-stdout.tmp.json")
+        let stderrURL = dest.appendingPathComponent("mozilla-stderr.tmp.txt")
+        defer {
+            try? fm.removeItem(at: stdoutURL)
+            try? fm.removeItem(at: stderrURL)
+        }
 
-        let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
-        let bridgeMessage = String(data: errData, encoding: .utf8)?
+        let bridgeResult = try await runRedirectedProcess(
+            executableURL: URL(fileURLWithPath: runtime.path),
+            arguments: args,
+            stdoutURL: stdoutURL,
+            stderrURL: stderrURL,
+            timeoutSeconds: mozillaTimeout
+        )
+
+        let bridgeMessage = String(data: bridgeResult.stderr, encoding: .utf8)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !bridgeMessage.isEmpty {
             printErr("JS bridge: \(bridgeMessage)")
         }
 
-        if jsProcess.terminationStatus == 2 {
+        func removeMozillaOutputs() throws {
             for fileName in ["mozilla-out.html", "draft-expected-metadata.json"] {
                 let fileURL = dest.appendingPathComponent(fileName)
                 if fm.fileExists(atPath: fileURL.path) {
                     try fm.removeItem(at: fileURL)
                 }
             }
+        }
 
-            let nullResult: [String: Any] = [
+        func writeMozillaFailure(
+            error: String,
+            suffix: String,
+            note: String? = nil,
+            includeStatus: Bool = true
+        ) throws {
+            try removeMozillaOutputs()
+            var failure: [String: Any] = [
                 "readable": false,
-                "error": bridgeMessage.isEmpty
-                    ? "Readability.parse() returned null — page may not be readable"
-                    : bridgeMessage,
+                "error": error,
+                "timedOut": bridgeResult.timedOut,
+                "stdoutBytes": bridgeResult.stdout.count,
+                "stderrBytes": bridgeResult.stderr.count
             ]
-            let nullResultData = try JSONSerialization.data(
-                withJSONObject: nullResult,
+            if includeStatus {
+                failure["terminationStatus"] = Int(bridgeResult.terminationStatus)
+            }
+            if !bridgeMessage.isEmpty {
+                failure["stderr"] = bridgeMessage
+            }
+            let failureData = try JSONSerialization.data(
+                withJSONObject: failure,
                 options: [.prettyPrinted, .sortedKeys]
             )
-            try nullResultData.write(to: dest.appendingPathComponent("mozilla-result.json"))
+            try failureData.write(to: dest.appendingPathComponent("mozilla-result.json"))
 
-            print("  mozilla-result.json  (Mozilla returned null)")
+            print("  mozilla-result.json  (\(suffix))")
             print("")
-            printParseFollowUp(caseName: caseName, swiftSucceeded: swiftParseSucceeded, mozillaSucceeded: false)
+            printParseFollowUp(
+                caseName: caseName,
+                swiftSucceeded: swiftParseSucceeded,
+                mozillaSucceeded: false,
+                mozillaFailureNote: note
+            )
+        }
+
+        if bridgeResult.timedOut {
+            let seconds = String(format: "%.1f", mozillaTimeout)
+            printErr("Note: Mozilla bridge timed out after \(seconds)s.")
+            try writeMozillaFailure(
+                error: "Mozilla bridge timed out after \(seconds)s.",
+                suffix: "Mozilla timed out",
+                note: "Mozilla bridge timed out. Swift output was still generated."
+            )
             return
         }
 
-        guard jsProcess.terminationStatus == 0 else {
-            throw ValidationError("Mozilla bridge exited with status \(jsProcess.terminationStatus).")
+        if bridgeResult.terminationStatus == 2 {
+            try writeMozillaFailure(
+                error: bridgeMessage.isEmpty
+                    ? "Readability.parse() returned null — page may not be readable"
+                    : bridgeMessage,
+                suffix: "Mozilla returned null"
+            )
+            return
         }
 
-        let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
+        guard bridgeResult.terminationStatus == 0 else {
+            try writeMozillaFailure(
+                error: bridgeMessage.isEmpty
+                    ? "Mozilla bridge exited with status \(bridgeResult.terminationStatus)."
+                    : bridgeMessage,
+                suffix: "Mozilla failed",
+                note: "Mozilla bridge failed. Swift output was still generated."
+            )
+            return
+        }
+
+        let outData = bridgeResult.stdout
         guard var json = try JSONSerialization.jsonObject(with: outData) as? [String: Any] else {
-            throw ValidationError("Could not parse JS bridge output as JSON.")
+            try writeMozillaFailure(
+                error: "Could not parse JS bridge output as JSON.",
+                suffix: "Mozilla output was invalid JSON",
+                note: "Mozilla bridge emitted invalid JSON. Swift output was still generated.",
+                includeStatus: false
+            )
+            return
         }
 
         // Write mozilla-out.html (content only)

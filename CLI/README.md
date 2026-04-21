@@ -34,7 +34,7 @@ Mozilla comparison is optional. If Node.js is missing, Swift output is still gen
 ```bash
 swift run ReadabilityCLI fetch <url> --name <case>
 swift run ReadabilityCLI inspect <case>
-swift run ReadabilityCLI parse <case>
+swift run ReadabilityCLI parse <case> [--mozilla-timeout <seconds>]
 swift run ReadabilityCLI probe-dom --html '<pre><code>...</code></pre>' --selector 'pre code'
 swift run ReadabilityCLI review <case>
 swift run ReadabilityCLI commit <case>
@@ -108,6 +108,12 @@ Runs Swift Readability on a staged case and, when Node.js is available, also run
 swift run ReadabilityCLI parse 1a23-1
 ```
 
+The Mozilla bridge has a default timeout of 30 seconds. Override it when diagnosing unusually large pages:
+
+```bash
+swift run ReadabilityCLI parse 1a23-1 --mozilla-timeout 60
+```
+
 Outputs:
 
 - `swift-out.html`
@@ -122,6 +128,8 @@ Outputs:
 `swift-result.json` is a full Swift-side metadata dump for debugging. `swift-expected-metadata.json` mirrors the fixture schema used by library tests and is intended as the starting point for `expected-metadata.json`.
 
 If Mozilla Readability.js returns `null` for a staged page, `parse` no longer fails the whole command. Swift outputs are still written, `mozilla-result.json` records that Mozilla considered the page unreadable, and `review` can still be used with the available columns.
+
+If the Mozilla bridge exits with an error, emits invalid JSON, or exceeds `--mozilla-timeout`, `parse` writes a structured failure object to `mozilla-result.json` and continues to the usual follow-up instructions instead of hanging or failing the whole command. The bridge stdout and stderr are redirected through temporary files in the staged case directory to avoid pipe backpressure on large Mozilla JSON output.
 
 Use `parse` after `inspect` to compare actual rendered extraction results.
 

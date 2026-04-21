@@ -1,0 +1,575 @@
+<div id="readability-page-1" class="page"><article>
+
+    
+
+    
+      
+
+    
+
+    
+      
+
+    
+
+    <h2 id="前言">前言</h2>
+<p>在本文中，我想向每一位 AI Coding 时代的开发者（尤其主要使用 Python 和 JavaScript 语言的）提出一个重要的建议： <strong>好好学习一门拥有现代化类型系统的静态强类型语言，真正理解编程语言类型系统的奥妙</strong> 。如果你想偷懒，那也可以通过阅读本文来达到一定效果。</p>
+<p>为什么 <strong>类型系统</strong> <em>Type System</em> 如此重要？因为设计良好的类型系统可以在程序编写时发现大部分程序中隐藏的问题，而无需过分依赖程序运行测试。</p>
+<p>在<a href="https://soulhacker.me/posts/good-code">上一篇文章</a>中，我们指出了 AI Coding 时代依然关键的两大挑战：</p>
+<ol>
+<li>通过良好的模块化设计来隔离和控制软件系统的复杂度；</li>
+<li>尽可能降低软件测试和验证的代价。</li>
+</ol>
+<p>第1点我们可以不断推动 <em>coding agent</em> 进行模块化重构来实现；而第2点就更难一些，因为完备的测试永远是很难或很昂贵的，所以最好是在测试前解决尽可能多的问题，而类型系统就是实现这一点的钥匙。如果你还不理解为什么这么说，当你读完本文时就会理解了。</p>
+<p>所以本文的目的是给不熟悉类型系统的朋友展示一个设计良好的类型系统是多么有用（和优雅），为此，我会用 Haskell 语言来作为示例，并与 Python 语言做一些对比。你可能听说过 Haskell 是一种小众且相当难掌握的编程语言，但在本文中，你不需要会 Haskell 语言也能理解我想说明的问题，至少我期望如此。</p>
+<p>在此之前我们先来了解不同编程语言关于类型的一些主要差异点。</p>
+<h2 id="编程语言的类型体系">编程语言的类型体系</h2>
+<p>几乎所有写代码的人都喜欢“编程语言大战”（ <em>War of Programming Languages</em> ）。在这种狂热的论战中，对待类型的差异往往是各编程语言拥趸津津乐道的话题，就算你没有参与过这类论战，也一定听过相关的术语，这些“动态类型”、“静态类型”、“强类型”、“弱类型”到底是什么意思呢？这实际上是两对概念。</p>
+<h3 id="静态类型-vs-动态类型">静态类型 vs 动态类型</h3>
+<p><strong>静态类型</strong> <em>Static Typing</em> 就是语言编译器会检查类型，出现问题根本无法编译，更不用说执行了；而 <strong>动态类型</strong> <em>Dynamic Typing</em> 则只在运行时才检查类型，出现错误就抛出运行时异常。打个比方，静态类型是先买票再上车，不买票不给上；而动态类型是先上车再补票，灵活、随性，但如果上车才发现没带钱，就有可能挨揍，静态类型没有这个风险，上车前摸摸口袋，没钱就回去拿，不会出大问题。</p>
+<p>看代码示例。先看动态编程语言 Python 的：</p>
+<div><pre tabindex="0"><code data-lang="python"><span><span><span>def</span> <span>add</span><span>(</span><span>a</span><span>,</span> <span>b</span><span>):</span>
+</span></span><span><span>    <span>return</span> <span>a</span> <span>+</span> <span>b</span>
+</span></span><span><span>
+</span></span><span><span><span>add</span><span>(</span><span>1</span><span>,</span> <span>2</span><span>)</span>               <span># → 3</span>
+</span></span><span><span><span>add</span><span>(</span><span>"hello"</span><span>,</span> <span>"world"</span><span>)</span>   <span># → "helloworld"</span>
+</span></span><span><span><span>add</span><span>(</span><span>1</span><span>,</span> <span>"2"</span><span>)</span>             <span># → TypeError</span>
+</span></span></code></pre></div><p>Python 在运行时才进行类型检查， <code>a</code> 和 <code>b</code> 可以是任何类型，只要它们可以被 <code>+</code> 操作就可以。 <code>1 + 2</code> 是合法的表达式，所以第一个调用正确运行，返回 <code>3</code> ； <code>"hello" + "world"</code> 也是合法的表达式，所以第二个调用也可以正确运行；但整数 <code>int</code> 和字符串 <code>str</code> 类型不可相加，所以第三个调用将在运行时抛出 <code>TypeError</code> 错误。</p>
+<p>再来看静态编程语言 Haskell 的：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>add</span> <span>::</span> <span>Int</span> <span>-&gt;</span> <span>Int</span> <span>-&gt;</span> <span>Int</span>
+</span></span><span><span><span>add</span> <span>a</span> <span>b</span> <span>=</span> <span>a</span> <span>+</span> <span>b</span>
+</span></span><span><span>
+</span></span><span><span><span>add</span> <span>1</span> <span>2</span>                 <span>-- → 3</span>
+</span></span><span><span><span>add</span> <span>"hello"</span> <span>"world"</span>     <span>-- → Compiling Error</span>
+</span></span><span><span><span>add</span> <span>1</span> <span>"2"</span>               <span>-- → Compiling Error</span>
+</span></span></code></pre></div><p>在 Haskell 中，任何函数都有一个类型“签名”，明确其每个参数以及返回值的类型，上面的例子就定义了 <code>add</code> 函数是接受两个整数 <code>Int</code> 类型参数并返回整数值的函数。有了这些信息，编译器可以很容易识别出下面三个函数调用哪些合法哪些不能通过。</p>
+<p>静态类型是有代价的，为了让编译器（或者其他工具）在运行前就能确定每个变量的类型并检查程序逻辑发现可能的类型错误，通常会要求变量在声明时就指明类型，且类型固定不可改变。</p>
+<p>所以，Python 的灵活性带来运行时风险，Haskell 把这类错误提前到编译期，所以问题是：你愿意为“灵活”付出多少调试时间？</p>
+<p>常见编程语言里，Java、C++、C#、Go、Swift、Rust 还有本文主角 Haskell 都是静态类型语言，而 Python、JavaScript、PHP 等都是动态类型语言。</p>
+<p>TypeScript 语言则比较特殊，它本质上想成为一个静态类型语言，引入了类型声明和静态类型检查，但为了照顾 JavaScript 用户的习惯，允许使用 <code>Any</code> 这样的类型来临时“退出”类型检查，且并未对这样的机制做出足够约束，所以它被称为 <em>Optionally Static Typing Language</em> ，即“可选的静态类型”语言。</p>
+<p>Python 近年通过增加语言特性 <a href="https://peps.python.org/pep-0484/">PEP 484</a> 类型注释（ <em>Type Hints</em> ），配合新的静态类型检查工具如 <a href="https://github.com/python/mypy">mypy</a>、<a href="https://github.com/DetachHead/basedpyright">pyright</a>、Pylance、<a href="https://github.com/astral-sh/ty">ty</a> 等，实现了一部分静态类型检查的能力，但与 TypeScript 类似，这也只是可选的，如果你选择忽略类型警告或者压根不写类型注释，也不影响你运行 Python 程序。还有不少奇技淫巧被开发出来（并被 AI 熟练掌握）用来“绕过”类型警告，比如 <code>Any</code> 、 <code>cast</code> 、 <code>getattr</code> 等等，如果你和 AI 合作开发 Python 应用，并要求 AI 帮你消除类型检查错误，你就一定见识过这些东西。我之前写的<a href="https://github.com/neolee/reversi/blob/main/HUMAN.md">一篇笔记</a>的最后就记录了这样的一些实例。</p>
+<p>下面是使用了类型注释之后的 Python 代码：</p>
+<div><pre tabindex="0"><code data-lang="python"><span><span><span>def</span> <span>add</span><span>(</span><span>a</span><span>:</span> <span>int</span><span>,</span> <span>b</span><span>:</span> <span>int</span><span>)</span> <span>-&gt;</span> <span>int</span><span>:</span>
+</span></span><span><span>    <span>return</span> <span>a</span> <span>+</span> <span>b</span>
+</span></span><span><span>
+</span></span><span><span><span>add</span><span>(</span><span>1</span><span>,</span> <span>2</span><span>)</span>
+</span></span><span><span><span>add</span><span>(</span><span>1</span><span>,</span> <span>"2"</span><span>)</span>
+</span></span></code></pre></div><p>这里我们使用类型注释语法给 <code>add</code> 函数添加了类型签名，有了这些信息之后，Python 的类型检查器会检查代码中的类型问题，并在 <code>"2"</code> 这个不匹配类型签名的地方用红色波浪线标示出来，这样你就知道这里有问题——但你可以不理，坚持就这么运行。如果你让 AI 修改这个错误，有可能它会把代码改成这样：</p>
+<div><pre tabindex="0"><code data-lang="python"><span><span><span>from</span> <span>typing</span> <span>import</span> <span>cast</span>
+</span></span><span><span>
+</span></span><span><span><span>def</span> <span>add</span><span>(</span><span>a</span><span>:</span> <span>int</span><span>,</span> <span>b</span><span>:</span> <span>int</span><span>)</span> <span>-&gt;</span> <span>int</span><span>:</span>
+</span></span><span><span>    <span>return</span> <span>a</span> <span>+</span> <span>b</span>
+</span></span><span><span>
+</span></span><span><span><span>add</span><span>(</span><span>1</span><span>,</span> <span>2</span><span>)</span>
+</span></span><span><span><span>add</span><span>(</span><span>1</span><span>,</span> <span>cast</span><span>(</span><span>int</span><span>,</span> <span>"2"</span><span>))</span>
+</span></span></code></pre></div><p>通过 <code>cast</code> 函数将 <code>"2"</code> 强行转换成类型签名需要的 <code>int</code> 类型，从而消除类型警告。但这其实只是一种“掩饰性”修正，因为 <code>cast</code> 并不真的进行数据的转换，它只是给数据戴了一个伪装帽，让类型检查器以为其类型是对的而已。如果真要转换类型得用 <code>int("2")</code> 这样的方式，但这也有隐患，如果字符串里不是可以转为整数的内容，也会抛出运行时错误。</p>
+<p>所以，虽然 Python 在加强静态类型检查的能力，但一方面它不强制，有可能被忽略，另一方面由于类型转换的存在，也可能使一些隐患被深埋而难以发现。</p>
+<h3 id="强类型-vs-弱类型">强类型 vs 弱类型</h3>
+<p><strong>强类型</strong> <em>Strong Typing</em> 就是不允许隐式类型转换，不匹配的类型通常会报错（编译时或运行时）； <strong>弱类型</strong> <em>Weak Typing</em> 则允许甚至鼓励隐式类型转换，允许不同类型的数据之间的操作，其结果可能难以预测。</p>
+<p>现代语言中弱类型的已经不多了，因为这种特性实在是弊远大于利，但还是有一些例子的，其中最可怕的是 JavaScript 这个应用十分广泛的语言，还有 PHP，以及某些场景下的 C 语言，比如 <code>char</code> 类型某些情况下可以当作 <code>int</code> 类型处理、指针相关的自动类型转换、将 <code>struct</code> 当作 <code>char[]</code> 处理等。</p>
+<p>本文基本不讨论强弱类型问题，因为结论很简单：在需要长期维护的代码项目中应尽量避免使用弱类型语言。C 语言的编译器其实会指出隐式类型转换，而 JavaScript 应该用 TypeScript 代替。</p>
+<h3 id="编程语言阵营与发展趋势">编程语言阵营与发展趋势</h3>
+<p>根据上面两个维度的分类，可以把所有编程语言分为四类：</p>
+<ul>
+<li>静态强类型：Fortran、Pascal、C++、Java、Scala、Kotlin、C#、TypeScript、Swift、Go、Rust、Haskell 等</li>
+<li>动态强类型：Python、Ruby、Lua 等，以及大部分 Lisp 方言如 Scheme、Clojure 等</li>
+<li>静态弱类型：C、Objective-C 等</li>
+<li>动态弱类型：Perl、JavaScript、PHP 等</li>
+</ul>
+<p>所以可以看到，绝大部分现代语言都是强类型，而其中多数是静态类型或提供一定静态类型检查的语言（我下面会把这类系统称为“严格类型”系统）。这并非偶然，而是软件工程数十年实践凝聚成的共识，即严格类型对大规模的软件项目来说能有效提高总体的成功率和效率。而语言的动态特性在探索性编程、快速原型等场景中有优势，比如数据科学、各种脚本等。</p>
+<p>在 AI Coding 时代， <em>coding agents</em> 非常擅长（适合）生成快速、一次性的代码，这类场景下使用动态语言非常合适；而一旦项目规模上去，长期维护、团队协作的需求显著增加，严格类型系统的投入产出比会迅速体现出优势。</p>
+<p>从长期趋势来看，严格类型系统会显著降低 AI Coding 时代的全链路成本：</p>
+<ul>
+<li>问题修复：AI 生成代码量激增，运行时 bug 的修复成本（包括问题定位、事故恢复等）会指数级上升，严格类型把这些成本前移到编译期，对设计良好的严格类型系统，大部分数据抽象、接口设计、跨模块协作方面的错误都能在静态检查中发现。</li>
+<li>代码演进：大型项目中，AI 会频繁重构，强类型保证重构安全（编译通过 ≈ 类型安全）。</li>
+<li>AI 进化：未来的 <em>coding agents</em> 将会更依赖类型系统来“推理”程序正确性；Haskell 的类型系统几乎可以表达“程序证明”逻辑，AI 能更好地利用它生成可靠代码。</li>
+</ul>
+<p>可以大胆预测：未来 5-10 年，主流语言要么大幅强化类型系统（Python 可能继续往这个方向走，但很难追上 Haskell 的深度），要么新项目会更倾向选择 Rust、TypeScript 等严格类型语言，这也是为什么我建议所有人都去学一门严格类型语言的根本原因。</p>
+<p>那为什么我要用 Haskell 作为例子来介绍类型系统而不是 Java、TypeScript 或者 Rust 语言呢？因为：</p>
+<ol>
+<li>Haskell 的类型系统是 <strong>最好</strong> 和 <strong>最完整</strong> 的，是的，这是个很主观的判断，但并非完全主观，不少“现代”编程语言（如 Swift、Rust 等）的类型系统设计确实从 Haskell 中多有借鉴；</li>
+<li>Haskell 在安全和可靠编程领域其实一直有优势，尤其是在程序正确性证明领域，它的主要问题在于一直有着学习曲线陡峭的恶名，但这个问题在 AI Coding 年代可能不是问题了，因为那些麻烦和繁琐的细节 AI 会就行，Haskell 语言应该在这个时代得到更多关注；</li>
+<li>Haskell 的语法虽不常规，但一致性很好，如果不求甚解，其实挺容易看懂，适合本文快速学习的需要。</li>
+</ol>
+<p>下面就来介绍 Haskell 类型系统中的主要特性，这些特性使 Haskell 语言能够提供静态类型的一切优点，同时不必写类似 Python 类型注释那样繁琐难看的代码；针对常见的模式化需求如边界处理、多态等，能写出非常简洁优雅的代码。这些特性无论对人类还是 <em>coding agents</em> 来说，都是相当有价值的。</p>
+<h2 id="haskell-的类型系统">Haskell 的类型系统</h2>
+<p>Haskell 是一种通用的纯函数式编程语言，一直以来以其严谨的数学基础、强大的类型系统和惰性求值等特性闻名。从 1990 年诞生至今，Haskell 语言已经在高可靠性系统、数学与程序证明、数据科学与 AI、编译器开发等领域证明了自己的能力；同时也影响了一批重要的现代编程语言，Rust、Swift、Scala 等语言大量借鉴了 Haskell 的特性（如 <em>Option</em> 和 <em>Maybe</em> 类型、泛型约束等）。</p>
+<p>Haskell 语言的核心特点包括：</p>
+<ul>
+<li>纯函数式 <em>Purely Functional</em> ：所有函数都没有副作用，相同的输入永远产生相同的输出。</li>
+<li>严格而强大的类型系统 <em>Type System</em> ：如前所述，Haskell 拥有极为先进的类型系统，在静态类型基础上提供类型推断、代数数据类型、类型类等功能，能在编译期捕捉绝大多数错误，且通常不需要显式声明类型，同时拥有强大的表达能力。</li>
+<li>惰性求值 <em>Lazy Evaluation</em> ：表达式仅在结果被需要时才进行计算，这允许定义无限数据结构。</li>
+<li>并发与并行 <em>Concurrent and Parallel Computing</em> ：具备内建的并发与并行支持，充分利用纯函数的不可变性 <em>immutability</em> 和无副作用 <em>side effect free</em> 优势，编写多线程程序更加安全简单。</li>
+</ul>
+<p>本文重点介绍其类型系统。作为一种函数式编程语言，Haskell 的程序主要由函数的定义与调用组成，而类型系统提供对各种数据的抽象，与函数抽象相得益彰。</p>
+<p>Haskell 的类型系统力求将静态类型的严格、自动类型推断带来的简洁与强大的语义表达能力融合起来，其主要组成部分包括：</p>
+<ul>
+<li><strong>静态类型</strong> <em>Static Typing</em> ：与 Python 语言的 <em>Type Hints</em> 不同，Haskell 的静态类型系统是语言核心，是强制特性。</li>
+<li><strong>类型推断</strong> <em>Type Inference</em> ：Haskell 的类型推断能够从完全无类型的程序中推断出变量、表达式和函数的类型，使 Haskell 程序的大部分代码并不需要显式声明类型。</li>
+<li><strong>代数数据类型</strong> <em>Algebraic Data Types, ADT</em> 与 <strong>模式匹配</strong> <em>Pattern Matching</em> ：代数数据类型特性允许通过对基本类型的选择与组合定义复杂数据类型，以数学方式清晰描述数据“是什么”以及“包含什么”；而模式匹配可与 <em>ADT</em> 配合，处理其中包含的各种数据及其边界情况。</li>
+<li><strong>类型类</strong> <em>Type Classes</em> ：一种对多态和泛型的简洁优雅的实现。</li>
+</ul>
+<p>除了静态类型以外，这些概念都有非常深刻的数学和逻辑学背景，并不是那么直观，但理解之后一定能对编程的理解上一个台阶。下面我们就来介绍这几个东西。</p>
+<h3 id="类型推断-type-inference">类型推断 Type Inference</h3>
+<p>Haskell 的类型推断基于 <em>Hindley–Milner</em> 算法，这是一个历史悠久且有着深刻数学背景的算法，最早由数学家兼计算机科学家 Haskell Curry 和 Robert Feys 于 1958 年提出，后经 J. Roger Hindley、Robin Milner 和 Luis Damas 的研究与扩展，发展为成熟的 <em>Hindley–Milner</em> 算法并证明了其完备性（就是说这个算法总能推导出最通用的类型）。是的，Haskell 语言的名字就来自 Haskell Curry，这位大前辈的姓和名各命名了一个编程语言。</p>
+<h4 id="例一-算术">例一 算术</h4>
+<p>前面我们有个例子是这么写的：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>add</span> <span>::</span> <span>Int</span> <span>-&gt;</span> <span>Int</span> <span>-&gt;</span> <span>Int</span>
+</span></span><span><span><span>add</span> <span>a</span> <span>b</span> <span>=</span> <span>a</span> <span>+</span> <span>b</span>
+</span></span></code></pre></div><p>第一行中的 <code>::</code> 表示后面是函数 <code>add</code> 的类型签名，签名由箭头 <code>-&gt;</code> 串起来的一组类型构成，前面的类型是输入参数的类型，最后一个则是返回值的类型（实际上比这复杂一点，下面会说）。</p>
+<p>第二行则是函数的定义， <code>add a b</code> 表示函数 <code>add</code> 包含两个输入参数 <code>a</code> 和 <code>b</code> ， <code>=</code> 后面的 <code>a + b</code> 则是函数值的定义。</p>
+<p>其实我们可以省略前面的类型签名，只写函数定义，即：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>add</span> <span>a</span> <span>b</span> <span>=</span> <span>a</span> <span>+</span> <span>b</span>
+</span></span></code></pre></div><p>如果你在编程环境中配置好了 Haskell 环境 <a href="https://www.haskell.org/ghc/">GHC</a>，尤其是配套的语言服务器 <code>hls</code> 的话，它会自动在这行代码上显示类型推断的结果：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>add</span> <span>::</span> <span>Num</span> <span>a</span> <span>=&gt;</span> <span>a</span> <span>-&gt;</span> <span>a</span> <span>-&gt;</span> <span>a</span>
+</span></span></code></pre></div><p>这看上去是个简单的例子，但却需要深入拆分才好理解：</p>
+<ul>
+<li>开头部分的 <code>add ::</code> 和上面我们手写的类型签名没区别，就表示后面是 <code>add</code> 函数的类型签名；</li>
+<li><code>a</code> 是一个“全称量化”的 <strong>类型变量</strong> <em>Type Variable</em> ，这是一个逻辑学中的术语，可以简单理解为表示“任何类型”，类似于其他语言中的泛型 <em>Generic</em> ；</li>
+<li><code>Num a</code> 是一个 <strong>类型类约束</strong> <em>Type Class Constraint</em> ，它规定：虽然 <code>a</code> 可以是任何类型，但这个类型必须实现了 <code>Num</code> 类型类，在 Haskell 标准类型中， <code>Int</code> <code>Integer</code> <code>Float</code> <code>Double</code> 等“数字”类型都实现了 <code>Num</code> 类型类；而如果尝试传入一个字符串，编译器会报错，因为字符串没有实现 <code>Num</code> ；</li>
+<li><code>a -&gt; a -&gt; a</code> 是一个柯里化 <em>Currying</em> 的函数签名，对此要这么理解：
+<ul>
+<li>在 Haskell 中，所有函数在底层都是单参数的；</li>
+<li>这个签名表示 <code>add</code> 是一个函数 <code>α</code> ，它接受一个类型为 <code>a</code> 的参数，返回另一个接受 <code>a</code> 类型参数并返回 <code>a</code> 类型值的函数 <code>β</code> ，函数 <code>α</code> 和 <code>β</code> 组合 <em>compose</em> 起来就是函数 <code>add</code> ；</li>
+<li>简而言之，函数 <code>add</code> 接受两个相同类型 <code>a</code> 的参数，并返回一个相同类型 <code>a</code> 的结果。</li>
+</ul>
+</li>
+</ul>
+<p>那么，它是怎么推断出来的呢？Haskell 的编译器 <code>GHC</code> 就像一个训练有素的侦探，会通过一系列推理过程，通过已知线索逐步推演，大致过程如下：</p>
+<ul>
+<li>第一步：分析函数结构
+<ul>
+<li>编译器看到： <code>add a b = ...</code></li>
+<li>推断： <code>add</code> 是一个函数，接受两个参数</li>
+<li>初步推断签名： <code>add ::</code> <code>t1 -&gt; t2 -&gt; t3</code> ，注意，这时候还不知道这三个具体是什么类型</li>
+</ul>
+</li>
+<li>第二步：分析函数体中的操作符
+<ul>
+<li>编译器看到：函数体使用了 <code>+</code> 操作符</li>
+<li>线索：在 Haskell 的标准库中，加法操作符的定义是： <code>(+) ::</code> <code>Num a ==&gt; a -&gt; a -&gt; a</code></li>
+<li>推断： <code>(+)</code> 要求它的左操作数、右操作数以及返回值必须是同一种类型，且该类型必须实现了 <code>Num</code> 类型类</li>
+</ul>
+</li>
+<li>第三步：建立等价关系，又称 <strong>合一化</strong> <em>Unification</em>
+<ul>
+<li>编译器将 <code>add</code> 的参数与 <code>(+)</code> 的要求进行匹配：
+<ul>
+<li>第一个参数 <code>a</code> 传给了 <code>(+)</code> 的左操作数 → <code>t1</code> 必须等于 <code>a</code></li>
+<li>第二个参数 <code>b</code> 传给了 <code>(+)</code> 的右操作数 → <code>t2</code> 必须等于 <code>a</code></li>
+<li><code>add</code> 的结果是 <code>(+)</code> 的运算结果 → <code>t3</code> 必须等于 <code>a</code></li>
+<li>因为使用了 <code>(+)</code> ，所以 <code>a</code> 必须满足 <code>Num</code> 约束</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>结论：经过上述逻辑整合，编译器得出了最通用的类型定义： <code>add ::</code> <code>Num a =&gt; a -&gt; a -&gt; a</code></li>
+</ul>
+<p>那么，为什么推断结果不是 <code>Int -&gt; Int -&gt; Int</code> 呢？甚至在代码后面写了 <code>add 1 2</code> 这样的调用代码，编译器也不会将 <code>Num a</code> 类型推断成 <code>Int</code> 。这是因为 Haskell 遵循 <strong>最通用类型原则</strong> <em>Principal Type</em> ：既然操作符 <code>+</code> 可以处理小数也可以处理整数，编译器就不会武断地将其限制为特定的 <code>Int</code> ，除非代码中其他地方强制要求它是整数。</p>
+<p>再多看几个别的例子来加强理解。</p>
+<h4 id="例二-元素与列表">例二 元素与列表</h4>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>head</span> <span>(</span><span>x</span><span>:</span><span>xs</span><span>)</span> <span>=</span> <span>x</span>
+</span></span></code></pre></div><p>取列表第一项的函数 <code>head</code> ，函数式编程语言的标配，这个函数的自动类型推断如下：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>head</span> <span>::</span> <span>[</span><span>a</span><span>]</span> <span>-&gt;</span> <span>a</span>
+</span></span></code></pre></div><p>也就是说，函数 <code>head</code> 接受一个任意元素类型的列表 <code>[a]</code> 作为输入，返回一个同元素类型的单一元素作为返回。这是怎么推断出来的呢？</p>
+<p>首先，编译器观察函数的参数部分 <code>(x:xs)</code> ，在 Haskell 中，冒号 <code>:</code> 是列表的 <strong>构造函数</strong> <em>cons operator</em> ，是的，它是个函数，其类型定义为 <code>(:) :: a -&gt; [a] -&gt; [a]</code> ，就是说，列表构造函数 <code>(:)</code> 接受一个类型为 <code>a</code> 的元素和一个类型为 <code>[a]</code> 的列表，返回一个新的类型为 <code>[a]</code> 的列表。</p>
+<p>据此进行推理：</p>
+<ul>
+<li>既然参数写成了 <code>(x:xs)</code> ，说明输入参数必须是一个能够被 <code>:</code> 函数构造的结构；</li>
+<li>因此，输入参数的类型必定是 <code>[t]</code> ，即某种类型的列表，这里把元素类型暂记为 <code>t</code> ；</li>
+<li>根据 <code>:</code> 的定义，拆开后的 <code>x</code> 的类型必然也是 <code>t</code> ，而拆开后的 <code>xs</code> 的类型必然是 <code>[t]</code> 。</li>
+</ul>
+<p>然后，编译器继续观察，函数体（等号右边）返回的是 <code>x</code> ，根据上一步的推理，我们已经知道 <code>x</code> 的类型是 <code>t</code> ，因此整个 <code>head</code> 函数的返回类型就是 <code>t</code> 。</p>
+<p>将输入和返回类型组合起来就是函数签名： <code>[t] -&gt; t</code> 。</p>
+<p>最后进行 <strong>泛化</strong> <em>Generalization</em> 以确保返回最通用的类型。由于在整个函数定义中，没有对 <code>t</code> 进行任何限制（除了列表构造函数 <code>:</code> 以外没有调用其他函数），编译器认为 <code>t</code> 可以是任何类型。按照 Haskell 的习惯，使用小写字母 <code>a</code> 作为类型变量名，于是最后推断结果就是 <code>head :: [a] -&gt; a</code> 。</p>
+<p>所以函数 <code>head</code> 可以接受各种类型的列表，比如下面的调用都是正确的：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>head</span> <span>[</span><span>1</span><span>,</span> <span>2</span><span>,</span> <span>3</span><span>,</span> <span>4</span><span>,</span> <span>5</span><span>]</span>
+</span></span><span><span><span>head</span> <span>"hello"</span>
+</span></span></code></pre></div><p>类型推断自动帮我们实现了多态和泛型的效果。但下面的调用代码无法编译：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>head</span> <span>[</span><span>1</span><span>,</span> <span>"2"</span><span>,</span> <span>3</span><span>,</span> <span>4</span><span>]</span>
+</span></span></code></pre></div><p>但这个错误都没到 <code>head</code> 函数，在列表构造时就出错了，因为列表的构造要求所有元素同类型（见上面列表构造函数 <code>:</code> 的类型定义）。</p>
+<p>列表相关的处理在 Haskell 这样的函数式编程语言中非常常见，真正理解了上面的例子就很容易理解这一类的函数。比如下面这个计算列表长度的函数：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>myLength</span> <span>[]</span> <span>=</span> <span>0</span>
+</span></span><span><span><span>myLength</span> <span>(</span><span>_</span><span>:</span><span>xs</span><span>)</span> <span>=</span> <span>1</span> <span>+</span> <span>myLength</span> <span>xs</span>
+</span></span></code></pre></div><p>这种同一个函数名多个定义的写法称为 <strong>模式匹配</strong> <em>Pattern Matching</em> ，大致可以理解为根据不同的输入匹配不同的函数定义：如果输入一个空列表（ <code>[]</code> ）函数就匹配第一行，返回 <code>0</code> ；如果输入一个非空的列表则匹配第二行，将列表分为头元素（ <code>_</code> ）和后面的部分（ <code>xs</code> ），然后进入递归，函数值等于 <code>xs</code> 的长度加 <code>1</code> 。</p>
+<p>这个函数的类型推断为 <code>myLength :: Num a1 =&gt; [a2] -&gt; a1</code> 。你可以试试自行推演。</p>
+<h4 id="例三-带约束的函数">例三 带约束的函数</h4>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>myMax</span> <span>x</span> <span>y</span> <span>=</span> <span>if</span> <span>x</span> <span>&gt;</span> <span>y</span> <span>then</span> <span>x</span> <span>else</span> <span>y</span>
+</span></span></code></pre></div><p>这是内置函数 <code>max</code> 的一个 <em>mock</em> 版本，定义本身一眼就能看懂，无需解释。它的类型推断如下：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>myMax</span> <span>::</span> <span>Ord</span> <span>a</span> <span>=&gt;</span> <span>a</span> <span>-&gt;</span> <span>a</span> <span>-&gt;</span> <span>a</span>
+</span></span></code></pre></div><p>就是说， <code>myMax</code> 函数接受两个同类型（用类型变量 <code>a</code> 表示）的参数，返回一个同类型的值，但有一个约束条件，这个类型 <code>a</code> 必须实现了类型类 <code>Ord</code> ，这是内置的重要类型类，要求实现大小比较的一系列函数如 <code>&gt;</code> <code>&lt;</code> <code>&gt;=</code> <code>&lt;=</code> <code>max</code> <code>min</code> 等。显然这是因为在函数体中使用了比较函数 <code>&gt;</code> ，而 <code>&gt;</code> 的类型定义是 <code>(&gt;) :: Ord a =&gt; a -&gt; a -&gt; Bool</code> ，据此你应该可以自行推导出编译器的类型推断过程。</p>
+<p>在这些例子中我们可以看到，Haskell 的类型推断可以根据你的函数输入和实现来推断一个最一般的类型签名，实际上是自动帮你提高代码的抽象程度，和精心设计的类型类（详见后）配合起来是非常有力的抽象工具。</p>
+<h4 id="例四-递归函数">例四 递归函数</h4>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>fib</span> <span>0</span> <span>=</span> <span>0</span>
+</span></span><span><span><span>fib</span> <span>1</span> <span>=</span> <span>1</span>
+</span></span><span><span><span>fib</span> <span>n</span> <span>=</span> <span>fib</span> <span>(</span><span>n</span><span>-</span><span>1</span><span>)</span> <span>+</span> <span>fib</span> <span>(</span><span>n</span><span>-</span><span>2</span><span>)</span>
+</span></span></code></pre></div><p>经典递归函数斐波那契数列，函数 <code>fib</code> 的类型推断如下：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>fib</span> <span>::</span> <span>(</span><span>Eq</span> <span>t</span><span>,</span> <span>Num</span> <span>t</span><span>,</span> <span>Num</span> <span>a</span><span>)</span> <span>=&gt;</span> <span>t</span> <span>-&gt;</span> <span>a</span>
+</span></span></code></pre></div><p>这个推断结果是 Haskell 类型系统非常严谨的体现，它将输入类型与输出类型完全解耦，只保留必要的约束。下面我们分步骤拆解这个推断过程。</p>
+<ol>
+<li>识别函数的基本结构：函数定义为 <code>fib n = ...</code> ，接受一个参数，类型记为 <code>t</code> ，返回一个值，类型记为 <code>a</code> ，签名暂时记为 <code>fib :: t -&gt; a</code> 。</li>
+<li>分析输入类型 <code>t</code> 的约束，看函数定义等号左边的部分（模式匹配部分）和递归调用时的参数：
+<ul>
+<li>输入可以为 <code>0</code> 和 <code>1</code> ：
+<ul>
+<li>在 Haskell 中， <code>0</code> 和 <code>1</code> 这样的数字字面量是多态的，可以根据上下文推断为 <code>Int</code> <code>Double</code> 或 <code>Integer</code> ，如果没有进一步的约束，其类型视为 <code>Num n =&gt; n</code> ；</li>
+<li>要判断输入是不是 <code>0</code> ，本质上是在运行时检查 <code>n</code> 是否等于 <code>0</code> ，这就要求输入的类型 <code>t</code> 必须支持相等性比较，即类型类 <code>Eq</code> ；</li>
+<li>综合以上，得到约束 <code>Eq t</code> 和 <code>Num t</code> 。</li>
+</ul>
+</li>
+<li>递归调用中的 <code>(n-1)</code> <code>(n-2)</code> 使用了减法操作符 <code>(-)</code> ，减法要求操作数必须是数字，附加约束 <code>Num t</code> 。</li>
+</ul>
+</li>
+<li>分析输出类型 <code>a</code> 的约束，看函数定义等号右边的部分（返回值部分）：
+<ul>
+<li>基础情况返回 <code>0</code> 或 <code>1</code> ，由上可知返回类型 <code>a</code> 必须是数字类型，即约束 <code>Num a</code> ；</li>
+<li>递归情况返回 <code>fib(...) + fib(...)</code> 使用了加法操作符 <code>(+)</code> ，加法要求左右操作数及结果必须是同一种数字类型，因为 <code>fib</code> 的返回值类型定义为 <code>a</code> ，所以这里是 <code>a + a</code> ，结果类型依然是 <code>a</code> ，附加约束 <code>Num a</code> 。</li>
+</ul>
+</li>
+<li>合一化 <em>Unification</em> ： <code>t</code> 和 <code>a</code> 是不是同一种类型？编译器会自动查找可以合一的证据，也就是寻找有没有哪行代码强制要求“输入”类型必须等于“输出”，而在 <code>fib</code> 函数的定义中：
+<ul>
+<li>输入 <code>n</code> 只参与了模式匹配和减法运算 <code>n-1</code> ；</li>
+<li>输出是递归调用的输出结果相加 <code>fib + fib</code> ；</li>
+<li>所以结论是没有任何操作将输入 <code>n</code> 和输出 <code>fib n</code> 直接联系起来，这两个类型没有联系，无法合一。</li>
+</ul>
+</li>
+</ol>
+<p>综合以上所有的线索：</p>
+<ul>
+<li>输入类型 <code>t</code> 必须满足 <code>Eq t</code> 和 <code>Num t</code> ；</li>
+<li>输出类型 <code>a</code> 必须满足 <code>Num a</code> ；</li>
+<li>函数是从类型 <code>t</code> 到 <code>a</code> 的映射，二者可以不同。</li>
+</ul>
+<p>从而得到上面的推断结果， <code>fib</code> 函数的输入参数可以是任何实现了 <code>Eq</code> 的数字类型，输出任何数字类型。</p>
+<h4 id="例五-高阶函数">例五 高阶函数</h4>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>incrementAll</span> <span>xs</span> <span>=</span> <span>map</span> <span>(</span><span>+</span><span>1</span><span>)</span> <span>xs</span>
+</span></span></code></pre></div><p>函数 <code>incrementAll</code> 使用标准函数 <code>map</code> 对输入列表 <code>xs</code> 中所有元素执行 <code>+1</code> 的操作。这个函数的类型推断为：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>incrementAll</span> <span>::</span> <span>Num</span> <span>b</span> <span>=&gt;</span> <span>[</span><span>b</span><span>]</span> <span>-&gt;</span> <span>[</span><span>b</span><span>]</span>
+</span></span></code></pre></div><p>这个推断的过程比之前的都复杂一些，因为这个函数的定义中使用了两个高阶函数 <code>map</code> 和 <code>+1</code> ，我们来具体分析一下。</p>
+<p>首先编译器分析函数定义中两个关键的部件，即上述两个高阶函数。</p>
+<ul>
+<li>函数 <code>map</code> 的类型为 <code>(a -&gt; b) -&gt; [a] -&gt; [b]</code> ，即接受一个从 <code>a</code> 到 <code>b</code> 的函数，一个类型 <code>a</code> 的列表，返回一个类型 <code>b</code> 的列表；</li>
+<li>函数 <code>(+1)</code> 实质上是一个操作符分段 <em>Section</em> ，其类型就是 <code>+</code> 操作符的类型，即 <code>Num n =&gt; n -&gt; n</code> ；</li>
+</ul>
+<p>接下去编译器按照上面的函数定义把 <code>(+1)</code> 作为第一个参数送进 <code>map</code> 函数，这时发生合一化：</p>
+<ul>
+<li><code>map</code> 的第一个参数是 <code>(a -&gt; b)</code> 的函数；</li>
+<li><code>(+1)</code> 的类型是 <code>Num n ==&gt; n -&gt; n</code> ；</li>
+<li>于是类型 <code>a</code> 和 <code>b</code> 应合一，统一为类型 <code>b</code> 且包含约束 <code>Num b</code> 。</li>
+</ul>
+<p>然后看输入的 <code>xs</code> ，它被用于 <code>map</code> 函数的第二个参数，根据 <code>map</code> 的类型定义和上面已有的推断， <code>xs</code> 类型应为 <code>[b]</code> 。而函数输出是 <code>map (+1) xs</code> 的结果，类型也为 <code>[b]</code> ，这就是上面的最终推断结果。</p>
+<p>当然在实践中我们不会这样定义 <code>incrementAll</code> 函数，更简洁的定义是这样的：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>incrementAll</span> <span>=</span> <span>map</span> <span>(</span><span>+</span><span>1</span><span>)</span>
+</span></span></code></pre></div><p>这里使用函数式编程中的常用方法，把 <code>incrementAll</code> 定义为 <code>map</code> 的一个 <em>partial function</em> ，这样实现后你会惊讶地发现，这次类型推断变成了下面这个样子：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>incrementAll</span> <span>::</span> <span>[</span><span>Integer</span><span>]</span> <span>-&gt;</span> <span>[</span><span>Integer</span><span>]</span>
+</span></span></code></pre></div><p>完全不是前面我们看到的“尽量推断最一般类型”的方式。这其实是 Haskell 编译器的一个默认行为，称为 <strong>单态限制</strong> <em>Monomorphism Restriction</em> ，简单点说就是，像上面这样的 <code>incrementAll</code> 定义不被视为一个新的函数，而被视为一个“值”，编译器默认这种情况下其类型推断不支持多态，不能带有类型类约束，即不能使用诸如 <code>Num b</code> 这样的约束，编译器会看看满足 <code>Num</code> 约束的类型里默认用那个好，最后选择锁定于 <code>Integer</code> 类型。</p>
+<p>如果不想要这个效果，也很简单，自己手写类型签名就行了，自动的类型推断虽好，但并不禁止你推翻它自己来。或者也可以在源代码文件顶部加上 <code>{-# LANGUAGE NoMonomorphismRestriction #-}</code> 编译指令来关闭上述默认行为。在现代 Haskell 实践中，很多开发者都会关闭这个“单态限制”，但在标准中它确实是默认开启的。</p>
+<h4 id="python-实现与对比">Python 实现与对比</h4>
+<p>借助类型注释 <em>Type Hints</em> ，Python 也能实现一部分静态类型的检查，但无法进行自动类型推断，而且要实现抽象的泛型也麻烦不少。比如上面的例子，用 Python 来写，大致是这样的：</p>
+<div><pre tabindex="0"><code data-lang="python"><span><span><span>from</span> <span>typing</span> <span>import</span> <span>List</span><span>,</span> <span>TypeVar</span><span>,</span> <span>Any</span>
+</span></span><span><span>
+</span></span><span><span><span>T</span> <span>=</span> <span>TypeVar</span><span>(</span><span>"T"</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>def</span> <span>my_length</span><span>(</span><span>xs</span><span>:</span> <span>List</span><span>[</span><span>Any</span><span>])</span> <span>-&gt;</span> <span>int</span><span>:</span>
+</span></span><span><span>    <span>if</span> <span>not</span> <span>xs</span><span>:</span>
+</span></span><span><span>        <span>return</span> <span>0</span>
+</span></span><span><span>    <span>return</span> <span>1</span> <span>+</span> <span>my_length</span><span>(</span><span>xs</span><span>[</span><span>1</span><span>:])</span>
+</span></span><span><span>
+</span></span><span><span><span>def</span> <span>my_max</span><span>(</span><span>x</span><span>:</span> <span>Any</span><span>,</span> <span>y</span><span>:</span> <span>Any</span><span>)</span> <span>-&gt;</span> <span>Any</span><span>:</span>
+</span></span><span><span>    <span>return</span> <span>x</span> <span>if</span> <span>x</span> <span>&gt;</span> <span>y</span> <span>else</span> <span>y</span>
+</span></span><span><span>
+</span></span><span><span><span>def</span> <span>fib</span><span>(</span><span>n</span><span>:</span> <span>int</span><span>)</span> <span>-&gt;</span> <span>int</span><span>:</span>
+</span></span><span><span>    <span>if</span> <span>n</span> <span>==</span> <span>0</span><span>:</span>
+</span></span><span><span>        <span>return</span> <span>0</span>
+</span></span><span><span>    <span>if</span> <span>n</span> <span>==</span> <span>1</span><span>:</span>
+</span></span><span><span>        <span>return</span> <span>1</span>
+</span></span><span><span>    <span>return</span> <span>fib</span><span>(</span><span>n</span> <span>-</span> <span>1</span><span>)</span> <span>+</span> <span>fib</span><span>(</span><span>n</span> <span>-</span> <span>2</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>def</span> <span>increment_all</span><span>(</span><span>xs</span><span>:</span> <span>List</span><span>[</span><span>int</span><span>])</span> <span>-&gt;</span> <span>List</span><span>[</span><span>int</span><span>]:</span>
+</span></span><span><span>    <span>return</span> <span>[</span><span>x</span> <span>+</span> <span>1</span> <span>for</span> <span>x</span> <span>in</span> <span>xs</span><span>]</span>
+</span></span></code></pre></div><p>我们把前面的 Haskell 实现也汇总到一起，以便于比较：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>myLength</span> <span>[]</span> <span>=</span> <span>0</span>
+</span></span><span><span><span>myLength</span> <span>(</span><span>_</span><span>:</span><span>xs</span><span>)</span> <span>=</span> <span>1</span> <span>+</span> <span>myLength</span> <span>xs</span>
+</span></span><span><span>
+</span></span><span><span><span>myMax</span> <span>x</span> <span>y</span> <span>=</span> <span>if</span> <span>x</span> <span>&gt;</span> <span>y</span> <span>then</span> <span>x</span> <span>else</span> <span>y</span>
+</span></span><span><span>
+</span></span><span><span><span>fib</span> <span>0</span> <span>=</span> <span>0</span>
+</span></span><span><span><span>fib</span> <span>1</span> <span>=</span> <span>1</span>
+</span></span><span><span><span>fib</span> <span>n</span> <span>=</span> <span>fib</span> <span>(</span><span>n</span><span>-</span><span>1</span><span>)</span> <span>+</span> <span>fib</span> <span>(</span><span>n</span><span>-</span><span>2</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>incrementAll</span> <span>::</span> <span>Num</span> <span>b</span> <span>=&gt;</span> <span>[</span><span>b</span><span>]</span> <span>-&gt;</span> <span>[</span><span>b</span><span>]</span>
+</span></span><span><span><span>incrementAll</span> <span>=</span> <span>map</span> <span>(</span><span>+</span><span>1</span><span>)</span>
+</span></span></code></pre></div><p>你觉得如何？</p>
+<p>第一感是 Haskell 非常简洁直接，而且编译器做了很多事情来确保类型抽象与正确性；而 Python 需要自己写类型定义，而且还有很多细节没做好，比如函数 <code>my_max</code> 中的 <code>Any</code> 类型参数可能并不支持大小比较而导致运行时错误，而函数 <code>fib</code> 中的参数与返回值实际上锁定了单一类型而不支持多态，到处都是的 <code>if...else</code> 也远不如模式匹配简洁优雅。</p>
+<p>当然要熟悉 Haskell 高度数学化、函数式的代码风格需要额外的学习时间，但这对 AI 来说不是问题呀，即使人类，借助一个 AI 助手，在实践中学习像 Haskell 这样历来认为颇有门槛的语言也会容易很多。</p>
+<p>类型推断只是 Haskell 类型系统中的一块拼图（虽然是很基础的一块），下面继续来看代数数据类型和模式匹配。</p>
+<h3 id="代数数据类型-algebraic-data-types">代数数据类型 Algebraic Data Types</h3>
+<p>代数数据类型 <em>ADT</em> 是一个非常有趣的概念，它非常简练同时非常强大，它比 C 语言的结构 <code>struct</code> 功能更丰富，比面向对象抽象更简练，我们还是从一个实例开始吧。</p>
+<h4 id="和类型与积类型">和类型与积类型</h4>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>data</span> <span>Tree</span> <span>a</span> <span>=</span> <span>Empty</span> <span>|</span> <span>Node</span> <span>a</span> <span>(</span><span>Tree</span> <span>a</span><span>)</span> <span>(</span><span>Tree</span> <span>a</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>treeDepth</span> <span>::</span> <span>Tree</span> <span>a</span> <span>-&gt;</span> <span>Int</span>
+</span></span><span><span><span>treeDepth</span> <span>Empty</span> <span>=</span> <span>0</span>
+</span></span><span><span><span>treeDepth</span> <span>(</span><span>Node</span> <span>_</span> <span>left</span> <span>right</span><span>)</span> <span>=</span> <span>1</span> <span>+</span> <span>max</span> <span>(</span><span>treeDepth</span> <span>left</span><span>)</span> <span>(</span><span>treeDepth</span> <span>right</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>sampleTree</span> <span>=</span> <span>Node</span> <span>1</span> <span>(</span><span>Node</span> <span>2</span> <span>Empty</span> <span>Empty</span><span>)</span> <span>(</span><span>Node</span> <span>3</span> <span>Empty</span> <span>Empty</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>main</span> <span>::</span> <span>IO</span> <span>()</span>
+</span></span><span><span><span>main</span> <span>=</span> <span>print</span> <span>(</span><span>treeDepth</span> <span>sampleTree</span><span>)</span>
+</span></span></code></pre></div><p>第一行使用 Haskell 的 <code>data</code> 关键字以递归方式定义了一个表达二叉树的 <em>ADT</em> 。我们来仔细看看它的每一个部分。</p>
+<p>在 <code>data</code> 关键字之后、等号左边的部分说明我们在定义的是什么：</p>
+<ul>
+<li><code>Tree</code> 是这个代数数据类型的名字，用 Haskell 的术语称为 <strong>类型构造器</strong> <em>Type Constructor</em> ；</li>
+<li><code>a</code> 我们前面已经多次见过，是一个类型参数，类似于 Java 和 C++ 语言中的泛型 <code>&lt;T&gt;</code> ；</li>
+<li><code>Tree a</code> 合起来表示“一个存放 <code>a</code> 类型元素的树”，这才是一个完整的类型，你不能在代码中直接创建一个叫 Tree 的值，它只存在于类型声明中（比如函数签名）。</li>
+</ul>
+<p>而等号右边则表示我们定义的类型里可以有什么：</p>
+<ul>
+<li>符号 <code>|</code> 表示“或”，它两边的 <code>Empty</code> 和 <code>Node</code> 表示 <code>Tree</code> 类型可以通过两种方式来构造自己的数据，所以这里的 <code>Empty</code> 和 <code>Node</code> 被称为 <strong>数据构造器</strong> <em>Data Constructors</em> ，它们是用来创建实际值的函数；</li>
+<li><code>Empty</code> 表示一棵空树，它不带任何参数，既是一个构造器也是一个常量值；</li>
+<li><code>Node</code> 表示一个包含数据的节点，它接收三个参数：一个 <code>a</code> 类型的数据，左子树 <code>Tree a</code> ，右子树 <code>Tree a</code> ；在内存中，Node 就像一个容器，把这三个东西打包在一起。</li>
+</ul>
+<p>打个比方，可能更好理解类型构造器 <code>Tree</code> 和数据构造器 <code>Empty</code> <code>Node</code> ：</p>
+<ul>
+<li><code>Tree</code> 就像是菜单上的某种套餐名；</li>
+<li><code>Empty</code> 和 <code>Node</code> 则是套餐里二选一的菜品，你可以点一份 <code>Empty</code> 也可以点一份 <code>Node</code> 并在里面塞上肉和两份小菜（子树）。</li>
+</ul>
+<p>一个 <em>ADT</em> 可以包含用符号 <code>|</code> 隔开的多个数据构造器，这些数据构造器称为 <em>ADT</em> 的 <strong>和类型</strong> <em>Sum Types</em> ，表示它们之间是 <em>OR</em> 的多选一关系；而每一个数据构造器内部可以包含多个不同类型，如 <code>Node a (Tree a) (Tree a)</code> 表示组合一个类型 <code>a</code> 的值加两个 <code>Tree a</code> 类型的值，这几个组合在一起的类型称为 <strong>积类型</strong> <em>Product Types</em> ，表示它们是 <em>AND</em> 的全包含关系。</p>
+<p>每一个 ADT 的定义都可以用 <em>OR</em> 来指定任意种可能的方案，每种方案可以用 <em>AND</em> 来指定其中包含哪些内容，这种简单的组合可以定义出任意所需的复合类型，就好像数学里只要有了加和乘就能定义任何多项式一样，这就是 <em>ADT</em> 的魅力。</p>
+<p>另外我们也可以注意到， <em>ADT</em> 支持递归定义，可以在定义中使用正在定义的类型 <code>Tree</code> 本身。</p>
+<p>有了类型的定义，下面就可以定义对其操作的函数，比如这里作为例子的 <code>treeDepth</code> ，接受一个 <code>Tree a</code> 类型的输入，输出树的深度（类型为 <code>Int</code> ），这个函数通过 <strong>模式匹配</strong> <em>Pattern Matching</em> 来处理 <code>Tree</code> 类型的不同分支：</p>
+<ul>
+<li>如果输入的是 <code>Empty</code> 构造的值，直接返回 <code>0</code> ；</li>
+<li>如果输入的是 <code>Node</code> 构造的值，则使用递归方式比较左右子树深度，取其大者并加 <code>1</code> 。</li>
+</ul>
+<p>注意，这两个分支是强制的，缺一不可，任一个分支未处理都会导致编译错误。</p>
+<p>顺便，这里我们直接手写了类型签名，因为我们完全清楚这个函数的输入输出类型，可以精确的限定，如果交给自动类型推断，出来的结果可能会更宽泛，并不是我们想要的。你可以去掉手写签名看看区别。</p>
+<p>后面我们用 <code>Node</code> 数据构造器构造了一个 <code>Tree Int</code> 类型的值 <code>sampleTree</code> ，注意这里 <code>Node</code> 完全就是函数的用法： <code>(Node 2 Empty Empty)</code> 和 <code>(Node 3 Empty Empty)</code> 构造了两个叶子节点（左右子树都是 <code>Empty</code> ），然后 <code>Node 1 (...) (...)</code> 将它们挂在父节点 <code>1</code> 下面。</p>
+<p>下面的 <code>main</code> 函数是程序的主入口（就像 C 语言的 <code>main()</code> 函数一样），里面调用 <code>treeDepth</code> 函数计算 <code>sampleTree</code> 的深度。</p>
+<p>上面的 <code>main :: IO ()</code> 使 <code>main</code> 函数可以使用带有副作用的 IO 函数如 <code>print</code> ，这里涉及到 Haskell 的另外一个核心特征即 <strong>纯函数</strong> <em>Pure Functions</em> ，就不在这里展开了。</p>
+<p>如果要用 Python 实现二叉树数据结构，大致会是下面这样：</p>
+<div><pre tabindex="0"><code data-lang="python"><span><span><span>from</span> <span>typing</span> <span>import</span> <span>Union</span>
+</span></span><span><span><span>from</span> <span>dataclasses</span> <span>import</span> <span>dataclass</span>
+</span></span><span><span><span>from</span> <span>typing</span> <span>import</span> <span>Optional</span>
+</span></span><span><span>
+</span></span><span><span><span>@dataclass</span>
+</span></span><span><span><span>class</span> <span>Tree</span><span>[</span><span>T</span><span>]:</span>
+</span></span><span><span>    <span>value</span><span>:</span> <span>T</span>
+</span></span><span><span>    <span>left</span><span>:</span> <span>Optional</span><span>[</span><span>'Tree[T]'</span><span>]</span> <span>=</span> <span>None</span>
+</span></span><span><span>    <span>right</span><span>:</span> <span>Optional</span><span>[</span><span>'Tree[T]'</span><span>]</span> <span>=</span> <span>None</span>
+</span></span><span><span>
+</span></span><span><span><span>def</span> <span>tree_depth</span><span>(</span><span>tree</span><span>:</span> <span>Optional</span><span>[</span><span>Tree</span><span>[</span><span>T</span><span>]])</span> <span>-&gt;</span> <span>int</span><span>:</span>
+</span></span><span><span>    <span>if</span> <span>tree</span> <span>is</span> <span>None</span><span>:</span>
+</span></span><span><span>        <span>return</span> <span>0</span>
+</span></span><span><span>    <span>return</span> <span>1</span> <span>+</span> <span>max</span><span>(</span><span>tree_depth</span><span>(</span><span>tree</span><span>.</span><span>left</span><span>),</span> <span>tree_depth</span><span>(</span><span>tree</span><span>.</span><span>right</span><span>))</span>
+</span></span></code></pre></div><p>与 Haskell 的版本相比，主要问题仍然是非强制，以及缺乏强制穷举的手段。</p>
+<h4 id="语义与类型安全">语义与类型安全</h4>
+<p><em>ADT</em> 还可以用于构建语义丰富而类型安全的代码。比如我们在构建一个物理学相关的系统，里面有距离、时间、速度等物理量，在计算机里都是用浮点数来表示的，但其含义并不一样：</p>
+<ul>
+<li>我们可以把两个距离相加，但不能把距离和时间相加；</li>
+<li>我们可以用距离除以时间得到速度，但不能用距离去乘时间，等等。</li>
+</ul>
+<p>你不妨思考一下在你喜欢的编程语言中如何实现这样的数据类型，下面是 Haskell 的方案：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>newtype</span> <span>Meter</span> <span>=</span> <span>Meter</span> <span>Double</span> <span>deriving</span> <span>(</span><span>Num</span><span>,</span> <span>Show</span><span>)</span>
+</span></span><span><span><span>newtype</span> <span>Second</span> <span>=</span> <span>Second</span> <span>Double</span> <span>deriving</span> <span>(</span><span>Num</span><span>,</span> <span>Show</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>velocity</span> <span>(</span><span>Meter</span> <span>m</span><span>)</span> <span>(</span><span>Second</span> <span>s</span><span>)</span> <span>=</span> <span>m</span> <span>/</span> <span>s</span>
+</span></span><span><span>
+</span></span><span><span><span>-- invalid = Meter 10 + Second 5  -- Compiling Error</span>
+</span></span><span><span>
+</span></span><span><span><span>main</span> <span>::</span> <span>IO</span> <span>()</span>
+</span></span><span><span><span>main</span> <span>=</span> <span>do</span>
+</span></span><span><span>  <span>let</span> <span>distance</span> <span>=</span> <span>Meter</span> <span>100</span>
+</span></span><span><span>      <span>time</span> <span>=</span> <span>Second</span> <span>9.58</span>
+</span></span><span><span>      <span>speed</span> <span>=</span> <span>velocity</span> <span>distance</span> <span>time</span>
+</span></span><span><span>  <span>putStrLn</span> <span>$</span> <span>"Velocity: "</span> <span>++</span> <span>show</span> <span>speed</span> <span>++</span> <span>" m/s"</span>
+</span></span></code></pre></div><p>关键字 <code>newtype</code> 提供介于 <code>type</code> （定义类型别名）和 <code>data</code> （定义代数数据类型）之间的一种能力：</p>
+<ul>
+<li><code>type</code> <em>Type Alias</em> ：只是给已经存在的类型取个外号。比如 <code>type Meter = Double</code> ，编译器会把 <code>Meter</code> 和 <code>Double</code> 看作完全一样的东西，你可以把它们随意进行运算，这不安全；</li>
+<li><code>data</code> <em>Data Type</em> ：创建一个全新的数据类型结构，在运行时，它会有一个包装成本，在我们这个需求里并不需要；</li>
+<li><code>newtype</code> ：零成本抽象，它在编译时创建一个全新的类型，让 <code>Meter</code> 和 <code>Double</code> 互不通用，但在运行时，它会被完全脱掉，直接当作 <code>Double</code> 处理，这既保证了语义上的类型安全性，又没有任何运行性能损失。</li>
+</ul>
+<p>上面代码的前两行定义了两个这样的 <code>newtype</code> ，以第一行 <code>newtype Meter = Meter Double</code> 为例：</p>
+<ul>
+<li>第一个 <code>Meter</code> 是类型构造器，用于类型签名；</li>
+<li>第二个 <code>Meter</code> 是数据构造器，用于在代码里创建值；</li>
+<li><code>Double</code> 是底层实际存储数据的数据类型。</li>
+</ul>
+<p>你一定还记得加法操作符的类型定义是 <code>(+) :: Num a =&gt; a -&gt; a -&gt; a</code> ，也就是说只要是两个相同数字类型的值就可以相加。</p>
+<p>如果直接用 <code>Double</code> 类型来保存所有值，你可能不小心把 <code>10米</code> 和 <code>5秒</code> 相加，编译器不会报错；但当我们像上面那样定义了 <code>Meter</code> 和 <code>Second</code> 类型之后，它们就成了不同类型的值，如果你想把 <code>10米</code> 和 <code>5秒</code> 相加：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>invalid</span> <span>=</span> <span>Meter</span> <span>10</span> <span>+</span> <span>Second</span> <span>5</span>
+</span></span></code></pre></div><p>就会出现编译错误。这就从底层防止了“物理单位混用”的逻辑错误，而且没有任何运行时开销。</p>
+<p>你一定很好奇，上面定义 <code>newtype</code> 的代码中，最后的 <code>deriving (Num, Show)</code> 是什么？这是另一个类型类带来的“魔法”，它让新定义的类型可以继承原类型的某些特性：</p>
+<ul>
+<li><code>Show</code> 让这个类型可以被转换成字符串（支持 <code>show</code> 函数）；</li>
+<li><code>Num</code> 自动获得数字的特性，即加减乘除，通过 <code>deriving Num</code> Haskell 会把底层的 <code>Double</code> 类型支持的加法逻辑自动借给 <code>Meter</code> 使用。</li>
+</ul>
+<p>在此基础上，我们就可以定义 <code>velocity</code> 这样的函数，用距离除以时间来得到速度，并对这些值的类型做出严格限制。这个函数的类型经过自动推断确定为 <code>velocity :: Meter -&gt; Second -&gt; Double</code> 。最后的 <code>main</code> 函数里是实际调用的代码示例。</p>
+<p>有意思的是，Python 正在加强的类型系统中直接借鉴了 Haskell 的这个 <code>newtype</code> 能力，叫作 <code>NewType</code> 。用 Python 实现类似上面代码的功能，大致是这个样子：</p>
+<div><pre tabindex="0"><code data-lang="python"><span><span><span>from</span> <span>typing</span> <span>import</span> <span>NewType</span>
+</span></span><span><span>
+</span></span><span><span><span>Meter</span> <span>=</span> <span>NewType</span><span>(</span><span>'Meter'</span><span>,</span> <span>float</span><span>)</span>
+</span></span><span><span><span>Second</span> <span>=</span> <span>NewType</span><span>(</span><span>'Second'</span><span>,</span> <span>float</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>def</span> <span>velocity</span><span>(</span><span>m</span><span>:</span> <span>Meter</span><span>,</span> <span>s</span><span>:</span> <span>Second</span><span>)</span> <span>-&gt;</span> <span>float</span><span>:</span>
+</span></span><span><span>    <span>return</span> <span>m</span> <span>/</span> <span>s</span>
+</span></span><span><span>
+</span></span><span><span><span>d</span> <span>=</span> <span>Meter</span><span>(</span><span>100.0</span><span>)</span>
+</span></span><span><span><span>t</span> <span>=</span> <span>Second</span><span>(</span><span>9.58</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>velocity</span><span>(</span><span>t</span><span>,</span> <span>d</span><span>)</span>
+</span></span></code></pre></div><p>上面代码的最后一行会被 Python 的静态类型检查标出有错，因为输入参数顺序错了。这段 Python 代码和 Haskell 代码几乎一样，除了因为没有类型类而少了一层抽象。</p>
+<h4 id="结构化异常处理">结构化异常处理</h4>
+<p><em>ADT</em> 还可以用于实现结构化的异常处理。Haskell 提供了两种类型来处理可能失败的值，分别是 <code>Maybe a</code> 和 <code>Either a b</code> ，前者用于只关心是否有值而不关心出错细节的场合，后者则在失败时携带额外的错误信息。我们这里只说一下 <code>Either</code> ，它是用 <em>ADT</em> 实现的，其定义和用法大致如下：</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>data</span> <span>Either</span> <span>a</span> <span>b</span> <span>=</span> <span>Left</span> <span>a</span> <span>|</span> <span>Right</span> <span>b</span>
+</span></span><span><span>
+</span></span><span><span><span>safeParse</span> <span>::</span> <span>String</span> <span>-&gt;</span> <span>Either</span> <span>String</span> <span>Int</span>
+</span></span><span><span><span>safeParse</span> <span>s</span> <span>=</span> <span>if</span> <span>all</span> <span>isDigit</span> <span>s</span> <span>then</span> <span>Right</span> <span>(</span><span>read</span> <span>s</span><span>)</span> <span>else</span> <span>Left</span> <span>"Not a number"</span>
+</span></span><span><span>
+</span></span><span><span><span>handleParse</span> <span>::</span> <span>Either</span> <span>String</span> <span>Int</span> <span>-&gt;</span> <span>String</span>
+</span></span><span><span><span>handleParse</span> <span>(</span><span>Left</span> <span>err</span><span>)</span> <span>=</span> <span>"Error: "</span> <span>++</span> <span>err</span>
+</span></span><span><span><span>handleParse</span> <span>(</span><span>Right</span> <span>n</span><span>)</span> <span>=</span> <span>"Success: "</span> <span>++</span> <span>show</span> <span>n</span>
+</span></span></code></pre></div><p>可以看到， <code>Either</code> 是一个简单的 <em>ADT</em> ，它包含两个和类型：如果处理失败就使用 <code>Left</code> 数据构造器，把错误信息放进去；如果处理成功就使用 <code>Right</code> 数据构造器，把处理结果放进去。</p>
+<p>下面定义了两个使用 <code>Either</code> 的函数例子：</p>
+<ul>
+<li>函数 <code>safeParse</code> 尝试把一个字符串转换为整数，如果字符串里内容全是数字，可以成功转换，就用 <code>Right</code> 装好转换出来的整数返回，否则就用 <code>Left</code> 装好出错信息返回；</li>
+<li>函数 <code>handleParse</code> 拿到 <code>safeParse</code> 返回的 <code>Either</code> 类型值，通过模式匹配分别处理两种情况。</li>
+</ul>
+<p>其中 <code>handleParse</code> 使用了模式匹配，它是一种更简洁优雅的 <code>if...else</code> 或 <code>switch</code> 或 <code>match...case</code> ，当函数的输入参数包含多种不同数据构造器时，根据不同的构造器匹配不同的处理代码。</p>
+<p>如前所述，如果 <code>handleParse</code> 定义时只处理了 <code>Left</code> 或者 <code>Right</code> 中的一种，编译器也会报错。Haskell 强制处理所有 <em>ADT</em> 分支是一种非常安全的策略。</p>
+<p>如果要用 Python 模拟 <code>Either</code> 的效果，大致会写成这样：</p>
+<div><pre tabindex="0"><code data-lang="python"><span><span><span>def</span> <span>safe_parse</span><span>(</span><span>s</span><span>):</span>
+</span></span><span><span>    <span>try</span><span>:</span>
+</span></span><span><span>        <span>return</span> <span>int</span><span>(</span><span>s</span><span>)</span>
+</span></span><span><span>    <span>except</span> <span>ValueError</span><span>:</span>
+</span></span><span><span>        <span>return</span> <span>"Not a number"</span>
+</span></span><span><span>
+</span></span><span><span><span>def</span> <span>handle_parse</span><span>(</span><span>result</span><span>):</span>
+</span></span><span><span>    <span>if</span> <span>isinstance</span><span>(</span><span>result</span><span>,</span> <span>str</span><span>):</span>
+</span></span><span><span>        <span>return</span> <span>f</span><span>"Error: </span><span>{</span><span>result</span><span>}</span><span>"</span>
+</span></span><span><span>    <span>return</span> <span>f</span><span>"Success: </span><span>{</span><span>result</span><span>}</span><span>"</span>
+</span></span></code></pre></div><p>这里利用了 Python 函数返回值类型可以不进行限制的特点，但这也隐含了风险。</p>
+<h3 id="类型类-type-classes">类型类 Type Classes</h3>
+<p><strong>类型类</strong> <em>Type Classes</em> 是一种定义行为 <strong>多态</strong> <em>Polymorphism</em> 的强大机制，主要用于实现面向行为或面向能力的零成本抽象（相比于面向对象语言常有的内存中的巨大对象实体），与 C++ 的 <em>abstract class</em> 、Java 和 Objective-C 的 <em>interface</em> 有功能上的类似之处，但最接近的概念是 Scala、Rust 等语言中的 <em>trait</em> ，这并非偶然，因为 Rust 的整个类型系统就主要借鉴自 Haskell。Python 目前同时支持抽象类 <code>abc.ABC</code> 和类似 <em>trait</em> 的 <code>typing.Protocol</code> ，后者比较接近 Haskell 的类型类。</p>
+<p>Haskell 的类型类非常有助于泛型编程，编写适用于多种类型的通用函数，同时支持编译时的强类型检查，实现安全可靠的代码复用与模块化。我们还是从代码示例中学习。</p>
+<div><pre tabindex="0"><code data-lang="haskell"><span><span><span>class</span> <span>Area</span> <span>a</span> <span>where</span>
+</span></span><span><span>    <span>area</span> <span>::</span> <span>a</span> <span>-&gt;</span> <span>Float</span>
+</span></span><span><span>
+</span></span><span><span><span>data</span> <span>Circle</span> <span>=</span> <span>Circle</span> <span>Float</span> <span>deriving</span> <span>Show</span>
+</span></span><span><span><span>instance</span> <span>Area</span> <span>Circle</span> <span>where</span>
+</span></span><span><span>    <span>area</span> <span>(</span><span>Circle</span> <span>r</span><span>)</span> <span>=</span> <span>pi</span> <span>*</span> <span>r</span><span>^</span><span>2</span>
+</span></span><span><span>
+</span></span><span><span><span>data</span> <span>Rectangle</span> <span>=</span> <span>Rectangle</span> <span>Float</span> <span>Float</span> <span>deriving</span> <span>Show</span>
+</span></span><span><span><span>instance</span> <span>Area</span> <span>Rectangle</span> <span>where</span>
+</span></span><span><span>    <span>area</span> <span>(</span><span>Rectangle</span> <span>w</span> <span>h</span><span>)</span> <span>=</span> <span>w</span> <span>*</span> <span>h</span>
+</span></span><span><span>
+</span></span><span><span><span>data</span> <span>Triangle</span> <span>=</span> <span>Triangle</span> <span>Float</span> <span>Float</span> <span>deriving</span> <span>Show</span>
+</span></span><span><span><span>instance</span> <span>Area</span> <span>Triangle</span> <span>where</span>
+</span></span><span><span>    <span>area</span> <span>(</span><span>Triangle</span> <span>b</span> <span>h</span><span>)</span> <span>=</span> <span>0.5</span> <span>*</span> <span>b</span> <span>*</span> <span>h</span>
+</span></span><span><span>
+</span></span><span><span><span>totalArea</span> <span>::</span> <span>Area</span> <span>a</span> <span>=&gt;</span> <span>[</span><span>a</span><span>]</span> <span>-&gt;</span> <span>Float</span>
+</span></span><span><span><span>totalArea</span> <span>=</span> <span>sum</span> <span>.</span> <span>map</span> <span>area</span>
+</span></span><span><span>
+</span></span><span><span><span>main</span> <span>::</span> <span>IO</span> <span>()</span>
+</span></span><span><span><span>main</span> <span>=</span> <span>do</span>
+</span></span><span><span>    <span>let</span> <span>c</span> <span>=</span> <span>Circle</span> <span>5.0</span>
+</span></span><span><span>    <span>let</span> <span>r</span> <span>=</span> <span>Rectangle</span> <span>10.0</span> <span>20.0</span>
+</span></span><span><span>    <span>let</span> <span>t</span> <span>=</span> <span>Triangle</span> <span>10.0</span> <span>5.0</span>
+</span></span><span><span>
+</span></span><span><span>    <span>print</span> <span>c</span>
+</span></span><span><span>    <span>putStrLn</span> <span>$</span> <span>"Area of Circle: "</span> <span>++</span> <span>show</span> <span>(</span><span>area</span> <span>c</span><span>)</span>
+</span></span><span><span>    <span>print</span> <span>r</span>
+</span></span><span><span>    <span>putStrLn</span> <span>$</span> <span>"Area of Rectangle: "</span> <span>++</span> <span>show</span> <span>(</span><span>area</span> <span>r</span><span>)</span>
+</span></span><span><span>    <span>print</span> <span>t</span>
+</span></span><span><span>    <span>putStrLn</span> <span>$</span> <span>"Area of Triangle: "</span> <span>++</span> <span>show</span> <span>(</span><span>area</span> <span>t</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span>    <span>let</span> <span>shapes</span> <span>=</span> <span>[</span><span>Rectangle</span> <span>2</span> <span>3</span><span>,</span> <span>Rectangle</span> <span>4</span> <span>5</span><span>]</span>
+</span></span><span><span>    <span>putStrLn</span> <span>$</span> <span>"Total area of [Rectangle 2 3, Rectangle 4 5]: "</span> <span>++</span> <span>show</span> <span>(</span><span>totalArea</span> <span>shapes</span><span>)</span>
+</span></span><span><span>    <span>let</span> <span>circles</span> <span>=</span> <span>[</span><span>Circle</span> <span>1</span><span>,</span> <span>Circle</span> <span>2</span><span>,</span> <span>Circle</span> <span>3</span><span>]</span>
+</span></span><span><span>    <span>putStrLn</span> <span>$</span> <span>"Total area of 3 circles: "</span> <span>++</span> <span>show</span> <span>(</span><span>totalArea</span> <span>circles</span><span>)</span>
+</span></span></code></pre></div><p>在这段代码的开头，我们用关键字 <code>class</code> 定义了一个类型类 <code>Area a</code> ：</p>
+<ul>
+<li>你应该已经熟悉了，这里 <code>a</code> 是一个类型变量，代表实现了 <code>Area</code> 类型类的任意类型，从语义角度应该是某种可以计算面积的几何图形；</li>
+<li>规定类型 <code>a</code> 必须支持的函数 <code>area</code> ，该函数接受一个类型 <code>a</code> 的输入，返回一个 <code>Float</code> 值，即图形的面积。</li>
+</ul>
+<p>下面是一组使用 <code>Area</code> 的 <em>ADT</em> 定义。注意 Haskell 的 <em>ADT</em> 可以两种方式来使用类型类：</p>
+<ul>
+<li>通过 <code>deriving</code> 关键字直接继承类型类的能力，不需要自己实现什么，比如上面的几个 <em>ADT</em> 都直接继承了类型类 <code>Show</code> 即转换为字符串的能力，这种继承很方便，但需要满足一些前提：
+<ul>
+<li>需要类型类本身 <strong>可继承</strong> <em>derivable</em> ，很多内置类型类比如 <code>Eq</code> <code>Show</code> <code>Read</code> <code>Ord</code> <code>Enum</code> <code>Bound</code> 等都可以，你也可以自己定义 <em>derivable</em> 的类型类；</li>
+<li>你定义的 <em>ADT</em> 数据构造器要足够简单，编译器要能判断其中的数据构成是不是可以被类型类中的能力处理，比如我们上面的例子里，这些 <em>ADT</em> 数据构造器都是简单的一个或几个浮点数，都可以被 <code>Show</code> 处理；</li>
+</ul>
+</li>
+<li>通过 <code>instance</code> 关键字定义函数 <code>area</code> 的具体实现，这是与类型本身相关的，不同图形算面积的方法不一样，但是输入输出的接口完全一致，也就是类型类 <code>Area</code> 中定义的 <code>area</code> 函数接口。</li>
+</ul>
+<p>按此方式我们定义了圆形 <code>Circle</code> 、矩形 <code>Rectangle</code> 、三角形 <code>Triangle</code> 三种 <em>ADT</em> ，它们是完全不同的类型，但它们都实现了 <code>Area</code> 类型类，所以我们就可以编写统一的函数来处理它们，比如用于计算一组几何图形面积之和的函数 <code>totalArea</code> ，这个函数接受一个列表作为输入，返回输入列表中每个图形的面积之和。</p>
+<p>如果没有类型类，这个任务是无法完成的，因为 Haskell 中的列表必须是同质的，就是 <code>[a]</code> 中的每个元素类型都必须相同，而不同几何图形是不同的数据类型，无法放进同一个列表。但这些几何图形都实现了类型类 <code>Area</code> 之后就好办了，我们只要定义 <code>totalArea</code> 的类型为 <code>Area a =&gt; [a] -&gt; Float</code> 就可以了，它的输入列表中的元素可以是任何类型，只要这些类型满足约束 <code>Area a</code> 即可。</p>
+<p>具体实现层面， <code>totalArea = sum . map area</code> 这句看起来有点难懂，这其实是函数式编程的经典套路 <strong>函数组合</strong> <em>Function Composition</em> ，它等价于 <code>totalArea xs = sum (map area xs)</code> 。</p>
+<p>后面的 <code>main</code> 函数中，我们先创建了几个不同类型的图形，然后验证它们确实都得到了类型类 <code>Show</code> 的核心能力（函数 <code>show</code> ），以及它们可以被函数 <code>totalArea</code> 统一处理。</p>
+<p>在这个例子中，我们展示了类型类的核心能力：</p>
+<ul>
+<li>可扩展性：如果你想增加一个几何图形类，比如 <code>Square</code> 类型，只需定义数据并为其写一个 <code>instance Area Square</code> ，而不需要修改原有的 <code>Area</code> 类型类定义，也不需要修改处理 <code>Area</code> 类型类的函数比如 <code>totalArea</code> ;</li>
+<li>类型安全：编译器会在编译阶段检查某个类型是否真的实现了 <code>area</code> 函数；</li>
+<li>代码复用：通用函数如 <code>totalArea</code> 可以处理任何现在或将来定义的 <code>Area</code> 实例。</li>
+</ul>
+<p>下面我们看看 Python 的类似实现，使用最接近类型类的 <code>Protocol</code> 写出来的 Python 实现大致如下：</p>
+<div><pre tabindex="0"><code data-lang="python"><span><span><span>from</span> <span>typing</span> <span>import</span> <span>Protocol</span><span>,</span> <span>List</span><span>,</span> <span>runtime_checkable</span>
+</span></span><span><span><span>from</span> <span>dataclasses</span> <span>import</span> <span>dataclass</span>
+</span></span><span><span><span>import</span> <span>math</span>
+</span></span><span><span>
+</span></span><span><span><span>@runtime_checkable</span>
+</span></span><span><span><span>class</span> <span>Area</span><span>(</span><span>Protocol</span><span>):</span>
+</span></span><span><span>    <span>def</span> <span>area</span><span>(</span><span>self</span><span>)</span> <span>-&gt;</span> <span>float</span><span>:</span>
+</span></span><span><span>        <span>...</span>
+</span></span><span><span>
+</span></span><span><span><span>@dataclass</span>
+</span></span><span><span><span>class</span> <span>Circle</span><span>:</span>
+</span></span><span><span>    <span>radius</span><span>:</span> <span>float</span>
+</span></span><span><span>    <span>def</span> <span>area</span><span>(</span><span>self</span><span>)</span> <span>-&gt;</span> <span>float</span><span>:</span>
+</span></span><span><span>        <span>return</span> <span>math</span><span>.</span><span>pi</span> <span>*</span> <span>self</span><span>.</span><span>radius</span> <span>**</span> <span>2</span>
+</span></span><span><span>
+</span></span><span><span><span>@dataclass</span>
+</span></span><span><span><span>class</span> <span>Rectangle</span><span>:</span>
+</span></span><span><span>    <span>width</span><span>:</span> <span>float</span>
+</span></span><span><span>    <span>height</span><span>:</span> <span>float</span>
+</span></span><span><span>    <span>def</span> <span>area</span><span>(</span><span>self</span><span>)</span> <span>-&gt;</span> <span>float</span><span>:</span>
+</span></span><span><span>        <span>return</span> <span>self</span><span>.</span><span>width</span> <span>*</span> <span>self</span><span>.</span><span>height</span>
+</span></span><span><span>
+</span></span><span><span><span>def</span> <span>total_area</span><span>(</span><span>shapes</span><span>:</span> <span>List</span><span>[</span><span>Area</span><span>])</span> <span>-&gt;</span> <span>float</span><span>:</span>
+</span></span><span><span>    <span>return</span> <span>sum</span><span>(</span><span>shape</span><span>.</span><span>area</span><span>()</span> <span>for</span> <span>shape</span> <span>in</span> <span>shapes</span><span>)</span>
+</span></span><span><span>
+</span></span><span><span><span>shapes</span><span>:</span> <span>List</span><span>[</span><span>Area</span><span>]</span> <span>=</span> <span>[</span><span>Circle</span><span>(</span><span>1</span><span>),</span> <span>Rectangle</span><span>(</span><span>3</span><span>,</span> <span>4</span><span>),</span> <span>Rectangle</span><span>(</span><span>1</span><span>,</span> <span>2</span><span>)]</span>
+</span></span><span><span><span>print</span><span>(</span><span>total_area</span><span>(</span><span>shapes</span><span>))</span>
+</span></span></code></pre></div><p>不难看出，Python 在 3.8+ 版本引入的 <code>Protocol</code> 机制很大程度上就是模仿了 Haskell 的类型类，虽然底层实现机制不一样，但至少在表达力和类型安全检查方面提供了可用的工具。遗憾的是，多数人类 Python 程序员并不理解为什么有这种东西，更不会去用。</p>
+<h3 id="小结-haskell-的类型系统">小结：Haskell 的类型系统</h3>
+<p>Haskell 的类型系统还有一些更高级的东西，比如基于类型类基础上构建的 <em>Functor</em> 和大名鼎鼎的 <em>Monad</em> 将“纯逻辑”与文件 IO、网络、随机数等“脏操作”在类型层面彻底隔离，但限于篇幅和本文的主旨，就不展开了。</p>
+<p>仅凭本文的内容，相信你也可以感受到 Haskell 类型系统提供的极高抽象与严密约束能力：</p>
+<ul>
+<li>类型推导使程序员几乎不需要手写类型注释，但编译器却能实时掌握全局的类型流转，兼具动态语言的开发效率和静态语言的安全性。</li>
+<li>代数数据类型 <em>ADT</em> 允许通过“和类型”（A或B）和“积类型”（A和B）来对业务领域进行精确建模，让非法状态在类型层面上就无法表达。</li>
+<li>类型类 <em>Type Classes</em> 提供高度抽象的接口协议，支持代码逻辑在极高层面的复用，同时不丢失类型安全性。</li>
+</ul>
+<p>放眼未来，这种抽象和约束能力在 AI Coding 时代正变得越来越重要：</p>
+<ul>
+<li>作为对抗 AI “幻觉”的逻辑边界：Haskell 的类型系统极为严苛，它像一个自动化“逻辑审查员”，无需运行程序就能检查、过滤大量逻辑错误，其中不乏非常深层和难于发现的隐患。如果 AI 生成的代码能通过 Haskell 编译，其逻辑正确性的概率远高于 Python 等语言。</li>
+<li>提升对复杂数据流的建模能力：现代神经网络如 <em>Transformer</em> 本质上是复杂的高维张量变换函数，Haskell 会训练你用函数和组合子 <em>Combinators</em> 的思维去思考，这种思维与现代深度学习框架高度契合，能帮助你从数学本质上理解模型的数据流，而非仅仅停留在 API 调用。</li>
+<li>构建更安全的智能体 <em>Agent</em> 环境：当越来越多任务交给 <em>Agent</em> 去执行时，安全性至关重要。利用 Haskell 的强类型和受限副作用，可以为 <em>Agent</em> 提供一个“绝对安全”的沙盒式领域特定语言 <em>DSL</em> ，通过类型约束可以从根本上限制 AI 只能调用哪些函数、触达哪些数据，防止其产生非预期的破坏性行为。</li>
+<li>迈向形式化验证的桥梁：AI 辅助证明系统如 <em>Lean</em> 和 <em>Rocq</em> 正在兴起，而 Haskell 处于命令式编程与数学证明的交界处，是理解软件程序 <strong>可证明</strong> <em>Provable</em> 及 <strong>可验证</strong> <em>Verifiable</em> 的阶梯。</li>
+</ul>
+<p>相信这些前景足矣抵消你对本文学习到这里必然产生的困倦感（</p>
+<h2 id="结语">结语</h2>
+<p>Haskell 的类型系统被誉为编程语言设计的巅峰之一，其核心特色可以用“类型即规范、编译即证明”来概括。在 AI Coding 时代，代码编写的门槛在降低，但架构设计和逻辑验证的门槛在提高。学习 Haskell 的类型系统，本质上是在学习如何严谨地定义世界，并将验证逻辑的繁重任务交给机器，其价值可能会从“小众研究”转向“构建高可靠大规模软件系统”的基石。</p>
+<p>就在我写这篇文章的过程中，与老友<a href="https://x.com/virushuo?lang=en">霍炬</a>有一段有趣的交流。他告诉我他们最近的一个发现，就是对 PostgreSQL 这种比较复杂、功能非常丰富的数据库系统，AI 掌握得特别好，对一些高级特性的使用、数据库设计、写非常复杂的 SQL，都处理的非常好，所以他们在考虑更多发挥这些高级数据库的潜力，可能很多问题会变得简单省心很多。</p>
+<p>其实我也有类似体会，很久以前我作为某跨国大厂的合作伙伴，给一些企业讲他们的巨无霸系统软件，其中不少功能又强又好用，但不太好理解、上手有门槛，大部分客户的架构师压根不愿碰，但实际上那些东西掌握后根本不难，因为它没太多变化和需要人决策的东西。</p>
+<p>这也证实了我一直以来的猜想，很多人类畏难的东西，其难点其实是数学是严谨是抽象是强大，这些对今天的 AI 来说都不是问题，反而可以成为 AI 手上的宝具；而恰恰因为对人类来说有点难，实际上充当了某种筛选器，使相关资料的质量更高、噪音更少，这些资料对人类可能不太友好，但 AI 会喜欢。</p>
+<p>其实这也不是我发明的理论，人工智能领域著名的<a href="https://zh.wikipedia.org/zh-hans/%E8%8E%AB%E6%8B%89%E7%B6%AD%E5%85%8B%E6%82%96%E8%AB%96">莫拉维克悖论</a> <em><a href="https://en.wikipedia.org/wiki/Moravec%27s_paradox">Moravec’s paradox</a></em> 说难就是简单、简单就是难，意思是对人类来说很难的高阶智慧能力，比如下围棋，对计算机来说只需要相对非常少的算力，而对人类来说轻而易举毫不费力的事情，比如小孩子都拥有的一些无意识技能和直觉，计算机却需要极高的算力和极复杂的算法才能模拟。</p>
+<p>几乎与此同时又看到最近很火的开源 AI 编程工具 <a href="https://opencode.ai/">OpenCode</a> 主创之一 <a href="https://x.com/thdxr">@thdxr</a> 发的<a href="https://x.com/thdxr/status/2011638639831499041">一条推</a>：</p>
+<blockquote>
+<p>I just put all my opencode data into sqlite. Unsurprisingly it can query, filter, aggregate way better than it can when these were flat files. Agents love databases and a filesystem is just the worst kind of database.</p>
+</blockquote>
+<p>今天的 AI 社区正在重新发现软件工程，并逐步学会正确的认知与实践方法。好消息是，这一切可以挺快，只要你愿意坚持学习，学习重要的原理而非实操细节，你会发现 AI 真是相得益彰的好帮手。</p>
+<p>P.S.</p>
+<p>如果你读到这里真被勾起了好奇心，希望继续学习 Haskell 更深入的内容，除了官方网站海量的<a href="https://www.haskell.org/documentation/">文档内容</a>，我主要推荐经典教材 <a href="https://book.realworldhaskell.org/read/">Real World Haskell</a> （<a href="https://rwh.readthedocs.io/en/latest/index.html">中文版</a>），或者干脆和你的 <em>coding agent</em> 一起用 Haskell 构建一个有用的软件产品，并在这个过程中和它一起学习，没准效果更好。</p>
+<p>对了，我最近试着和 AI 一起写了个 Haskell 的 LLM 库，你可以在<a href="https://github.com/neolee/oasis">看看</a>。</p>
+
+</article></div>
