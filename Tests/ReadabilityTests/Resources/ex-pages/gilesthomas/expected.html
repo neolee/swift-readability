@@ -1,0 +1,63 @@
+<div id="readability-page-1" class="page"><div><p>Last November, when I finished the main body of
+"<a href="https://www.manning.com/books/build-a-large-language-model-from-scratch">Build a Large Language Model (from Scratch)</a>",
+I <a href="https://www.gilesthomas.com/2025/11/llm-from-scratch-27-whats-left-and-whats-next">set myself a number of follow-on goals</a>.
+One was "training the full GPT-2 base model myself".</p><p>I've reached the end of that journey, with a model that is almost -- if not quite
+-- as good as GPT-2 small, trained in 44 hours on my own machine,
+so I thought it would be worth summarising
+how it went.</p><p>In December, <a href="https://www.gilesthomas.com/2025/12/llm-from-scratch-28-training-a-base-model-from-scratch">I trained my first model</a>,
+taking two days,
+but was disappointed to see that it was worse in terms of loss, and in terms
+of how well it could be fine-tuned to follow instructions, than the original GPT-2 model.</p><p>I expected that a chunk of that difference was likely to be due to the original model having
+been trained for longer, but also noticed that there were a number of changes -- interventions -- that
+I could make to the model and the training run, and I thought they might help.</p><p>In January, I <a href="https://www.gilesthomas.com/2026/01/llm-from-scratch-29-ddp-training-a-base-model-in-the-cloud">got a DDP training system together</a>
+that would allow me to iterate on those interventions without having to wait for
+two days for each result.</p><p>In February, I got started by <a href="https://www.gilesthomas.com/2026/02/llm-from-scratch-32a-interventions-baseline-model">training a baseline model in the cloud</a>,
+and
+I've since ground through all of the interventions, and come up with
+a set that lowered the loss nicely, both <a href="https://www.gilesthomas.com/2026/04/llm-from-scratch-32j-interventions-trying-to-train-a-better-model-in-the-cloud">in the cloud</a>,
+and <a href="https://www.gilesthomas.com/2026/04/llm-from-scratch-32k-interventions-training-our-best-model-locally-gradient-accumulation">locally</a>.</p><p>Along the way, I've learned about, or refined my knowledge of, a bunch of ML concepts.
+In increasing order of how they helped with the loss (with the first two actually making
+it slightly worse):</p><ul>
+<li><a href="https://www.gilesthomas.com/2026/03/llm-from-scratch-32g-interventions-weight-tying">Weight tying</a>, which
+I found made the loss worse, but it was interesting how simple it was to implement.</li>
+<li>PyTorch's <a href="https://www.gilesthomas.com/2026/04/llm-from-scratch-32h-interventions-full-fat-float32">Automated Mixed Precision</a>,
+which also harmed the loss a tiny bit, but
+had the benefit of making training twice as fast, and 66% cheaper in the cloud
+-- well worth the loss penalty.</li>
+<li><a href="https://www.gilesthomas.com/2026/02/llm-from-scratch-32b-interventions-gradient-clipping">Gradient clipping</a> -- a cheap,
+but (somewhat to my surprise) not particularly effective intervention for this model.</li>
+<li><a href="https://www.gilesthomas.com/2026/02/llm-from-scratch-32d-interventions-adding-attention-bias">QKV bias</a> -- that is,
+adding bias to the attention weight matrices -- which also helped a tiny bit, though
+I later felt that this might have been in the noise.</li>
+<li><a href="https://www.gilesthomas.com/2026/03/llm-from-scratch-32f-interventions-weight-decay">Weight decay</a> -- more effective,
+and something
+that's simple enough to understand with simple gradient descent.  I still need to
+learn more about it in
+the context of optimisers, though -- particularly with AdamW.</li>
+<li><a href="https://www.gilesthomas.com/2026/02/llm-from-scratch-32c-interventions-removing-dropout">Dropout</a>, which
+seems to be less than useful for single-epoch training: removing it
+helped the model quite a lot.</li>
+<li><a href="https://www.gilesthomas.com/2026/03/llm-from-scratch-32e-interventions-learning-rate">The learning rate</a>,
+which I built up quite a lot of new knowledge about, and by both increasing it
+and scheduling it, I got the biggest bang for the buck.</li>
+</ul><p>I've also learned how to <a href="https://www.gilesthomas.com/2026/01/custom-automodelforcausallm-frompretrained-models-on-hugging-face">upload my custom models to Hugging Face</a>,
+found out some <a href="https://www.gilesthomas.com/2026/04/llm-from-scratch-32i-interventions-what-is-in-the-noise">interesting things about how random noise affects training</a>,
+and come up with improvements in the setup I have for using an
+<a href="https://www.gilesthomas.com/2026/01/llm-from-scratch-30-digging-into-llm-as-a-judge">LLM as a judge for instruction fine-tuned models</a>.</p><p>There was a bit of a mystery when I tried out the instruction fine-tuning tests,
+though.  Although two of my models were very close to GPT-2 small in terms of loss,
+<a href="https://www.gilesthomas.com/2026/04/llm-from-scratch-32l-interventions-instruction-fine-tuning-tests">I found</a>
+that while one of them had an instruction fine-tuning result that was likewise close
+to GPT-2 small, the other was <em>much</em> worse!  A mystery to dig into later, I think.</p><p>But it was still very satisfying that my best model -- trained locally in 44 hours
+-- was almost as good as GPT-2 small, even if it did fall somewhat short.  So on that
+positive note, I'm going to wrap up this "Interventions" series-within-a-series, and move
+on to the two other things I wanted to do before wrapping up the "LLM from scratch" series
+as a whole:</p><ol>
+<li>Going through the appendices in the book to see if there's anything I want
+to highlight there.</li>
+<li>The final test as to whether I've really understood everything: building my own
+LLM from scratch without reference to the book.  I want to do that in a different
+framework, not PyTorch, to minimise the risk of just regurgitating code --
+I asked people on X/Twitter which one I should use, and
+<a href="https://x.com/gpjt/status/1985434030880293004">the winner was JAX</a> -- so it should be interesting to see how that goes!</li>
+</ol><p>The appendices first, I think -- I'll post about them shortly.  But I think the big
+one will be the JAX implementation -- really looking forward to that.</p><p><a href="https://www.gilesthomas.com/2026/04/llm-from-scratch-33-what-i-learned-from-the-appendices">Here's a link to the next post in this series</a>.</p></div></div>

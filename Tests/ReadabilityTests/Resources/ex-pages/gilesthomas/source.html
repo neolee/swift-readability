@@ -1,0 +1,1161 @@
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1.0, width=device-width">
+        <meta charset="UTF-8">
+        <meta name="description" content="Wrapping up my 'Interventions' mini-series: what I've learned, what I've achieved, and what's next!">
+
+        <link rel="canonical" href="/2026/04/llm-from-scratch-32m-interventions-conclusion">
+
+        <link rel="alternate" type="application/rss+xml" title="Giles Thomas" href="/feed/rss.xml" />
+        <link rel="stylesheet" href="/styles/base.css">
+        <link rel="stylesheet" href="/styles/monokai.css">
+
+        <script src="/js/htmx.min.js"></script>
+
+        <link rel="icon" type="image/png" href="/images/favicons/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/images/favicons/favicon.svg" />
+        <link rel="shortcut icon" href="/images/favicons/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/favicons/apple-touch-icon.png" />
+        <link rel="manifest" href="/images/favicons/site.webmanifest" />
+
+        <title>Writing an LLM from scratch, part 32m -- Interventions: conclusion :: Giles' blog</title>
+
+        
+        <link rel="alternate" type="text/markdown" title="LLM-friendly version" href="/2026/04/llm-from-scratch-32m-interventions-conclusion.md" />
+
+        <script type="application/ld+json">
+            {
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": "https://www.gilesthomas.com/2026/04/llm-from-scratch-32m-interventions-conclusion"
+              },
+              "headline": "Writing an LLM from scratch, part 32m -- Interventions: conclusion",
+              "description": "Wrapping up my 'Interventions' mini-series: what I've learned, what I've achieved, and what's next!",
+              "author": {
+                "@type": "Person",
+                "name": "Giles Thomas",
+                "url": "https://www.gilesthomas.com/about/"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "Giles Thomas"
+              },
+              "datePublished": "2026-04-21T18:15:00+0000",
+              "keywords": "AI, LLM from scratch, TIL deep dives, Python"
+            }
+        </script>
+
+        <meta property="og:type" content="article">
+        <meta property="og:title" content="Writing an LLM from scratch, part 32m -- Interventions: conclusion">
+        <meta property="og:description" content="Wrapping up my 'Interventions' mini-series: what I've learned, what I've achieved, and what's next!">
+        <meta property="og:url" content="https://www.gilesthomas.com/2026/04/llm-from-scratch-32m-interventions-conclusion">
+        <meta property="og:site_name" content="Giles' Blog">
+        <meta property="og:image" content="https://www.gilesthomas.com/images/favicons/web-app-manifest-512x512.png">
+        <meta property="article:published_time" content="2026-04-21T18:15:00+0000">
+        <meta property="article:author" content="Giles Thomas">
+        <meta property="article:tag" content="AI">
+        <meta property="article:tag" content="LLM from scratch">
+        <meta property="article:tag" content="TIL deep dives">
+        <meta property="article:tag" content="Python">
+        
+
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:title" content="Writing an LLM from scratch, part 32m -- Interventions: conclusion">
+        <meta name="twitter:description" content="Wrapping up my 'Interventions' mini-series: what I've learned, what I've achieved, and what's next!">
+        <meta name="twitter:site" content="@gpjt">
+        <meta name="twitter:creator" content="@gpjt">
+
+    </head>
+
+    <body hx-on="click:
+        if (!event.target.closest('.dropdown-content')) {
+            htmx.findAll('.links-bar').forEach(el => el.dataset.currentDropdown = '')
+        }">
+        <div class="content">
+            <div class="site-header">
+                <a href="/">Giles' blog</a>
+
+                <div class="links">
+                    <a href="https://x.com/gpjt"><img src="/images/x-icon.png" alt="Me on X/Twitter" title="Me on X/Twitter"/></a>
+                    <a href="https://bsky.app/profile/gilesthomas.com"><img src="/images/bluesky-icon.png" alt="Me on Bluesky" title="Me on Bluesky"/></a>
+                    <a href="https://github.com/gpjt"><img src="/images/github-icon.png" alt="My GitHub profile" title="My GitHub profile"/></a>
+                    <a href="https://huggingface.co/gpjt"><img src="/images/hf-icon.png" alt="My Hugging Face profile" title="My Hugging Face profile"/></a>
+                    <a href="/feed/rss.xml"><img src="/images/rss-icon.png" alt="RSS feed for this blog" title="RSS feed for this blog"/></a>
+                </div>
+            </div>
+
+            <div class="links-bar"
+                 data-current-dropdown=""
+                 hx-on="click:
+                    if (event.target.closest('.dropdown')) {
+                        let targetId = event.target.closest('.dropdown').dataset.target;
+                        this.dataset.currentDropdown = (this.dataset.currentDropdown === targetId) ? '' : targetId;
+                        event.stopPropagation();
+                    }">
+
+                <div class="static-links-group">
+                    <div class="links-bar-link">
+                        <a href="/about">About</a>
+                    </div>
+
+                    <div class="links-bar-link">
+                        <a href="/contact">Contact</a>
+                    </div>
+                </div>
+
+                <div class="dropdown-group">
+                    
+                        <div class="links-bar-link dropdown" data-target="archives-dropdown">
+                            Archives <span class="dropdown-indicator"></span>
+                        </div>
+                    
+                    
+                        <div class="links-bar-link dropdown" data-target="categories-dropdown">
+                            Categories <span class="dropdown-indicator"></span>
+                        </div>
+                    
+                    <div class="links-bar-link dropdown" data-target="blogroll-dropdown">
+                        Blogroll <span class="dropdown-indicator"></span>
+                    </div>
+                </div>
+
+                <div id="archives-dropdown" class="dropdown-content">
+                    <ul>
+                        
+                            <li>
+                                <a href="/2026/04">
+                                    April 2026 (9)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2026/03">
+                                    March 2026 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2026/02">
+                                    February 2026 (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2026/01">
+                                    January 2026 (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/12">
+                                    December 2025 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/11">
+                                    November 2025 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/10">
+                                    October 2025 (9)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/09">
+                                    September 2025 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/08">
+                                    August 2025 (5)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/07">
+                                    July 2025 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/06">
+                                    June 2025 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/05">
+                                    May 2025 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/04">
+                                    April 2025 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/03">
+                                    March 2025 (7)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/02">
+                                    February 2025 (10)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2025/01">
+                                    January 2025 (6)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2024/12">
+                                    December 2024 (7)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2024/09">
+                                    September 2024 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2024/08">
+                                    August 2024 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2024/07">
+                                    July 2024 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2024/05">
+                                    May 2024 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2024/04">
+                                    April 2024 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2024/02">
+                                    February 2024 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2023/04">
+                                    April 2023 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2023/03">
+                                    March 2023 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2022/09">
+                                    September 2022 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2022/02">
+                                    February 2022 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2021/11">
+                                    November 2021 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2021/03">
+                                    March 2021 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2021/02">
+                                    February 2021 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2019/08">
+                                    August 2019 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2018/11">
+                                    November 2018 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2017/05">
+                                    May 2017 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2016/12">
+                                    December 2016 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2016/04">
+                                    April 2016 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2015/08">
+                                    August 2015 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2014/12">
+                                    December 2014 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2014/08">
+                                    August 2014 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2014/03">
+                                    March 2014 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2013/12">
+                                    December 2013 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2013/10">
+                                    October 2013 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2013/09">
+                                    September 2013 (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2013/08">
+                                    August 2013 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2013/07">
+                                    July 2013 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2013/06">
+                                    June 2013 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2013/02">
+                                    February 2013 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2012/10">
+                                    October 2012 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2012/06">
+                                    June 2012 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2012/05">
+                                    May 2012 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2012/04">
+                                    April 2012 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2012/02">
+                                    February 2012 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2011/10">
+                                    October 2011 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2011/06">
+                                    June 2011 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2011/05">
+                                    May 2011 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2011/04">
+                                    April 2011 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2011/03">
+                                    March 2011 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2011/02">
+                                    February 2011 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2011/01">
+                                    January 2011 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/12">
+                                    December 2010 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/11">
+                                    November 2010 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/10">
+                                    October 2010 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/09">
+                                    September 2010 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/08">
+                                    August 2010 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/07">
+                                    July 2010 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/05">
+                                    May 2010 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/04">
+                                    April 2010 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/03">
+                                    March 2010 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/02">
+                                    February 2010 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2010/01">
+                                    January 2010 (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/12">
+                                    December 2009 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/11">
+                                    November 2009 (5)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/10">
+                                    October 2009 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/09">
+                                    September 2009 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/08">
+                                    August 2009 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/07">
+                                    July 2009 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/05">
+                                    May 2009 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/04">
+                                    April 2009 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/03">
+                                    March 2009 (5)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/02">
+                                    February 2009 (5)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2009/01">
+                                    January 2009 (5)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/12">
+                                    December 2008 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/11">
+                                    November 2008 (7)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/10">
+                                    October 2008 (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/09">
+                                    September 2008 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/08">
+                                    August 2008 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/07">
+                                    July 2008 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/06">
+                                    June 2008 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/05">
+                                    May 2008 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/04">
+                                    April 2008 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2008/01">
+                                    January 2008 (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2007/12">
+                                    December 2007 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2007/03">
+                                    March 2007 (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2007/02">
+                                    February 2007 (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2007/01">
+                                    January 2007 (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2006/12">
+                                    December 2006 (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/2006/11">
+                                    November 2006 (18)
+                                </a>
+                            </li>
+                        
+                    </ul>
+                </div>
+                <div id="categories-dropdown" class="dropdown-content">
+                    <ul>
+                        
+                            <li>
+                                <a href="/ai">
+                                    AI (82)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/til-deep-dives">
+                                    TIL deep dives (75)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/python">
+                                    Python (71)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/llm-from-scratch">
+                                    LLM from scratch (46)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/resolver-one">
+                                    Resolver One (34)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/blogkeeping">
+                                    Blogkeeping (18)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/pythonanywhere">
+                                    PythonAnywhere (17)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/linux">
+                                    Linux (16)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/startups">
+                                    Startups (15)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/nslu2-offsite-backup-project">
+                                    NSLU2 offsite backup project (13)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/til">
+                                    TIL (13)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/hugging-face">
+                                    Hugging Face (12)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/funny">
+                                    Funny (11)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/finance">
+                                    Finance (10)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/fine-tuning">
+                                    Fine-tuning LLMs (10)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/musings">
+                                    Musings (10)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/c">
+                                    C (9)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/gadgets">
+                                    Gadgets (8)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/personal">
+                                    Personal (8)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/robotics">
+                                    Robotics (8)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/website-design">
+                                    Website design (8)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/3d">
+                                    3D (5)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/rants">
+                                    Rants (5)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/cryptography">
+                                    Cryptography (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/javascript">
+                                    JavaScript (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/music">
+                                    Music (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/oddities">
+                                    Oddities (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/quick-links">
+                                    Quick links (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/talks">
+                                    Talks (4)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/dirigible">
+                                    Dirigible (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/eee">
+                                    Eee (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/memes">
+                                    Memes (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/politics">
+                                    Politics (3)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/django">
+                                    Django (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/gpu-computing">
+                                    GPU Computing (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/latex">
+                                    LaTeX (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/mathml">
+                                    MathML (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/olpc-xo">
+                                    OLPC XO (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/retro-language-models">
+                                    Retro Language Models (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/space">
+                                    Space (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/voip">
+                                    VoIP (2)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/copyright">
+                                    Copyright (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/golang">
+                                    Golang (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/microprojects">
+                                    Microprojects (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/raspberry-pi">
+                                    Raspberry Pi (1)
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/software-dev-tools">
+                                    Software development tools (1)
+                                </a>
+                            </li>
+                        
+                    </ul>
+                </div>
+                <div id="blogroll-dropdown" class="dropdown-content">
+                    <ul>
+                        <li><a href="https://agileabstractions.com/">Agile Abstractions</a></li>
+                        <li><a href="https://www.astralcodexten.com/">Astral Codex Ten</a></li>
+                        <li><a href="https://blog.omega-prime.co.uk/">:: (Bloggable a) => a -> IO ()</a></li>
+                        <li><a href="https://daviddfriedman.substack.com/">David Friedman's Substack</a></li>
+                        <li><a href="https://robertsmithson1.substack.com/">Econ & Energy</a></li>
+                        <li><a href="https://ianozsvald.com/">Entrepreneurial Geekiness</a></li>
+                        <li><a href="https://holdenweb.blogspot.com/">For some value of "Magic"</a></li>
+                        <li><a href="https://hackaday.com/">Hackaday</a></li>
+                        <li><a href="https://kaleidic.substack.com/">kaleidic.ai newsletter</a></li>
+                        <li><a href="https://knowing.net/">Knowing.NET</a></li>
+                        <li><a href="https://languagelog.ldc.upenn.edu/nll/">Language Log</a></li>
+                        <li><a href="http://blog.millenniumhand.co.uk/">Millennium Hand</a></li>
+                        <li><a href="https://ntoll.org/">ntoll.org</a></li>
+                        <li><a href="https://www.obeythetestinggoat.com/">Obey the Testing Goat!</a></li>
+                        <li><a href="https://pkaznowski.gitlab.io/projects/">PK</a></li>
+                        <li><a href="https://blog.pythonanywhere.com/">PythonAnywhere News</a></li>
+                        <li><a href="https://simonwillison.net/">Simon Willison's Weblog</a></li>
+                        <li><a href="https://medium.com/@societive">Societive</a></li>
+                        <li><a href="https://orestis.gr/">Software Deviser</a></li>
+                        <li><a href="https://filip.lajszczak.dev/">Some opinions, held with varying degrees of certainty</a></li>
+                        <li><a href="https://www.tartley.com/">tartley.com</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            
+
+    <h2 class="post-header">Writing an LLM from scratch, part 32m -- Interventions: conclusion</h2>
+
+    <div class="post-subhead">
+        Posted on 21 <a href="/2026/04/">April 2026</a>
+        
+            in
+            
+                <a href="/ai">AI</a>,
+            
+                <a href="/llm-from-scratch">LLM from scratch</a>,
+            
+                <a href="/til-deep-dives">TIL deep dives</a>,
+            
+                <a href="/python">Python</a>
+            
+        
+    </div>
+
+    <p>Last November, when I finished the main body of
+"<a href="https://www.manning.com/books/build-a-large-language-model-from-scratch">Build a Large Language Model (from Scratch)</a>",
+I <a href="/2025/11/llm-from-scratch-27-whats-left-and-whats-next">set myself a number of follow-on goals</a>.
+One was "training the full GPT-2 base model myself".</p>
+
+<p>I've reached the end of that journey, with a model that is almost -- if not quite
+-- as good as GPT-2 small, trained in 44 hours on my own machine,
+so I thought it would be worth summarising
+how it went.</p>
+
+
+    
+        <span id="id_fold"></span>
+        <p>In December, <a href="/2025/12/llm-from-scratch-28-training-a-base-model-from-scratch">I trained my first model</a>,
+taking two days,
+but was disappointed to see that it was worse in terms of loss, and in terms
+of how well it could be fine-tuned to follow instructions, than the original GPT-2 model.</p>
+
+<p>I expected that a chunk of that difference was likely to be due to the original model having
+been trained for longer, but also noticed that there were a number of changes -- interventions -- that
+I could make to the model and the training run, and I thought they might help.</p>
+
+<p>In January, I <a href="/2026/01/llm-from-scratch-29-ddp-training-a-base-model-in-the-cloud">got a DDP training system together</a>
+that would allow me to iterate on those interventions without having to wait for
+two days for each result.</p>
+
+<p>In February, I got started by <a href="/2026/02/llm-from-scratch-32a-interventions-baseline-model">training a baseline model in the cloud</a>,
+and
+I've since ground through all of the interventions, and come up with
+a set that lowered the loss nicely, both <a href="/2026/04/llm-from-scratch-32j-interventions-trying-to-train-a-better-model-in-the-cloud">in the cloud</a>,
+and <a href="/2026/04/llm-from-scratch-32k-interventions-training-our-best-model-locally-gradient-accumulation">locally</a>.</p>
+
+<p>Along the way, I've learned about, or refined my knowledge of, a bunch of ML concepts.
+In increasing order of how they helped with the loss (with the first two actually making
+it slightly worse):</p>
+
+<ul>
+<li><a href="/2026/03/llm-from-scratch-32g-interventions-weight-tying">Weight tying</a>, which
+I found made the loss worse, but it was interesting how simple it was to implement.</li>
+<li>PyTorch's <a href="/2026/04/llm-from-scratch-32h-interventions-full-fat-float32">Automated Mixed Precision</a>,
+which also harmed the loss a tiny bit, but
+had the benefit of making training twice as fast, and 66% cheaper in the cloud
+-- well worth the loss penalty.</li>
+<li><a href="/2026/02/llm-from-scratch-32b-interventions-gradient-clipping">Gradient clipping</a> -- a cheap,
+but (somewhat to my surprise) not particularly effective intervention for this model.</li>
+<li><a href="/2026/02/llm-from-scratch-32d-interventions-adding-attention-bias">QKV bias</a> -- that is,
+adding bias to the attention weight matrices -- which also helped a tiny bit, though
+I later felt that this might have been in the noise.</li>
+<li><a href="/2026/03/llm-from-scratch-32f-interventions-weight-decay">Weight decay</a> -- more effective,
+and something
+that's simple enough to understand with simple gradient descent.  I still need to
+learn more about it in
+the context of optimisers, though -- particularly with AdamW.</li>
+<li><a href="/2026/02/llm-from-scratch-32c-interventions-removing-dropout">Dropout</a>, which
+seems to be less than useful for single-epoch training: removing it
+helped the model quite a lot.</li>
+<li><a href="/2026/03/llm-from-scratch-32e-interventions-learning-rate">The learning rate</a>,
+which I built up quite a lot of new knowledge about, and by both increasing it
+and scheduling it, I got the biggest bang for the buck.</li>
+</ul>
+
+<p>I've also learned how to <a href="/2026/01/custom-automodelforcausallm-frompretrained-models-on-hugging-face">upload my custom models to Hugging Face</a>,
+found out some <a href="/2026/04/llm-from-scratch-32i-interventions-what-is-in-the-noise">interesting things about how random noise affects training</a>,
+and come up with improvements in the setup I have for using an
+<a href="/2026/01/llm-from-scratch-30-digging-into-llm-as-a-judge">LLM as a judge for instruction fine-tuned models</a>.</p>
+
+<p>There was a bit of a mystery when I tried out the instruction fine-tuning tests,
+though.  Although two of my models were very close to GPT-2 small in terms of loss,
+<a href="/2026/04/llm-from-scratch-32l-interventions-instruction-fine-tuning-tests">I found</a>
+that while one of them had an instruction fine-tuning result that was likewise close
+to GPT-2 small, the other was <em>much</em> worse!  A mystery to dig into later, I think.</p>
+
+<p>But it was still very satisfying that my best model -- trained locally in 44 hours
+-- was almost as good as GPT-2 small, even if it did fall somewhat short.  So on that
+positive note, I'm going to wrap up this "Interventions" series-within-a-series, and move
+on to the two other things I wanted to do before wrapping up the "LLM from scratch" series
+as a whole:</p>
+
+<ol>
+<li>Going through the appendices in the book to see if there's anything I want
+to highlight there.</li>
+<li>The final test as to whether I've really understood everything: building my own
+LLM from scratch without reference to the book.  I want to do that in a different
+framework, not PyTorch, to minimise the risk of just regurgitating code --
+I asked people on X/Twitter which one I should use, and
+<a href="https://x.com/gpjt/status/1985434030880293004">the winner was JAX</a> -- so it should be interesting to see how that goes!</li>
+</ol>
+
+<p>The appendices first, I think -- I'll post about them shortly.  But I think the big
+one will be the JAX implementation -- really looking forward to that.</p>
+
+<p><a href="/2026/04/llm-from-scratch-33-what-i-learned-from-the-appendices">Here's a link to the next post in this series</a>.</p>
+
+    
+
+    
+        <div class="older-newer-footer">
+            
+                <a href="/2026/04/llm-from-scratch-32l-interventions-instruction-fine-tuning-tests">&laquo; Writing an LLM from scratch, part 32l -- Interventions: updated instruction fine-tuning results</a>
+            
+
+            
+                <a href="/2026/04/llm-from-scratch-33-what-i-learned-from-the-appendices">Writing an LLM from scratch, part 33 -- what I learned from finally getting round to the appendices &raquo;</a>
+            
+        </div>
+    
+
+    <div hx-get="https://comments.gilesthomas.com/comments"
+         hx-trigger="load"
+         hx-vals='js:{
+           "post_url": (() => {
+             const url = new URL(document.querySelector("link[rel=\"canonical\"]").href);
+             url.host = "www.gilesthomas.com";
+             return url.toString();
+           })()
+         }'
+    ></div>
+
+
+
+            <div class="footer">
+                Copyright (c) 2006-2026 by Giles Thomas.
+                This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+            </div>
+        </div>
+
+    </body>
+
+</html>
