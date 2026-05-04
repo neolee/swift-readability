@@ -162,7 +162,12 @@ public struct Readability {
         var extractionFlags = initialExtraction.flags
         var textContent = try cleanArticleContent(articleContent, flags: extractionFlags)
 
-        if textContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        let shouldKeepTextlessContent = try SiteRuleRegistry.shouldKeepTextlessArticleContent(
+            articleContent,
+            sourceURL: sourceURL,
+            document: doc
+        )
+        if textContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !shouldKeepTextlessContent {
             for (index, attempt) in extractor.getAttemptsSortedByTextLength().enumerated() {
                 if attempt.articleContent === articleContent {
                     continue

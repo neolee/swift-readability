@@ -29,6 +29,7 @@ First production release of the Swift Readability library.
 - Added antirez-specific removal of trailing Disqus promo/footer content from article output.
 - Added antirez-specific excerpt recovery for article bodies that are authored as a leading `<pre>` block.
 - Added antirez-specific serialization annotation `data-readability-pre-type="markdown"` for article-body `<pre>` blocks that contain Markdown source rather than code.
+- Added xkcd-specific comic extraction for short image-heavy pages where Mozilla-style text scoring selects the site footer instead of the actual comic image.
 
 ### Notes
 

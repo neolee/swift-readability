@@ -39,6 +39,7 @@ enum SiteRuleRegistry {
             BreitbartHeaderMediaRule.self,
             QuantaTopReactIDRule.self,
             HukumusumeLegacyFileURLRule.self,
+            XkcdComicImageSourceRule.self,
             XkcdFooterCleanupRule.self
         ]
         for rule in rules {
@@ -90,7 +91,8 @@ enum SiteRuleRegistry {
         document: Document
     ) throws -> String? {
         let rules: [ExcerptSiteRule.Type] = [
-            AntirezExcerptRule.self
+            AntirezExcerptRule.self,
+            XkcdComicExcerptRule.self
         ]
         var current = excerpt
         for rule in rules {
@@ -102,6 +104,22 @@ enum SiteRuleRegistry {
             )
         }
         return current
+    }
+
+    static func shouldKeepTextlessArticleContent(
+        _ articleContent: Element,
+        sourceURL: URL?,
+        document: Document
+    ) throws -> Bool {
+        let rules: [TextlessArticleContentSiteRule.Type] = [
+            XkcdTextlessComicContentRule.self
+        ]
+        for rule in rules {
+            if try rule.shouldKeepTextlessArticleContent(articleContent, sourceURL: sourceURL, document: document) {
+                return true
+            }
+        }
+        return false
     }
 
     static func shortContentFallbackArticle(
@@ -129,6 +147,7 @@ enum SiteRuleRegistry {
 
     static func promotedCandidate(from candidate: Element) -> Element? {
         let rules: [CandidatePromotionSiteRule.Type] = [
+            XkcdComicCandidateRule.self,
             QuantaLeadCandidatePromotionRule.self,
             BreitbartArticleCandidatePromotionRule.self,
             FirefoxNightlyContainerCandidatePromotionRule.self,
@@ -255,7 +274,8 @@ enum SiteRuleRegistry {
                 MercurialExampleSectionRule.self,
                 SimonWillisonRecentArticlesRule.self,
                 WikipediaHermitianListPruneRule.self,
-                EbbPreviousLinkRule.self
+                EbbPreviousLinkRule.self,
+                XkcdComicChromeCleanupRule.self
             ]
         }
     }
@@ -267,6 +287,7 @@ enum SiteRuleRegistry {
         inspectionContext: InspectionContext? = nil
     ) throws -> SiblingInclusionDecision? {
         let rules: [SiblingInclusionSiteRule.Type] = [
+            XkcdFooterSiblingRule.self,
             WordPressFeaturedImageRule.self
         ]
         for rule in rules {

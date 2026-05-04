@@ -158,6 +158,24 @@ final class SiblingMerger {
             )
         }
 
+        // Site rules can explicitly reject a sibling before score-based
+        // inclusion. This is needed for high-scoring site chrome that is a
+        // direct sibling of a narrow, image-heavy content candidate.
+        if let siteRuleDecision = try SiteRuleRegistry.siblingInclusionDecision(
+            sibling,
+            topCandidate: topCandidate,
+            inspectionContext: inspectionContext
+        ), !siteRuleDecision.include {
+            return SiblingEvaluation(
+                shouldAppend: false,
+                score: siblingScore,
+                bonus: contentBonus,
+                visible: true,
+                reason: "site-rule-exclude",
+                siteRuleDecisionID: siteRuleDecision.ruleID
+            )
+        }
+
         // Check if sibling has a score above threshold
         if siblingScore + contentBonus >= threshold {
             return SiblingEvaluation(
