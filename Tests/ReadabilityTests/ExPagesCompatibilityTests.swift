@@ -1150,4 +1150,47 @@ struct ExPagesCompatibilityTests {
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
+
+    // MARK: xkcd · Bottle (xkcd.com)
+
+    @Test("xkcd - Title matches expected")
+    func testXkcdTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xkcd", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xkcd'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("xkcd - Byline matches expected")
+    func testXkcdByline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xkcd", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xkcd'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("xkcd - Excerpt matches expected")
+    func testXkcdExcerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xkcd", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xkcd'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("xkcd - Content matches expected HTML")
+    func testXkcdContent() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xkcd", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xkcd'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
 }

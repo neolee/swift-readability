@@ -38,7 +38,8 @@ enum SiteRuleRegistry {
             QQVoteContainerRule.self,
             BreitbartHeaderMediaRule.self,
             QuantaTopReactIDRule.self,
-            HukumusumeLegacyFileURLRule.self
+            HukumusumeLegacyFileURLRule.self,
+            XkcdFooterCleanupRule.self
         ]
         for rule in rules {
             try rule.apply(to: articleContent)

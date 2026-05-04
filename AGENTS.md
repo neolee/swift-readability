@@ -186,6 +186,10 @@ import Testing
 2. **SwiftSoup Tag Replacement**: Cannot change tag names directly - create new `Element` and move children
 3. **Concurrency**: Never add `@MainActor` - this defeats the purpose of `WKWebView`-free implementation
 4. **Path Dependencies**: `CLI` uses `..` path dependency
+5. **SPM Build Cache**: When adding or removing Swift source files, the build system may cache stale file lists. If a new file fails to compile (e.g. "cannot find 'Xxx' in scope"), delete `.build/` directories and rebuild:
+   ```bash
+   rm -rf .build CLI/.build && cd CLI && swift run ReadabilityCLI ...
+   ```
 
 ### Site-Specific Rule Architecture
 

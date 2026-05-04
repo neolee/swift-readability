@@ -74,7 +74,8 @@ public struct Readability {
 
             let cleaner = ArticleCleaner(
                 options: options,
-                allowConditionalCleaning: flags & Configuration.flagCleanConditionally != 0
+                allowConditionalCleaning: flags & Configuration.flagCleanConditionally != 0,
+                allowWeightClasses: flags & Configuration.flagWeightClasses != 0
             )
             try cleaner.prepArticle(preparedCopy)
             return try preparedCopy.text().count
@@ -125,7 +126,8 @@ public struct Readability {
         ) throws -> String {
             let cleaner = ArticleCleaner(
                 options: options,
-                allowConditionalCleaning: flags & Configuration.flagCleanConditionally != 0
+                allowConditionalCleaning: flags & Configuration.flagCleanConditionally != 0,
+                allowWeightClasses: flags & Configuration.flagWeightClasses != 0
             ) { stage, element in
                 let stageName: String
                 if let snapshotPrefix {
