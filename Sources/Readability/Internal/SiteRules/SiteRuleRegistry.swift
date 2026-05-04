@@ -58,7 +58,8 @@ enum SiteRuleRegistry {
             YahooBylineTimeRule.self,
             RoyalRoadFollowAuthorBylineRule.self,
             TumblrBlogHandleBylineRule.self,
-            WikiaBylineTimeSuffixRule.self
+            WikiaBylineTimeSuffixRule.self,
+            XkcdBylineRule.self
         ]
         var current = byline
         for rule in rules {
