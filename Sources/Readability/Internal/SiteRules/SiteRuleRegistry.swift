@@ -39,8 +39,7 @@ enum SiteRuleRegistry {
             BreitbartHeaderMediaRule.self,
             QuantaTopReactIDRule.self,
             HukumusumeLegacyFileURLRule.self,
-            XkcdComicImageSourceRule.self,
-            XkcdFooterCleanupRule.self
+            XkcdComicImageSourceRule.self
         ]
         for rule in rules {
             try rule.apply(to: articleContent)

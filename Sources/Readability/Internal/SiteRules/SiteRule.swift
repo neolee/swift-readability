@@ -51,6 +51,8 @@ protocol ExcerptSiteRule: SiteRule {
     static func apply(currentExcerpt: String?, articleContent: Element, sourceURL: URL?, document: Document) throws -> String?
 }
 
+/// Allows narrow site rules to accept intentionally image-only article content
+/// after cleanup instead of retrying into unrelated surrounding chrome.
 protocol TextlessArticleContentSiteRule: SiteRule {
     static func shouldKeepTextlessArticleContent(_ articleContent: Element, sourceURL: URL?, document: Document) throws -> Bool
 }

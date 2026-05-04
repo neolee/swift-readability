@@ -110,9 +110,9 @@ final class ArticleCleaner {
         try element.attr(marker, token)
         defer {
             if let previousMarker {
-                try? element.attr(marker, previousMarker)
+                _ = try? element.attr(marker, previousMarker)
             } else {
-                try? element.removeAttr(marker)
+                _ = try? element.removeAttr(marker)
             }
         }
 
@@ -1046,9 +1046,9 @@ final class ArticleCleaner {
         try root.attr(marker, token)
         defer {
             if let previousMarker {
-                try? root.attr(marker, previousMarker)
+                _ = try? root.attr(marker, previousMarker)
             } else {
-                try? root.removeAttr(marker)
+                _ = try? root.removeAttr(marker)
             }
         }
 
@@ -1257,9 +1257,9 @@ final class ArticleCleaner {
         try root.attr(marker, token)
         defer {
             if let previousMarker {
-                try? root.attr(marker, previousMarker)
+                _ = try? root.attr(marker, previousMarker)
             } else {
-                try? root.removeAttr(marker)
+                _ = try? root.removeAttr(marker)
             }
         }
 
@@ -1434,9 +1434,9 @@ final class ArticleCleaner {
         try root.attr(marker, token)
         defer {
             if let previousMarker {
-                try? root.attr(marker, previousMarker)
+                _ = try? root.attr(marker, previousMarker)
             } else {
-                try? root.removeAttr(marker)
+                _ = try? root.removeAttr(marker)
             }
         }
 

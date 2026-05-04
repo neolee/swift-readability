@@ -28,7 +28,9 @@ enum XkcdFooterSiblingRule: SiblingInclusionSiteRule {
 
     static func shouldIncludeSibling(_ sibling: Element, topCandidate: Element) throws -> Bool? {
         guard topCandidate.id().trimmingCharacters(in: .whitespacesAndNewlines) == "middleContainer",
-              sibling.id().trimmingCharacters(in: .whitespacesAndNewlines) == "bottom" else {
+              hasComicImage(in: topCandidate),
+              sibling.id().trimmingCharacters(in: .whitespacesAndNewlines) == "bottom",
+              try sibling.select("#comicLinks").isEmpty() == false else {
             return nil
         }
 
