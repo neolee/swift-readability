@@ -257,7 +257,8 @@ enum SiteRuleRegistry {
             ]
         case .preConversion:
             return [
-                NYTimesRelatedLinkCardsRule.self
+                NYTimesRelatedLinkCardsRule.self,
+                SubstackInlineButtonCTARule.self
             ]
         case .shareCleanup:
             return [
