@@ -85,3 +85,13 @@ protocol SiblingInclusionSiteRule: SiteRule {
 protocol SiblingExtractSiteRule: SiteRule {
     static func extractFromSibling(_ sibling: Element, topCandidate: Element) throws -> Element?
 }
+
+/// Runs before candidate scoring to prune known noise containers from the document.
+///
+/// Use this when a platform-specific comment or discussion module must be removed
+/// before any extraction pass runs. Unlike `ArticleCleanerSiteRule` (which operates
+/// on already-extracted content), rules of this type modify the document in place
+/// so the noise never enters the candidate pool.
+protocol PreExtractionDocumentRule: SiteRule {
+    static func apply(to document: Document, sourceURL: URL?) throws
+}

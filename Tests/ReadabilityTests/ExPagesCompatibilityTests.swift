@@ -338,6 +338,49 @@ struct ExPagesCompatibilityTests {
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
 
+    // MARK: garymarcus-3 · Agents and ROI (garymarcus.substack.com)
+
+    @Test("garymarcus-3 - Title matches expected")
+    func testGarymarcus3Title() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-3", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-3'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("garymarcus-3 - Byline matches expected")
+    func testGarymarcus3Byline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-3", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-3'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("garymarcus-3 - Excerpt matches expected")
+    func testGarymarcus3Excerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-3", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-3'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("garymarcus-3 - Content matches expected HTML")
+    func testGarymarcus3Content() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "garymarcus-3", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'garymarcus-3'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
+
     // MARK: mariozechner · Thoughts on slowing the fuck down (mariozechner.at)
 
     @Test("mariozechner - Title matches expected")

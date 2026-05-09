@@ -22,6 +22,18 @@ enum SiteRuleRegistry {
         }
     }
 
+    static func applyPreExtractionDocumentRules(
+        to document: Document,
+        sourceURL: URL?
+    ) throws {
+        let rules: [PreExtractionDocumentRule.Type] = [
+            StandardDiscussionModuleRule.self
+        ]
+        for rule in rules {
+            try rule.apply(to: document, sourceURL: sourceURL)
+        }
+    }
+
     static func applySerializationRules(to articleContent: Element) throws {
         let rules: [SerializationSiteRule.Type] = [
             AntirezProsePreRule.self,

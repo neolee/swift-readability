@@ -59,6 +59,10 @@ public struct Readability {
         // Prepare document (remove scripts, styles, etc.)
         try prepDocument()
 
+        // Prune known comment/discussion platform containers before extraction.
+        // Must run before candidate scoring so noise never enters the pool.
+        try SiteRuleRegistry.applyPreExtractionDocumentRules(to: doc, sourceURL: sourceURL)
+
         // Use metadata title if available, otherwise extract from document
         let title: String
         if let metaTitle = metadata.title {
