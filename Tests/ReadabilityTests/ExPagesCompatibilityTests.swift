@@ -1236,4 +1236,87 @@ struct ExPagesCompatibilityTests {
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
+
+    // MARK: seangoedecke · The left-wing case for AI (seangoedecke.com)
+
+    @Test("seangoedecke - Title matches expected")
+    func testSeangoedeckeTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "seangoedecke", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'seangoedecke'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("seangoedecke - Byline matches expected")
+    func testSeangoedeckeByline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "seangoedecke", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'seangoedecke'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("seangoedecke - Excerpt matches expected")
+    func testSeangoedeckeExcerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "seangoedecke", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'seangoedecke'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("seangoedecke - Language matches expected")
+    func testSeangoedeckeLanguage() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "seangoedecke", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'seangoedecke'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.lang == testCase.expectedMetadata.lang)
+    }
+
+    @Test("seangoedecke - Direction matches expected")
+    func testSeangoedeckeDirection() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "seangoedecke", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'seangoedecke'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.dir == testCase.expectedMetadata.dir)
+    }
+
+    @Test("seangoedecke - Site name matches expected")
+    func testSeangoedeckeSiteName() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "seangoedecke", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'seangoedecke'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.siteName == testCase.expectedMetadata.siteName)
+    }
+
+    @Test("seangoedecke - Published time matches expected")
+    func testSeangoedeckePublishedTime() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "seangoedecke", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'seangoedecke'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.publishedTime == testCase.expectedMetadata.publishedTime)
+    }
+
+    @Test("seangoedecke - Content matches expected HTML")
+    func testSeangoedeckeContent() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "seangoedecke", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'seangoedecke'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
 }

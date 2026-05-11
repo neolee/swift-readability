@@ -521,11 +521,11 @@ final class ArticleCleaner {
             return false
         }
 
-        if (try? element.select("li[id^='fn:']").isEmpty()) == false {
+        if (try? element.select("li[id^='fn']").isEmpty()) == false {
             return true
         }
 
-        if (try? element.select("a[href^='#fnref:']").isEmpty()) == false {
+        if (try? element.select("a[href^='#fnref']").isEmpty()) == false {
             return true
         }
 
