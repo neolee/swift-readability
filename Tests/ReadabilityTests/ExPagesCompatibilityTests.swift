@@ -1319,4 +1319,47 @@ struct ExPagesCompatibilityTests {
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
+
+    // MARK: xeiaso · I'm really frustrated that GitLab is doing layoffs (xeiaso.net)
+
+    @Test("xeiaso - Title matches expected")
+    func testXeiasoTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("xeiaso - Byline matches expected")
+    func testXeiasoByline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("xeiaso - Excerpt matches expected")
+    func testXeiasoExcerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("xeiaso - Content matches expected HTML")
+    func testXeiasoContent() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
 }

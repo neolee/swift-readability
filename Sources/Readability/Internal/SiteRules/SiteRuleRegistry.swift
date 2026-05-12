@@ -51,7 +51,8 @@ enum SiteRuleRegistry {
             BreitbartHeaderMediaRule.self,
             QuantaTopReactIDRule.self,
             HukumusumeLegacyFileURLRule.self,
-            XkcdComicImageSourceRule.self
+            XkcdComicImageSourceRule.self,
+            XeiasoArticleRule.self
         ]
         for rule in rules {
             try rule.apply(to: articleContent)
@@ -164,6 +165,7 @@ enum SiteRuleRegistry {
             BreitbartArticleCandidatePromotionRule.self,
             FirefoxNightlyContainerCandidatePromotionRule.self,
             CityLabArticleContainerCandidateRule.self,
+            XeiasoArticleRule.self,
             SimonWillisonBeatCandidatePromotionRule.self
         ]
         for rule in rules {
@@ -282,6 +284,7 @@ enum SiteRuleRegistry {
                 LiberationArticleBodyWrapperRule.self,
                 DFarqShareAuthorTailRule.self,
                 SubstackTwitterEmbedRule.self,
+                XeiasoArticleRule.self,
                 WordPressPrevNextNavigationRule.self,
                 JohnDCookRelatedPostsRule.self,
                 MercurialExampleSectionRule.self,
