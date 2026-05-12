@@ -1448,4 +1448,90 @@ struct ExPagesCompatibilityTests {
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
+
+    // MARK: xeiaso-4 · DNS fight (xeiaso.net)
+
+    @Test("xeiaso-4 - Title matches expected")
+    func testXeiaso4Title() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso-4", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso-4'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("xeiaso-4 - Byline matches expected")
+    func testXeiaso4Byline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso-4", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso-4'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("xeiaso-4 - Excerpt matches expected")
+    func testXeiaso4Excerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso-4", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso-4'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("xeiaso-4 - Content matches expected HTML")
+    func testXeiaso4Content() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso-4", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso-4'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
+
+    // MARK: xeiaso-5 · Hospital stay (xeiaso.net)
+
+    @Test("xeiaso-5 - Title matches expected")
+    func testXeiaso5Title() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso-5", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso-5'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("xeiaso-5 - Byline matches expected")
+    func testXeiaso5Byline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso-5", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso-5'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("xeiaso-5 - Excerpt matches expected")
+    func testXeiaso5Excerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso-5", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso-5'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("xeiaso-5 - Content matches expected HTML")
+    func testXeiaso5Content() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "xeiaso-5", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'xeiaso-5'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
 }

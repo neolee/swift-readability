@@ -27,7 +27,8 @@ enum SiteRuleRegistry {
         sourceURL: URL?
     ) throws {
         let rules: [PreExtractionDocumentRule.Type] = [
-            StandardDiscussionModuleRule.self
+            StandardDiscussionModuleRule.self,
+            XeiasoArticleRule.self
         ]
         for rule in rules {
             try rule.apply(to: document, sourceURL: sourceURL)
@@ -141,7 +142,8 @@ enum SiteRuleRegistry {
         inspectionContext: InspectionContext? = nil
     ) throws -> Element? {
         let rules: [ShortContentFallbackSiteRule.Type] = [
-            OneA23GalleryShortArticleRule.self
+            OneA23GalleryShortArticleRule.self,
+            XeiasoArticleRule.self
         ]
         for rule in rules {
             if let fallback = try rule.fallbackArticleContent(in: document, sourceURL: sourceURL) {
@@ -179,7 +181,8 @@ enum SiteRuleRegistry {
     static func shouldKeepCandidate(_ current: Element) -> Bool {
         let rules: [CandidateProtectionSiteRule.Type] = [
             CityLabArticleContainerCandidateRule.self,
-            MacRumorsMainContentCandidateRule.self
+            MacRumorsMainContentCandidateRule.self,
+            XeiasoArticleRule.self
         ]
         for rule in rules where rule.shouldKeepCandidate(current) {
             return true

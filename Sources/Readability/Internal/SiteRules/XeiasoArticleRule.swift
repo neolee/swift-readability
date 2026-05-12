@@ -1,18 +1,136 @@
 import Foundation
 import SwiftSoup
 
-/// Promotes xeiaso.net posts out of inline character dialogue blocks and
-/// normalizes those dialogue cards into reader-friendly blockquotes.
+/// Removes xeiaso.net site template chrome before extraction, promotes the article
+/// candidate out of dialogue / footer noise, normalizes character-dialogue cards into
+/// blockquotes, and cleans post metadata and tail chrome during post-processing.
 ///
 /// SiteRule Metadata:
-/// - Scope: xeiaso.net posts with character dialogue cards inside `article.prose`
-/// - Phase: candidate promotion and `postProcess` cleanup/normalization
-/// - Trigger: xeiaso canonical/location plus character links and sticker avatars
-/// - Evidence: `CLI/.staging/xeiaso`
-/// - Risk if misplaced: Tailwind `text-*` classes can make a dialogue card or footer
-///   outscore the real article body before cleanup.
-enum XeiasoArticleRule: CandidatePromotionSiteRule, ArticleCleanerSiteRule, SerializationSiteRule {
+/// - Scope: xeiaso.net posts with `article.prose`
+/// - Phase: pre-extraction document cleanup, candidate promotion,
+///   `postProcess` cleanup, and serialization normalization
+/// - Trigger: xeiaso canonical/location/hostname
+/// - Evidence: `CLI/.staging/xeiaso-1` through `xeiaso-5`
+/// - Risk if misplaced: Tailwind `text-*` class-weight false positives can make
+///   dialogue cards or the site footer outscore the real article body.
+enum XeiasoArticleRule: PreExtractionDocumentRule, CandidatePromotionSiteRule, CandidateProtectionSiteRule, ShortContentFallbackSiteRule, ArticleCleanerSiteRule, SerializationSiteRule {
     static let id = "xeiaso-article"
+
+    // MARK: - PreExtractionDocumentRule
+
+    static func apply(to document: Document, sourceURL: URL?) throws {
+        guard let url = sourceURL ?? (try? document.select("link[rel=canonical]").first()?.attr("href")).flatMap(URL.init(string:)),
+              isXeiasoURL(url.absoluteString) else {
+            return
+        }
+
+        try removeSiteHeader(from: document)
+        try removeArticleTailChrome(from: document)
+        try removeSiteFooter(from: document)
+    }
+
+    /// Removes the stable post-body tail inside `article.prose` that starts at the
+    /// final site-chrome `<hr>` separator.  Body-level `<hr>` elements are preserved.
+    private static func removeArticleTailChrome(from document: Document) throws {
+        guard let article = try document.select("article.prose").first() else {
+            return
+        }
+
+        for hr in try article.select("> hr").reversed() {
+            guard isTailBoundaryHR(hr) else { continue }
+            try removeFromHRThroughEndOfArticle(hr)
+            break
+        }
+    }
+
+    /// Returns `true` when the `<hr>` is followed by siblings that contain
+    /// xeiaso tail markers: share button, disclaimer paragraph, or empty tags.
+    private static func isTailBoundaryHR(_ hr: Element) -> Bool {
+        var next = try? hr.nextElementSibling()
+        while let sibling = next {
+            let id = sibling.id().trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if id == "sharebutton" { return true }
+
+            if sibling.tagName().uppercased() == "P" {
+                let text = (try? normalizedText(sibling)) ?? ""
+                if text.hasPrefix("Facts and circumstances may have changed since publication.") ||
+                    text.hasPrefix("Tags:") {
+                    return true
+                }
+                // Only the first following <p> is checked — past that it is likely
+                // article body content, not tail chrome.
+                break
+            }
+            next = try? sibling.nextElementSibling()
+        }
+        return false
+    }
+
+    /// Removes `hr` and all following siblings inside its parent.
+    private static func removeFromHRThroughEndOfArticle(_ hr: Element) throws {
+        var next = try? hr.nextElementSibling()
+        while let sibling = next {
+            let upcoming = try? sibling.nextElementSibling()
+            try sibling.remove()
+            next = upcoming
+        }
+        try hr.remove()
+    }
+
+    /// Removes the top-level site `<header>` (site navigation bar) to prevent it
+    /// from entering the candidate pool.
+    private static func removeSiteHeader(from document: Document) throws {
+        for header in try document.select("body > header").reversed() {
+            let navCount = (try? header.select("nav").count) ?? 0
+            guard navCount == 1 else { continue }
+            try header.remove()
+        }
+    }
+
+    /// Removes the top-level site footer block (direct child of `<body>`) whose text
+    /// contains the stable xeiaso footer markers.
+    private static func removeSiteFooter(from document: Document) throws {
+        for footer in try document.select("body > footer").reversed() {
+            let text = (try? normalizedText(footer)) ?? ""
+            guard text.contains("Copyright"),
+                  text.contains("Xe Iaso"),
+                  text.contains("Served by xesite") else {
+                continue
+            }
+            try footer.remove()
+        }
+    }
+
+    // MARK: - CandidateProtectionSiteRule
+
+    /// Prevents `article.prose` from being promoted into outer layout wrappers
+    /// (e.g., `div.mt-4`) during standard single-child or alternative-ancestor
+    /// promotion.  This keeps the semantic article boundary stable regardless of
+    /// content length or sibling scores.
+    static func shouldKeepCandidate(_ current: Element) -> Bool {
+        guard let document = current.ownerDocument(),
+              isXeiasoDocument(document),
+              isArticleProse(current) else {
+            return false
+        }
+        return true
+    }
+
+    // MARK: - ShortContentFallbackSiteRule
+
+    /// When all passes fail the content-length threshold (e.g. after pre-extraction
+    /// chrome removal shortens a very brief post), return `article.prose` directly
+    /// instead of falling through to an outer layout container.
+    static func fallbackArticleContent(in document: Document, sourceURL: URL?) throws -> Element? {
+        let url = sourceURL ?? (try? document.select("link[rel=canonical]").first()?.attr("href")).flatMap(URL.init(string:))
+        guard let url, isXeiasoURL(url.absoluteString),
+              let article = try document.select("article.prose").first() else {
+            return nil
+        }
+        return article
+    }
+
+    // MARK: - CandidatePromotionSiteRule
 
     static func promotedCandidate(from candidate: Element) -> Element? {
         guard let document = candidate.ownerDocument(),
@@ -26,10 +144,11 @@ enum XeiasoArticleRule: CandidatePromotionSiteRule, ArticleCleanerSiteRule, Seri
             return article
         }
 
-        // Case 2: candidate is NOT inside article.prose and does NOT contain it
-        //          (e.g., footer won on a short post) → promote to article.prose directly
+        // Case 2: candidate is NOT article.prose itself (e.g., footer won,
+        //          or standard promotion moved to outer div.mt-4)
+        //          → promote directly to article.prose
         if let article = try? document.select("article.prose").first(),
-           (try? candidate.select("article.prose").first()) !== article {
+           candidate !== article {
             return article
         }
 
