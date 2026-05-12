@@ -16,20 +16,27 @@ enum XeiasoArticleRule: CandidatePromotionSiteRule, ArticleCleanerSiteRule, Seri
 
     static func promotedCandidate(from candidate: Element) -> Element? {
         guard let document = candidate.ownerDocument(),
-              isXeiasoDocument(document),
-              let article = nearestArticleProseAncestor(of: candidate),
-              containsCharacterDialogue(in: article) else {
+              isXeiasoDocument(document) else {
             return nil
         }
 
-        return article
+        // Case 1: candidate is inside article.prose (e.g., dialogue card won)
+        //          → promote up to article.prose
+        if let article = nearestArticleProseAncestor(of: candidate) {
+            return article
+        }
+
+        // Case 2: candidate is NOT inside article.prose and does NOT contain it
+        //          (e.g., footer won on a short post) → promote to article.prose directly
+        if let article = try? document.select("article.prose").first(),
+           (try? candidate.select("article.prose").first()) !== article {
+            return article
+        }
+
+        return nil
     }
 
     static func apply(to articleContent: Element, context _: ArticleCleanerSiteRuleContext) throws {
-        guard containsCharacterDialogue(in: articleContent) else {
-            return
-        }
-
         try removePostMetadata(from: articleContent)
         try removePostTailChrome(from: articleContent)
     }
@@ -58,22 +65,6 @@ enum XeiasoArticleRule: CandidatePromotionSiteRule, ArticleCleanerSiteRule, Seri
         hasCharacterLink(in: article) && hasStickerAvatar(in: article)
     }
 
-    private static func isCharacterDialogueContainer(_ element: Element) -> Bool {
-        guard element.hasClass("bg-bg-soft") || element.hasClass("space-y-0") else {
-            return false
-        }
-
-        guard hasCharacterLink(in: element), hasStickerAvatar(in: element) else {
-            return false
-        }
-
-        if element.hasClass("space-y-0") {
-            return true
-        }
-
-        return element.parent()?.hasClass("space-y-0") == true
-    }
-
     private static func normalizeCharacterDialogues(in articleContent: Element) throws {
         for card in try articleContent.select("div").reversed() {
             guard isSingleCharacterDialogueCard(card) else {
@@ -86,10 +77,6 @@ enum XeiasoArticleRule: CandidatePromotionSiteRule, ArticleCleanerSiteRule, Seri
         }
 
         try unwrapDialogueBlockquoteWrappers(in: articleContent)
-    }
-
-    private static func isCharacterDialogueCard(_ element: Element) -> Bool {
-        hasCharacterLink(in: element) && hasStickerAvatar(in: element)
     }
 
     private static func isSingleCharacterDialogueCard(_ element: Element) -> Bool {
@@ -203,13 +190,18 @@ enum XeiasoArticleRule: CandidatePromotionSiteRule, ArticleCleanerSiteRule, Seri
     }
 
     private static func removePostTailChrome(from articleContent: Element) throws {
+        var foundXeiasoTailMarker = false
+
         for paragraph in try articleContent.select("p").reversed() {
             let text = try normalizedText(paragraph)
             if text.hasPrefix("Facts and circumstances may have changed since publication.") ||
                 text == "Tags:" {
                 try paragraph.remove()
+                foundXeiasoTailMarker = true
             }
         }
+
+        guard foundXeiasoTailMarker else { return }
 
         for rule in try articleContent.select("hr").reversed() {
             try rule.remove()
