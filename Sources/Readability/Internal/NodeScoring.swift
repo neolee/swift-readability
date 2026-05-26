@@ -174,6 +174,9 @@ extension NodeScoringManager {
             if Configuration.negativePatterns.contains(where: { className.lowercased().contains($0) }) {
                 weight -= Configuration.classWeightPositive
             }
+            if hasTokenAwareNegativeMatch(className) {
+                weight -= Configuration.classWeightPositive
+            }
             if Configuration.positivePatterns.contains(where: { className.lowercased().contains($0) }) {
                 weight += Configuration.classWeightPositive
             }
@@ -183,6 +186,9 @@ extension NodeScoringManager {
         let id = element.id()
         if !id.isEmpty {
             if Configuration.negativePatterns.contains(where: { id.lowercased().contains($0) }) {
+                weight -= Configuration.classWeightPositive
+            }
+            if hasTokenAwareNegativeMatch(id) {
                 weight -= Configuration.classWeightPositive
             }
             if Configuration.positivePatterns.contains(where: { id.lowercased().contains($0) }) {
@@ -227,6 +233,23 @@ extension NodeScoringManager {
                 weight += pts
                 components.append(("class", "negative", negMatches, pts))
             }
+            let tokenMatches = Configuration.matchedTokenPatterns(
+                in: className,
+                patterns: Configuration.tokenNegativePatterns
+            )
+            let phraseMatches = Configuration.matchedExactPhrases(
+                in: className,
+                phrases: Configuration.exactNegativePhrases
+            )
+            if !tokenMatches.isEmpty || !phraseMatches.isEmpty {
+                let pts = -Configuration.classWeightPositive
+                weight += pts
+                let side = tokenAwareNegativeSide(
+                    tokenMatches: tokenMatches,
+                    phraseMatches: phraseMatches
+                )
+                components.append(("class", side, tokenMatches + phraseMatches, pts))
+            }
             let posMatches = Configuration.positivePatterns.filter { lower.contains($0) }
             if !posMatches.isEmpty {
                 let pts = Configuration.classWeightPositive
@@ -244,6 +267,23 @@ extension NodeScoringManager {
                 weight += pts
                 components.append(("id", "negative", negMatches, pts))
             }
+            let tokenMatches = Configuration.matchedTokenPatterns(
+                in: id,
+                patterns: Configuration.tokenNegativePatterns
+            )
+            let phraseMatches = Configuration.matchedExactPhrases(
+                in: id,
+                phrases: Configuration.exactNegativePhrases
+            )
+            if !tokenMatches.isEmpty || !phraseMatches.isEmpty {
+                let pts = -Configuration.classWeightPositive
+                weight += pts
+                let side = tokenAwareNegativeSide(
+                    tokenMatches: tokenMatches,
+                    phraseMatches: phraseMatches
+                )
+                components.append(("id", side, tokenMatches + phraseMatches, pts))
+            }
             let posMatches = Configuration.positivePatterns.filter { lower.contains($0) }
             if !posMatches.isEmpty {
                 let pts = Configuration.classWeightPositive
@@ -253,6 +293,26 @@ extension NodeScoringManager {
         }
 
         return (weight, components)
+    }
+
+    private func hasTokenAwareNegativeMatch(_ classOrId: String) -> Bool {
+        Configuration.matchesAnyTokenPattern(
+            classOrId,
+            patterns: Configuration.tokenNegativePatterns
+        ) || !Configuration.matchedExactPhrases(
+            in: classOrId,
+            phrases: Configuration.exactNegativePhrases
+        ).isEmpty
+    }
+
+    private func tokenAwareNegativeSide(tokenMatches: [String], phraseMatches: [String]) -> String {
+        if !tokenMatches.isEmpty && !phraseMatches.isEmpty {
+            return "negative-token-phrase"
+        }
+        if !tokenMatches.isEmpty {
+            return "negative-token"
+        }
+        return "negative-phrase"
     }
 
     /// Score an element for content extraction

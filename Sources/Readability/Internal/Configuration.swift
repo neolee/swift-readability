@@ -97,6 +97,34 @@ enum Configuration {
         "shopping", "tags", "tool", "widget"
     ]
 
+    /// Token-level negative patterns matched against individual class/id tokens.
+    /// Existing negative/positive patterns intentionally keep substring semantics;
+    /// these patterns only match whole tokens split on whitespace, hyphens, and underscores.
+    static let tokenNegativePatterns = ["cta"]
+
+    /// Exact class/id values that represent CTA chrome without broad substring matching.
+    static let exactNegativePhrases = ["call-to-action"]
+
+    static func matchedTokenPatterns(in classOrId: String, patterns: [String]) -> [String] {
+        let lower = classOrId.lowercased()
+        var separators = CharacterSet.whitespacesAndNewlines
+        separators.insert(charactersIn: "-_")
+        let tokens = lower.components(separatedBy: separators)
+            .filter { !$0.isEmpty }
+        return patterns.filter { tokens.contains($0) }
+    }
+
+    static func matchesAnyTokenPattern(_ classOrId: String, patterns: [String]) -> Bool {
+        !matchedTokenPatterns(in: classOrId, patterns: patterns).isEmpty
+    }
+
+    static func matchedExactPhrases(in classOrId: String, phrases: [String]) -> [String] {
+        let values = classOrId.lowercased()
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+        return phrases.filter { values.contains($0) }
+    }
+
     // MARK: - Unlikely Candidates (elements to remove)
 
     /// Elements that are unlikely to be content

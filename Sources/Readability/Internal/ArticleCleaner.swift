@@ -1495,10 +1495,10 @@ final class ArticleCleaner {
         let classAndId = DOMHelpers.getClassAndId(element)
 
         if Configuration.negativePatterns.contains(where: { classAndId.contains($0) }) {
-            weight -= 25
+            weight -= Configuration.classWeightPositive
         }
         if Configuration.positivePatterns.contains(where: { classAndId.contains($0) }) {
-            weight += 25
+            weight += Configuration.classWeightPositive
         }
 
         return weight

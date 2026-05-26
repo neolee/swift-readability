@@ -301,6 +301,64 @@ struct NodeScoringTests {
         #expect(weight == 0)
     }
 
+    @Test("getClassWeight applies token-aware CTA penalty")
+    func testClassWeightTokenAwareCTAPenalty() throws {
+        #expect(try classWeight(for: "<div class='content-cta'>Test</div>") == 0)
+        #expect(try classWeight(for: "<div class='studio-cta'>Test</div>") == -25)
+        #expect(try classWeight(for: "<div class='cta-block'>Test</div>") == -25)
+        #expect(try classWeight(for: "<div class='popup-cta-wrapper'>Test</div>") == -25)
+    }
+
+    @Test("getClassWeight CTA token does not match internal substrings")
+    func testClassWeightCTATokenDoesNotMatchInternalSubstrings() throws {
+        #expect(try classWeight(for: "<div class='octane'>Test</div>") == 0)
+        #expect(try classWeight(for: "<div class='dictation'>Test</div>") == 0)
+        #expect(try classWeight(for: "<div class='contact'>Test</div>") == -25)
+    }
+
+    @Test("getClassWeight applies exact CTA phrase penalty")
+    func testClassWeightExactCTAPhrasePenalty() throws {
+        #expect(try classWeight(for: "<div class='call-to-action'>Test</div>") == -25)
+        #expect(try classWeight(for: "<div id='call-to-action'>Test</div>") == -25)
+    }
+
+    @Test("getClassWeight applies one CTA penalty per attribute")
+    func testClassWeightOneCTAPenaltyPerAttribute() throws {
+        #expect(try classWeight(for: "<div class='content-cta studio-cta'>Test</div>") == 0)
+        #expect(try classWeight(for: "<div class='content-cta' id='sidebar'>Test</div>") == -25)
+        #expect(try classWeight(for: "<div class='content-cta' id='hero-cta'>Test</div>") == -25)
+        #expect(try classWeight(for: "<div class='comment-cta'>Test</div>") == -50)
+    }
+
+    @Test("getClassWeightWithBreakdown reports token-aware matches")
+    func testClassWeightBreakdownReportsTokenAwareMatches() throws {
+        let manager = NodeScoringManager()
+        let doc = try SwiftSoup.parse("<div class='content-cta' id='call-to-action'>Test</div>")
+        let div = try doc.select("div").first()!
+
+        let result = manager.getClassWeightWithBreakdown(for: div, flagWeightClasses: true)
+
+        #expect(result.weight == -25)
+        #expect(result.components.contains { component in
+            component.attribute == "class" &&
+                component.side == "negative-token" &&
+                component.matchedPatterns == ["cta"] &&
+                component.points == -25
+        })
+        #expect(result.components.contains { component in
+            component.attribute == "id" &&
+                component.side == "negative-phrase" &&
+                component.matchedPatterns == ["call-to-action"] &&
+                component.points == -25
+        })
+        #expect(result.components.contains { component in
+            component.attribute == "class" &&
+                component.side == "positive" &&
+                component.matchedPatterns == ["content"] &&
+                component.points == 25
+        })
+    }
+
     // MARK: - getLinkDensity Tests
 
     @Test("getLinkDensity returns 0 for no links")
@@ -313,6 +371,13 @@ struct NodeScoringTests {
         let density = try manager.getLinkDensity(for: div)
 
         #expect(density == 0)
+    }
+
+    private func classWeight(for html: String) throws -> Double {
+        let manager = NodeScoringManager()
+        let doc = try SwiftSoup.parse(html)
+        let div = try doc.select("div").first()!
+        return manager.getClassWeight(for: div)
     }
 
     @Test("getLinkDensity calculates correctly")
