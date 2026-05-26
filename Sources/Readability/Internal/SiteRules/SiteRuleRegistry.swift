@@ -308,7 +308,8 @@ enum SiteRuleRegistry {
         let rules: [SiblingInclusionSiteRule.Type] = [
             XkcdFooterSiblingRule.self,
             WordPressFeaturedImageRule.self,
-            SeanGoedeckePostFooterRule.self
+            SeanGoedeckePostFooterRule.self,
+            GhostArticleChromeRule.self
         ]
         for rule in rules {
             if let decision = try rule.shouldIncludeSibling(sibling, topCandidate: topCandidate) {
