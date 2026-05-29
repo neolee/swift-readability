@@ -1,0 +1,9 @@
+{
+  "byline" : "Raymond Chen",
+  "dir" : null,
+  "excerpt" : "Just let each person take turns trying.",
+  "lang" : "en-US",
+  "publishedTime" : "2026-05-28T14:00:00+00:00",
+  "siteName" : "The Old New Thing",
+  "title" : "Sharing the result of a single Windows Runtime IAsyncOperation among multiple coroutines, part 2 - The Old New Thing"
+}

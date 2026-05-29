@@ -1577,4 +1577,77 @@ struct ExPagesCompatibilityTests {
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
+
+    // MARK: raymondchen · The Old New Thing (devblogs.microsoft.com)
+
+    @Test("raymondchen - Title matches expected")
+    func testRaymondchenTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "raymondchen", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'raymondchen'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("raymondchen - Byline matches expected")
+    func testRaymondchenByline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "raymondchen", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'raymondchen'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("raymondchen - Excerpt matches expected")
+    func testRaymondchenExcerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "raymondchen", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'raymondchen'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("raymondchen - Site name matches expected")
+    func testRaymondchenSiteName() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "raymondchen", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'raymondchen'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.siteName == testCase.expectedMetadata.siteName)
+    }
+
+    @Test("raymondchen - Language matches expected")
+    func testRaymondchenLanguage() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "raymondchen", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'raymondchen'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.lang == testCase.expectedMetadata.lang)
+    }
+
+    @Test("raymondchen - Published time matches expected")
+    func testRaymondchenPublishedTime() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "raymondchen", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'raymondchen'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.publishedTime == testCase.expectedMetadata.publishedTime)
+    }
+
+    @Test("raymondchen - Content matches expected HTML")
+    func testRaymondchenContent() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "raymondchen", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'raymondchen'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
 }
