@@ -168,7 +168,8 @@ enum SiteRuleRegistry {
             FirefoxNightlyContainerCandidatePromotionRule.self,
             CityLabArticleContainerCandidateRule.self,
             XeiasoArticleRule.self,
-            SimonWillisonBeatCandidatePromotionRule.self
+            SimonWillisonBeatCandidatePromotionRule.self,
+            DevBlogsArticleCandidateRule.self
         ]
         for rule in rules {
             if let promoted = rule.promotedCandidate(from: candidate) {
