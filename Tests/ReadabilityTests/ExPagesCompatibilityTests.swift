@@ -1650,4 +1650,67 @@ struct ExPagesCompatibilityTests {
         let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
+
+    // MARK: eof-hr · Ibrahim Diallo Blog
+
+    @Test("eof-hr - Title matches expected")
+    func testEofHrTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "eof-hr", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'eof-hr'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("eof-hr - Byline matches expected")
+    func testEofHrByline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "eof-hr", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'eof-hr'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("eof-hr - Excerpt matches expected")
+    func testEofHrExcerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "eof-hr", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'eof-hr'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("eof-hr - Site name matches expected")
+    func testEofHrSiteName() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "eof-hr", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'eof-hr'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.siteName == testCase.expectedMetadata.siteName)
+    }
+
+    @Test("eof-hr - Language matches expected")
+    func testEofHrLanguage() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "eof-hr", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'eof-hr'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.lang == testCase.expectedMetadata.lang)
+    }
+
+    @Test("eof-hr - Content matches expected HTML")
+    func testEofHrContent() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "eof-hr", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'eof-hr'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
 }

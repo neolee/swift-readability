@@ -156,6 +156,11 @@ public struct Readability {
                 stage: snapshotPrefix.map { "\($0).after-removeTitleMatchedHeaders" } ?? "after-removeTitleMatchedHeaders",
                 articleContent: articleContent
             )
+            try cleaner.trimBoundaryNonContent(articleContent)
+            inspectionContext?.recordCleanupSnapshot(
+                stage: snapshotPrefix.map { "\($0).after-trimBoundaryNonContent" } ?? "after-trimBoundaryNonContent",
+                articleContent: articleContent
+            )
             return try articleContent.text()
         }
 
