@@ -252,6 +252,49 @@ struct ExPagesCompatibilityTests {
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
 
+    // MARK: fabiensanglard · The art and engineering of Silpheed (fabiensanglard.net)
+
+    @Test("fabiensanglard - Title matches expected")
+    func testFabiensanglardTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "fabiensanglard", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'fabiensanglard'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("fabiensanglard - Byline matches expected")
+    func testFabiensanglardByline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "fabiensanglard", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'fabiensanglard'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("fabiensanglard - Excerpt matches expected")
+    func testFabiensanglardExcerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "fabiensanglard", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'fabiensanglard'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("fabiensanglard - Content matches expected HTML")
+    func testFabiensanglardContent() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "fabiensanglard", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'fabiensanglard'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
+
     // MARK: garymarcus-1 · The two wildest stories today in tech (garymarcus.substack.com)
 
     @Test("garymarcus-1 - Title matches expected")

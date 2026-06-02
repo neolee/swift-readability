@@ -338,9 +338,46 @@ final class ArticleCleaner {
     private func promoteFloatedInlineImagesToFigures(_ root: Element) throws {
         while let image = try nextFloatedInlineImage(in: root) {
             guard let host = nearestFloatedImageHost(for: image), host.parent() != nil else {
+                // Host is detached or nonexistent — cannot promote.
+                // Strip float style so this image won't be re-discovered
+                // on the next scan, guaranteeing loop convergence.
+                try stripFloatFromStyle(image)
                 continue
             }
             try promoteFloatedInlineImage(image, from: host)
+        }
+    }
+
+    /// Removes `float:left|right` from the element's inline `style` attribute.
+    /// If the style attribute becomes empty after removal, it is removed entirely.
+    private func stripFloatFromStyle(_ element: Element) throws {
+        let style = (try? element.attr("style")) ?? ""
+        guard !style.isEmpty else { return }
+
+        let declarations = style
+            .split(separator: ";", omittingEmptySubsequences: true)
+            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { declaration in
+                guard let colon = declaration.firstIndex(of: ":") else {
+                    return true
+                }
+                let property = declaration[..<colon]
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .lowercased()
+                guard property == "float" else {
+                    return true
+                }
+                let value = declaration[declaration.index(after: colon)...]
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .lowercased()
+                return !value.hasPrefix("left") && !value.hasPrefix("right")
+            }
+
+        let cleanedStyle = declarations.joined(separator: "; ")
+        if cleanedStyle.isEmpty {
+            try element.removeAttr("style")
+        } else {
+            try element.attr("style", cleanedStyle)
         }
     }
 

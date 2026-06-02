@@ -1,0 +1,194 @@
+<div id="readability-page-1" class="page"><center>
+    
+
+</center><p>
+June 1, 2026</p>
+<p>The art and engineering of Silpheed</p><hr />
+ 
+
+<a href="https://fabiensanglard.net/silpheed/f384_cropped.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/f384_cropped.png" width="256" height="192" /></a><p>
+The 90's was a decade of considerable improvement in the world of video-game consoles<a name="back_1" href="#footnote_1"><sup>[1]</sup></a>. Each new model brought advanced processing power and better graphics without compromise.
+</p>
+
+<p>
+The mid-90s emergence of CD-ROM drives however was an oddity. While the 640 MiB storage was 320x a cartridge capacity<a name="back_2" href="#footnote_2"><sup>[2]</sup></a>, the access time (800ms<a name="back_3" href="#footnote_3"><sup>[3]</sup></a>) and bandwidth (single-speed 150 KiB/s) were an eye-watering 4,000,000x and 35x slower.
+</p>
+
+<p>
+The Mega-CD was Sega's idea to bring CD-ROM to its Genesis console. Nearly 200<a name="back_4" href="#footnote_4"><sup>[4]</sup></a> titles were produced for the platform. A few great games like <a href="https://www.youtube.com/watch?v=yKpS3ja7m7w">Sonic CD</a>, <a href="https://www.youtube.com/watch?v=sVVS2E3dwXg">Snatcher</a>, <a href="https://www.youtube.com/watch?v=T8cBEOqLf1o">Final Fight CD</a>, and <a href="https://www.youtube.com/watch?v=xeq9fPOxz6o">RPGs</a> came out. But an endless series of titles relying heavily on Full Motion Video (FMV) gave Sega's add-on an infamous reputation (<a href="https://www.youtube.com/watch?v=plV5l_uKzDo">Night Trap</a>, <a href="https://www.youtube.com/watch?v=FPcnTpqjX6M">Prize Fighter</a>, <a href="https://www.youtube.com/watch?v=Mjv0t0OMCBw">Slam City</a>, <a href="https://www.youtube.com/watch?v=e0JgUvRPAac">Corpse Killer</a>, <a href="https://www.youtube.com/watch?v=Lyak7VQhW4o">Supreme Warrior</a>, <a href="https://www.youtube.com/watch?v=h7IXEJci_OQ&amp;t=380s">WireHead</a>, and <a href="https://www.youtube.com/watch?v=lM9ukMOe7PU">A/X-101</a>).</p>
+
+<p>And then, there is <i><b>Silpheed</b></i>. Armed with exquisite artistic taste and an engine capable of jaw-dropping animation, it made the press go wild<a name="back_5" href="#footnote_5"><sup>[5]</sup></a><a name="back_6" href="#footnote_6"><sup>[6]</sup></a>. Players pondered what was real-time 3D and what was pre-calculated<a name="back_7" href="#footnote_7"><sup>[7]</sup></a>. It received praises which, to this day, persist<a name="back_8" href="#footnote_8"><sup>[8]</sup></a><a name="back_9" href="#footnote_9"><sup>[9]</sup></a>.</p>
+
+
+
+
+
+
+
+
+
+<p>For those still unimpressed, keep in mind these near-fullscreen cutscenes run on a 12.5MHz m68k  CPU, use 16 colors, and consume 150 KiB/s. With 16-bit 16kHz music, the 15fps video stream was left with a mere 8 KiB per frame.</p>
+
+<p>I spent the past two weeks reverse engineering the FMV format in my spare time. That was a departure from how I normally work since I did not write a single line of code. I will likely write something about my A.I framework (and opensource it) next month. But I can already tell this is an overall pleasant way to work.</p>
+
+<p>The following is what I came up with. And if you want to see all of the cutscenes and gameplay background videos to get accustomed to the topic, here is a <a href="https://fabiensanglard.net/silpheed/storyboard">storyboard</a> I created with the tools I designed (I can't really say I "wrote" them).</p>
+
+
+<p>Sega-CD internals 101</p><hr /><p>Before we dive into the optimizations and tricks that made Silpheed video format so efficient, we need to learn about how a Sega Genesis and a Mega-CD work together.</p>
+
+<pre>
+        GENESIS               │                      MEGA-CD                   
+                              │                                                
+┌──────────────────────┐      │               ┌───────────┐        ┌──────────┐
+│ MC68000 7.67 MHz     │      │               │  WORD RAM │        │  MC68000 │
+│                      │  ┌───┴──────┐        │   256 KB  │        │          │
+│ 64 KB RAM            ◄──┤Expansion ├────────►───────────┤        │ 12.5 MHz │
+│                      │  │   Port   │        │PROGRAM RAM│        │          │
+│ 8 KB Audio RAM (Z80) │  └───┬──────┘        │  512 KB   │        │          │
+└──────────┬───────────┘      │               └─────┬─────┘        └─────┬────┘
+           │                  │                     └──────────────┬─────┘     
+     ┌─────┴──────────┐       │                                    │           
+     │                │       │                 ┌───────┐     ┌────┴────┐      
+┌────▼──────┐   ┌─────▼─────┐ │                 │ Ricoh │     │  ASIC   │      
+│ VDP       │   │   Z-80    │ │                 │  PCM  ├─────┤  GFX    │      
+│ ┌───────┐ │   │   YM2612  │ │                 └───┬───┘     └────┬────┘      
+│ │64KVRM │ │   │  SN76489  │ │                     │              │           
+│ └───────┘ │   │           │ │                     │              │           
+└─────┬─────┘   └──────┬────┘ │                     │              │           
+      │                │      │                     │      ┌───────┴──────┐    
+      │                │   ┌──┴──────┐         ┌────▼────┐ │    CD-ROM    │    
+      │                └───┤RCA Cable├─────────►  MIXER  ◄─┤     DRIVE    │    
+      │                    └──┬──────┘         └────┬────┘ └──────────────┘    
+      │                       │                     │                          
+ ┌────▼────┐                  │                     │                          
+ │   TV    ◄──────────────────┼─────────────────────┘                          
+ └─────────┘                  │                                                 
+</pre>                                                    
+
+<p>Adding a Mega-CD turns the machine into two systems running in parallel. The Mega-CD side has PCM and CD playback, connected directly to the mixer<a name="back_10" href="#footnote_10"><sup>[10]</sup></a>. There is an ASIC with graphics acceleration (rot/scal/misc) to rival games like Mario Kart. The two systems communicate via shared memory (the expansion port) and analogic audio mixing.</p>
+
+<p>Understanding how this thing works made me respect Mega-CD developers even more than before. This looks like a nightmare to deal with, especially synchronization.</p>
+
+<p>The architecture of Silpheed</p><hr /><a href="https://fabiensanglard.net/silpheed/arch_all.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/arch_all.png" width="256" height="224" /></a> 
+<p>A Mega-CD system still renders to the TV with three layers. Two of them are made of tiles and called backgrounds (A and B) while one is the foreground containing sprites.</p>
+<p>The Sub-CPU m68k writes the tiles and tilemap for background B. Meanwhile the main CPU takes care of "drawing" background A containing the HUD and the foreground sprite layer.</p>
+<p>The Sub-CPU uses a double-buffer system where it renders to the Word RAM in L1 mode. While one buffer is fed to the VDP by the main CPU, it renders the next frame into the other buffer.</p>
+
+<p>On the audio side, non-interactive cutscenes rely only on the Ricoh from the Mega-CD to generate PCM quality music. During interactive sequences, the Ricoh is sporadically used for PCM audio samples while the music is done via the YM2612.</p>
+
+
+
+
+
+<p>The original Genesis (Model 1) audio path is incredibly convoluted. The output of the Genesis, its front jack port, must physically be connected to the RCA input in the back of the Sega-CD via a "mixing cable". The Sega-CD then mixes the line-in signal with its own CD-DA + PCM signal. The result is sent direclty to the TV via another RCA cable!</p>
+
+
+
+
+<p>Good design decisions</p><hr /><a href="https://fabiensanglard.net/silpheed/f549_cropped.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/f549_cropped.png" width="256" height="192" /></a><p>Most FMV games looked bad because developers followed a top-down approach trying to cram a real movie into a tiny CD-ROM using a weak CPU. To do so, they had to use a minuscule window, compression artifacts, and dithering that made you cry.</p>
+
+<p>
+For Silpheed, Game Arts took the opposite approach. They started from the bottom, engineering upward from the constraints of the system. They made excellent trade-off decisions with flat shaded polygons, 16 colors total, no gouraud, and minimal dithering.
+</p>
+
+<p>This approach would have never succeeded with the talented artists of Game Arts who were able to go the distance with these choices (especially the limited number of colors).</p>
+
+
+<p>PC-CDROM games were a different story. Thanks to better CPUs (DX4-100) they were able to use much better codecs. Some well-funded games, like <a href="https://www.youtube.com/watch?v=v-1-5M3M1po">Command &amp; Conquer</a>, <a href="https://www.youtube.com/watch?v=rUnvNTvHMnQ">Crusader: No Remorse</a>, or <a href="https://www.youtube.com/watch?v=uhPlK6yOT3g">Wing Commander III</a> (4 CDs!) used FMV to tremendously improve the storytelling.</p>
+
+
+
+<p>The bandwidth problem</p><hr /><p>
+At its core the problem of FMV is a problem of bandwidth. Data needs to be extracted from the CD-ROM, decompressed by a processor into an image, and that image must be fed to the video screen to find its way to the TV. The Mega-CD is ill-equipped in all three stages. 
+</p>
+
+<p>The tilemap problem</p><hr /><p>
+At first sight, there is another problem. Without a framebuffer, rendering must follow a cumbersome process where 768 tiles of dimensions 8x8 are drawn into. The tiles are then laid out on the screen, 32x28 via a tilemap (traditionally called "nametable" in Genesis parlance). The result forms a 256x224 image.
+</p>
+
+<p>Three easy ways to reduce bandwidth</p><hr /><a href="https://fabiensanglard.net/silpheed/f847_cropped.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/f847_cropped.png" width="256" height="191" /></a>
+<p>
+The easiest way to reduce bandwidth is to reduce the size of the video. Silpheed also uses this trick but just a little bit with the top and bottom tile line set to black (that is 16 lines total). It almost looks like an artistic choice since it results in a cinematic aspect ratio!
+</p>
+
+<p>
+The second way to reduce bandwidth is to reduce the framerate. Silpheed uses mostly 15fps with some complex scenes going as low as 7.5fps.
+</p>
+
+<p>
+Finally, the third way to reduce bandwidth is compression. For this, cutscenes and background video are handled differently.
+</p>
+
+
+<p>Video Compression</p><hr /><p>
+Silpheed does not use delta-compression. Every frame in a video is self-sufficient. Every single frame contains all the tiles it needs and the tilemap to place the tiles on the screen.</p>
+
+<p>Written like that it looks like there is no compression at all. But that is where the cumbersome tilemap system becomes a tremendous source of optimizations. Let's take the example of frame 44 in the "Game starts" cutscene.</p>
+
+
+<a href="https://fabiensanglard.net/silpheed/8x8/f044.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/8x8/f044.png" width="256" height="224" /></a>
+<p>
+If we add an 8x8 pixel grid, we can see the image has interesting properties. For example, a lot of tiles are the same plain color.</p>
+
+
+<a href="https://fabiensanglard.net/silpheed/8x8/f044_grid.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/8x8/f044_grid.png" width="1024" height="896" /></a>
+<p>Silpheed's video format extensively exploits this. The encoder only issues one of each of the 15 plain color tiles in a frame and then references it over and over again in the tilemap. For this frame, out of 896 tiles, 456 reference the same 15 single color tiles. That is a bandwidth reduction of 50% right there.</p>
+
+<a href="https://fabiensanglard.net/silpheed/8x8/f044_solid_tiles_grid.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/8x8/f044_solid_tiles_grid.png" width="1024" height="896" /></a><a href="https://fabiensanglard.net/silpheed/8x8/f044_nonsolid_tiles_grid.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/8x8/f044_nonsolid_tiles_grid.png" width="1024" height="896" /></a>
+<p>On the right, we have all the leftover tiles made of more than one color. For these as well, Silpheed has a trick up its sleeves.</p>
+
+
+
+<p>Leveraging Mega-CD ASIC for decompression</p><hr /><p>
+With 456 tiles taken care of, 440 remain (see the image below). Some of these tiles also have an interesting property. They are made of only two colors.</p> 
+
+
+<a href="https://fabiensanglard.net/silpheed/8x8/f044_nonsolid_tiles_grid.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/8x8/f044_nonsolid_tiles_grid.png" width="1024" height="896" /></a>
+<p>The Mega-CD ASIC features advanced graphics capabilities. The most famous ones are rotation and scaling (to be able to rival games like Mario Kart on Super Nintendo). A much less notorious feature is named "Font bit"<a name="back_11" href="#footnote_11"><sup>[11]</sup></a>. As its name indicates, the intent was to allow fast 2-color kanji/text rendition. With three bytes, the font registers generate 16 nibbles (8 bytes) which is two full rows of an 8x8 tile. Here is how it works.</p>
+
+<ol>
+<li>Write two 4-bit palette indices to the source color register ($FF804D).
+  <ul>
+    <li>Color A = pixels generated when a bit is 0
+    </li><li>Color B = pixels generated when a bit is 1
+</li></ul>
+</li><li>Write a 16-bit bitmap pattern to $FF804E.
+  <ul>  
+    <li>Each bit represents one pixel.
+    </li><li>The 16 bits are interpreted as two rows of 8 pixels.
+    </li><li>A 0 bit selects Color A.
+    </li><li>A 1 bit selects Color B.
+  </li></ul>
+</li><li>The ASIC expands the 1-bit pattern into 4-bit pixel data.
+</li><li>Read the generated tile data back from $FF8050-$FF8056.
+</li></ol>
+
+<p>With three bytes, the font registers generate 16 nibbles (8 bytes). That is 37% bandwidth saved on the 50% remaining from the first optimization. Not to mention the CPU saving since no more masking as to be done to write nibbles.</p>
+
+<a href="https://fabiensanglard.net/silpheed/8x8/f044_nonsolid_tiles_asic_grid.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/8x8/f044_nonsolid_tiles_asic_grid.png" width="1024" height="896" /></a><a href="https://fabiensanglard.net/silpheed/8x8/f044_nonsolid_tiles_raw_grid.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/8x8/f044_nonsolid_tiles_raw_grid.png" width="1024" height="896" /></a>
+<p>
+Above, on the left, are 234 tiles, made of two colors. These were generated via the ASIC "font registers". On the right is what remains, 206 raw tiles that are actually stored as 8x8 "raw" nibbles in the frame.
+</p>
+
+<p>Tilemap compression</p><hr /><p>
+Each frame has a tilemap and this also is compressed. Normally the 768 tile locations would have taken 768x 10bit = 960 bytes. The compression scheme leverages another property of the image, namely that tile indices in the tilemap increase linearly (as shown in the 8x2 tilemap below).</p>
+
+<pre>
+0 1 2 3 4 5 6 7
+8 9 A B C D E F
+</pre>
+
+<p>The tilemap is stored as a 768-bit bitmap (96 bytes) where 0 means "auto-increment" and 1 means read an immediate value. In practice, the trick reduced the space requirement by nearly 30% (96 + 556-byte payload = 652 bytes).</p>
+
+
+<p>Fractal level</p><hr /><p>If you refer to the <a href="https://fabiensanglard.net/silpheed/storyboard">storyboard</a>, you will see that two levels (Stage 1 and Stage 10) include complex textures (which in interviews were called "fractals" by developers). These sequences were very hard to compress. So much so that all tiles use raw format without any trick. The only way to make it work was to drop the framerate to 7.5fps.</p>
+
+
+<p>Palette trick</p><hr /><a href="https://fabiensanglard.net/silpheed/laser_palette_cycle.png"><img loading="lazy" src="https://fabiensanglard.net/silpheed/laser_palette_cycle.png" width="4" height="1" /></a><p>If you take a look at the actual <a href="https://youtu.be/GBS332N6wig?si=NGvRQkOj1b3aaXOi&amp;t=1749">gameplay</a> you will have noticed that the laser and explosions do not use a plain color. They are in fact multi-colored. This effect is achieved by reserving four colors at the end of the palette and shifting them each frame via the main m68k.</p>
+<p>
+ This also means artists had to design gameplay sequences using only twelve colors (cutscenes used the full 16 colors since there was no laser effect in them)!</p>
+
+
+<p>References</p><hr /><table><tbody><tr><td><a name="footnote_1"></a><a href="#back_1">^</a></td><td> [ 1]</td><td><a href="https://fabiensanglard.net/silpheed/consoles.webp">Consoles of the 90s</a></td></tr><tr><td><a name="footnote_2"></a><a href="#back_2">^</a></td><td> [ 2]</td><td><a href="https://en.wikipedia.org/wiki/Sega_CD">Wikipedia: Mega-CD</a></td></tr><tr><td><a name="footnote_3"></a><a href="#back_3">^</a></td><td> [ 3]</td><td><a href="https://www.vgmuseum.com/systems/segacd/">VG Museum, Sega-CD</a></td></tr><tr><td><a name="footnote_4"></a><a href="#back_4">^</a></td><td> [ 4]</td><td><a href="https://segaretro.org/List_of_Mega-CD_games_in_the_United_States">List of Mega-CD games</a></td></tr><tr><td><a name="footnote_5"></a><a href="#back_5">^</a></td><td> [ 5]</td><td><a href="https://segaretro.org/Silpheed/Reception">Silpheed/Reception</a></td></tr><tr><td><a name="footnote_6"></a><a href="#back_6">^</a></td><td> [ 6]</td><td><a href="https://web.archive.org/web/20120915035000/http://www.silpheed.org/">Silpheed.comp: Magazine articles</a></td></tr><tr><td><a name="footnote_7"></a><a href="#back_7">^</a></td><td> [ 7]</td><td><a href="https://gendev.spritesmind.net/forum/viewtopic.php?t=224">Silpheed backgrounds and cutscenes</a></td></tr><tr><td><a name="footnote_8"></a><a href="#back_8">^</a></td><td> [ 8]</td><td><a href="https://www.reddit.com/r/SegaCD/comments/1raev90/why_does_silpheeds_fmv_look_so_good/">Why DOES Silpheed's FMV look so good?</a></td></tr><tr><td><a name="footnote_9"></a><a href="#back_9">^</a></td><td> [ 9]</td><td><a href="https://www.reddit.com/r/SegaCD/comments/jw8e0e/sega_cd_silpheed_was_largely_just_spectacle_but/">Sega CD Silpheed Was Largely Just Spectacle, But That’s Okay</a></td></tr><tr><td><a name="footnote_10"></a><a href="#back_10">^</a></td><td> [10]</td><td><a href="https://archive.org/details/sega-cd-users-manual">Mega-CD V1 manual</a></td></tr><tr><td><a name="footnote_11"></a><a href="#back_11">^</a></td><td> [11]</td><td><a href="https://segaretro.org/images/archive/6/6f/20190509144929%21Mega-CD_Software_Development_Manual.pdf">MEGA-CD SOFTWARE
+DEVELOPMENT MANUAL</a></td></tr></tbody></table> <hr />
+ <center>*</center></div>
