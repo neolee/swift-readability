@@ -256,6 +256,7 @@ enum SiteRuleRegistry {
                 SubstackDiscussionFooterRule.self,
                 MozillaCustomizeSyncSectionRule.self,
                 EHowAuthorProfileRule.self,
+                FabienSanglardLeadingChromeRule.self,
                 SimplyFoundMediaContainerRule.self,
                 FolhaGalleryWidgetRule.self,
                 PixnetArticleKeywordRule.self,
