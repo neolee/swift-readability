@@ -1560,7 +1560,6 @@ final class ArticleCleaner {
         // Remove empty paragraphs
         try removeEmptyParagraphs(articleContent)
         try SiteRuleRegistry.applyArticleCleanerRules(phase: .postParagraph, to: articleContent, context: siteRuleContext)
-        try mergeFragmentedParagraphDivs(articleContent)
 
         // Remove ad placeholders that survived extraction.
         try removeAdvertisementPlaceholders(articleContent)
@@ -1630,44 +1629,6 @@ final class ArticleCleaner {
             if text.isEmpty && contentElements == 0 {
                 try p.remove()
             }
-        }
-    }
-
-    /// Merge div blocks whose direct paragraph children were split into many tiny fragments.
-    /// This commonly happens in print-info tails where inline spans are broken into
-    /// consecutive short paragraphs.
-    private func mergeFragmentedParagraphDivs(_ element: Element) throws {
-        let divs = try element.select("div")
-        for div in divs.reversed() {
-            guard div.parent() != nil else { continue }
-            if (try? div.select("h1, h2, h3, h4, h5, h6, img, picture, figure, video, iframe, table, ul, ol").isEmpty()) == false {
-                continue
-            }
-
-            let children = div.children().array()
-            guard !children.isEmpty else { continue }
-            guard children.allSatisfy({ $0.tagName().lowercased() == "p" }) else { continue }
-
-            let paragraphs = children
-            guard paragraphs.count >= 4 else { continue }
-
-            let prefix = Array(paragraphs.prefix(min(6, paragraphs.count)))
-            let shortPrefixCount = prefix.filter {
-                let text = ((try? DOMHelpers.getInnerText($0)) ?? "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                return text.count <= 24
-            }.count
-            guard shortPrefixCount >= 3 else { continue }
-
-            let doc = div.ownerDocument() ?? Document("")
-            let merged = try doc.createElement("p")
-            for paragraph in paragraphs {
-                while let first = paragraph.getChildNodes().first {
-                    try merged.appendChild(first)
-                }
-                try paragraph.remove()
-            }
-            try div.appendChild(merged)
         }
     }
 

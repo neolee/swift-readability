@@ -1,0 +1,9 @@
+{
+  "byline" : "John",
+  "dir" : "ltr",
+  "excerpt" : "The Gaussian function exp(-x^2) can be surprisingly well approximated by (1 + cos(sin(x) + x))\/2 on the interval [-4.4].",
+  "lang" : "en-US",
+  "publishedTime" : "2026-05-31T16:15:49+00:00",
+  "siteName" : "John D. Cook | Applied Mathematics Consulting",
+  "title" : "Another Gaussian approximation"
+}

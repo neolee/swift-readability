@@ -1,0 +1,29 @@
+<div id="readability-page-1" class="page">
+ <div id="wrapper-one" role="main">
+  <article id="post-247061">
+   <div>
+    <p>The function</p>
+    <p>(1 + cos(<em>x</em>))/2</p>
+    <p>gives a fair approximation to the Gaussian density</p>
+    <p>exp(−<em>x</em>²)</p>
+    <p>You can make the approximation much better by raising it to a power. The function</p>
+    <p>((1 + cos(<em>x</em>))/2)<sup>4</sup></p>
+    <p>gives a good lower bound and</p>
+    <p>((1 + cos(<em>x</em>))/2)<sup>3.5597</sup></p>
+    <p>gives a good upper bound. More on that <a href="https://www.johndcook.com/blog/2023/07/05/normal-approximation/">here</a>.</p>
+    <p>There are other ways of improving the cosine approximation to the Gaussian. <a href="https://x.com/1strawberry_jam/status/2060730093404856692">Yesterday</a> I came across one I hadn’t seen before, adding a sin(<em>x</em>) term to&nbsp;<em>x</em>.</p>
+    <p>(1 + cos(sin(<em>x</em>) + <em>x</em>))/2</p>
+    <p>This function matches the first few terms of the power series for exp(−<em>x</em>²) and has an error on the order of <em>x</em><sup>6</sup>/240. You can’t see the difference between the two functions in a plot for −4 ≤ <em>x</em> ≤ 4.</p>
+    <p>***</p>
+    <p>There’s a tension between the previous two statements. If the error in on the order of <em>x</em><sup>6</sup>/240 then we’d expect the error to be huge at&nbsp;<em>x</em> = 4. We have</p>
+    <p>4<sup>6</sup>/240 = 17.07</p>
+    <p>and yet</p>
+    <p>exp(−4²) − ((1 + cos(4 + sin(4)))/2) = −0.002579,</p>
+    <p>i.e. the error is between 3 and 4 orders of magnitude smaller than we might expect.</p>
+    <p>We have an alternating series, so the truncation error should be roughly equal to the first term after the truncation, right? No, the alternating series theorem doesn’t apply because the absolute values of the terms in the series are not decreasing yet for <em>x</em> = 4. The terms have to decrease eventually because the series has infinite radius of convergence, but they’re not decreasing at the 6th term; the terms will get much larger in absolute value before they get smaller.</p>
+    <p>The basic alternating series theorem gives only an upper bound on truncation error, but there are extensions that also give a lower bound. I wrote about these <a href="https://www.johndcook.com/blog/2026/03/17/alternating-series-remainder/">extensions</a> a few weeks ago. But they don’t apply here because the terms have not started decreasing in absolute value.</p>
+    <p><strong>Update</strong>: See further discussion in the post <a href="https://www.johndcook.com/blog/2026/06/01/not-just-taylor-series/">It’s not just Taylor series</a>.</p>
+   </div>
+  </article>
+ </div>
+</div>
