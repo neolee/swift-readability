@@ -1,0 +1,9 @@
+{
+  "byline" : "Tom Renner",
+  "dir" : null,
+  "excerpt" : "This is part one of a series where I document how I’m making this site more interoperable with IndieWeb tools and standards. I’ll update this notice to link to part 2 once I’ve written it\nInteroperability is the heart of what makes the digital world work.\nIn my first job I worked with academic libraries to make research more openly available, sharing data about all forms of research outputs across the globe through the use of open data formats. These community-owned standards ensured that thousands of different systems globally could communicate, making each other aware of new findings in a field, and bringing the gobal academic community into closer contact.1",
+  "lang" : "en-gb",
+  "publishedTime" : "2026-05-29T00:00:00+00:00",
+  "siteName" : "My place to put things",
+  "title" : "Joining the IndieWeb - #1: Microformats"
+}

@@ -866,6 +866,49 @@ struct ExPagesCompatibilityTests {
         #expect(isEqual, "DOM mismatch:\n\(diff)")
     }
 
+    // MARK: tomrenner · Joining the IndieWeb - #1: Microformats (tomrenner.com)
+
+    @Test("tomrenner - Title matches expected")
+    func testTomrennerTitle() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "tomrenner", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'tomrenner'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("tomrenner - Byline matches expected")
+    func testTomrennerByline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "tomrenner", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'tomrenner'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("tomrenner - Excerpt matches expected")
+    func testTomrennerExcerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "tomrenner", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'tomrenner'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("tomrenner - Content matches expected HTML")
+    func testTomrennerContent() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "tomrenner", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'tomrenner'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
+
     // MARK: soulhacker · 为什么你要学习类型系统 (soulhacker.me)
 
     @Test("soulhacker - Title matches expected")

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Joining the IndieWeb - #1: Microformats | My place to put things</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="description" content="
+This is part one of a series where I document how I&rsquo;m making this site more interoperable with IndieWeb tools and standards. I&rsquo;ll update this notice to link to part 2 once I&rsquo;ve written it
+
+Interoperability is the heart of what makes the digital world work.
+In my first job I worked with academic libraries to make research more openly available, sharing data about all forms of research outputs across the globe through the use of open data formats. These community-owned standards ensured that thousands of different systems globally could communicate, making each other aware of new findings in a field, and bringing the gobal academic community into closer contact.1">
+    <meta name="generator" content="Hugo 0.157.0">
+    
+    
+    
+      <meta name="robots" content="index, follow">
+    
+      <meta name="author" content = "Tom Renner">
+
+    
+<link rel="stylesheet" href="/ananke/css/main.min.89a1964d7cf5331fddd36a0e1efec1995eff019dad8b08f936785db933c3906c.css" >
+
+
+
+
+    
+      
+
+    
+
+    
+
+    
+      <link rel="canonical" href="https://tomrenner.com/posts/joining-the-indieweb-1/">
+    
+
+    <link rel="webmention" href="https://webmention.io/tomrenner.com/webmention" />
+
+    <meta property="og:url" content="https://tomrenner.com/posts/joining-the-indieweb-1/">
+  <meta property="og:site_name" content="My place to put things">
+  <meta property="og:title" content="Joining the IndieWeb - #1: Microformats">
+  <meta property="og:description" content="This is part one of a series where I document how I’m making this site more interoperable with IndieWeb tools and standards. I’ll update this notice to link to part 2 once I’ve written it
+Interoperability is the heart of what makes the digital world work.
+In my first job I worked with academic libraries to make research more openly available, sharing data about all forms of research outputs across the globe through the use of open data formats. These community-owned standards ensured that thousands of different systems globally could communicate, making each other aware of new findings in a field, and bringing the gobal academic community into closer contact.1">
+  <meta property="og:locale" content="en_gb">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-05-29T00:00:00+00:00">
+    <meta property="article:modified_time" content="2026-05-29T00:00:00+00:00">
+    <meta property="article:tag" content="Technologies">
+    <meta property="article:tag" content="How-To">
+
+  <meta itemprop="name" content="Joining the IndieWeb - #1: Microformats">
+  <meta itemprop="description" content="This is part one of a series where I document how I’m making this site more interoperable with IndieWeb tools and standards. I’ll update this notice to link to part 2 once I’ve written it
+Interoperability is the heart of what makes the digital world work.
+In my first job I worked with academic libraries to make research more openly available, sharing data about all forms of research outputs across the globe through the use of open data formats. These community-owned standards ensured that thousands of different systems globally could communicate, making each other aware of new findings in a field, and bringing the gobal academic community into closer contact.1">
+  <meta itemprop="datePublished" content="2026-05-29T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2026-05-29T00:00:00+00:00">
+  <meta itemprop="wordCount" content="1212">
+  <meta itemprop="keywords" content="Technologies,How-To">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Joining the IndieWeb - #1: Microformats">
+  <meta name="twitter:description" content="This is part one of a series where I document how I’m making this site more interoperable with IndieWeb tools and standards. I’ll update this notice to link to part 2 once I’ve written it
+Interoperability is the heart of what makes the digital world work.
+In my first job I worked with academic libraries to make research more openly available, sharing data about all forms of research outputs across the globe through the use of open data formats. These community-owned standards ensured that thousands of different systems globally could communicate, making each other aware of new findings in a field, and bringing the gobal academic community into closer contact.1">
+
+      
+    
+      <link rel="me" href="https://mastodon.social/@trenner" />
+    <meta name="fediverse:creator" content="@trenner@mastodon.social">
+
+    <link rel="me" href="https://github.com/tr325" />
+
+    <link rel="webmention" href="https://webmention.io/tomrenner.com/webmention" />
+    
+    <link rel="stylesheet" href="https://tomrenner.com/css/webmentions.min.css" media="screen">
+
+    <span class="h-card" style="display: none;">
+        <span class="p-name">Tom Renner</span>
+        <span class="p-given-name">Tom</span>
+        <span class="p-family-name">Renner</span>
+        <span class="p-note">Generalist developer and team lead, based in Munich. Cares about ethical tech, teamwork, and badgers.</span>
+        <a class="u-url u-uid" href="https://tomrenner.com">tomrenner.com</a>
+        <a class="u-url" rel="me" href="https://mastodon.social/@trenner">@trenner@mastodon.social</a>
+    </span>
+  </head><body class="ma0 avenir bg-near-white production">
+
+    
+   
+  
+
+  
+  
+  
+  <header class="cover bg-center" style="background-image: url('https://tomrenner.com/images/indieweb.jpg');">
+    <div class="bg-black-60">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l justify-between items-center center">
+    <a href="/" class="f3 fw2 hover-white no-underline white-90 dib">
+      
+        My place to put things
+      
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+        <ul class="pl0 mr3">
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white no-underline white-90" href="/about/" title="About page">
+              About
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white no-underline white-90" href="/contact/" title="Contact page">
+              Contact
+            </a>
+          </li>
+          
+          <li class="list f5 f4-ns fw4 dib pr3">
+            <a class="hover-white no-underline white-90" href="/posts/" title="Posts page">
+              Posts
+            </a>
+          </li>
+          
+        </ul>
+      
+      <div class="ananke-socials"><a href="https://mastodon.social/@trenner" target="_blank" rel="noopener"
+        class="ananke-social-link link-transition mastodon link dib z-999 pt3 pt0-l mr1"
+        title="follow on Mastodon - Opens in a new window"
+        aria-label="follow on Mastodon - Opens in a new window">
+      <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M433 179.11c0-97.2-63.71-125.7-63.71-125.7-62.52-28.7-228.56-28.4-290.48 0 0 0-63.72 28.5-63.72 125.7 0 115.7-6.6 259.4 105.63 289.1 40.51 10.7 75.32 13 103.33 11.4 50.81-2.8 79.32-18.1 79.32-18.1l-1.7-36.9s-36.31 11.4-77.12 10.1c-40.41-1.4-83-4.4-89.63-54a102.54 102.54 0 0 1-.9-13.9c85.63 20.9 158.65 9.1 178.75 6.7 56.12-6.7 105-41.3 111.23-72.9 9.8-49.8 9-121.5 9-121.5zm-75.12 125.2h-46.63v-114.2c0-49.7-64-51.6-64 6.9v62.5h-46.33V197c0-58.5-64-56.6-64-6.9v114.2H90.19c0-122.1-5.2-147.9 18.41-175 25.9-28.9 79.82-30.8 103.83 6.1l11.6 19.5 11.6-19.5c24.11-37.1 78.12-34.8 103.83-6.1 23.71 27.3 18.4 53 18.4 175z"/></svg>
+            
+          </span></a><a href="https://github.com/tr325" target="_blank" rel="noopener"
+        class="ananke-social-link link-transition github link dib z-999 pt3 pt0-l mr1"
+        title="follow on GitHub - Opens in a new window"
+        aria-label="follow on GitHub - Opens in a new window">
+      <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+            
+          </span></a><a href="http://linkedin.com/in/tom-renner" target="_blank" rel="noopener"
+        class="ananke-social-link link-transition linkedin link dib z-999 pt3 pt0-l mr1"
+        title="follow on LinkedIn - Opens in a new window"
+        aria-label="follow on LinkedIn - Opens in a new window">
+      <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+            
+          </span></a><a href="https://tomrenner.com/index.xml" target="_blank" rel="noopener"
+        class="ananke-social-link link-transition rss link dib z-999 pt3 pt0-l mr1"
+        title="follow on RSS - Opens in a new window"
+        aria-label="follow on RSS - Opens in a new window">
+      <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M0 64C0 46.3 14.3 32 32 32c229.8 0 416 186.2 416 416c0 17.7-14.3 32-32 32s-32-14.3-32-32C384 253.6 226.4 96 32 96C14.3 96 0 81.7 0 64zM0 416a64 64 0 1 1 128 0A64 64 0 1 1 0 416zM32 160c159.1 0 288 128.9 288 288c0 17.7-14.3 32-32 32s-32-14.3-32-32c0-123.7-100.3-224-224-224c-17.7 0-32-14.3-32-32s14.3-32 32-32z"/></svg>
+            
+          </span></a></div>
+
+    </div>
+  </div>
+</nav>
+
+      <div class="tc-l pv6 ph3 ph4-ns">
+        
+          <div class="f2 f1-l fw2 white-90 mb0 lh-title">Joining the IndieWeb - #1: Microformats</div>
+          
+        
+      </div>
+    </div>
+  </header>
+
+
+
+    <main class="pb7" role="main">
+      
+  
+  <article class="h-entry flex-l flex-wrap justify-between mw8 center ph3">
+    <header class="mt4 w-100">
+      <aside class="instapaper_ignoref b helvetica tracked ttu">
+          
+        Posts
+      </aside><div id="sharing" class="mt3 ananke-socials"><a href="https://bsky.app/intent/compose?&amp;text=https%3A%2F%2Ftomrenner.com%2Fposts%2Fjoining-the-indieweb-1%2F"
+        class="ananke-social-link bluesky no-underline"
+        title="Share on Bluesky" aria-label="Share on Bluesky"
+        target="_blank" rel="nofollow noopener noreferrer">
+        <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M407.8 294.7c-3.3-.4-6.7-.8-10-1.3c3.4 .4 6.7 .9 10 1.3zM288 227.1C261.9 176.4 190.9 81.9 124.9 35.3C61.6-9.4 37.5-1.7 21.6 5.5C3.3 13.8 0 41.9 0 58.4S9.1 194 15 213.9c19.5 65.7 89.1 87.9 153.2 80.7c3.3-.5 6.6-.9 10-1.4c-3.3 .5-6.6 1-10 1.4C74.3 308.6-9.1 342.8 100.3 464.5C220.6 589.1 265.1 437.8 288 361.1c22.9 76.7 49.2 222.5 185.6 103.4c102.4-103.4 28.1-156-65.8-169.9c-3.3-.4-6.7-.8-10-1.3c3.4 .4 6.7 .9 10 1.3c64.1 7.1 133.6-15.1 153.2-80.7C566.9 194 576 75 576 58.4s-3.3-44.7-21.6-52.9c-15.8-7.1-40-14.9-103.2 29.8C385.1 81.9 314.1 176.4 288 227.1z"/></svg>
+                
+              </span></a><a href="https://news.ycombinator.com/submitlink?&amp;t=&#43;This&#43;is&#43;part&#43;one&#43;of&#43;a&#43;series&#43;where&#43;I&#43;document&#43;how&#43;I%26amp%3Brsquo%3Bm&#43;making&#43;this&#43;site&#43;more&#43;interoperable&#43;with&#43;IndieWeb&#43;tools&#43;and&#43;standards.&#43;I%26amp%3Brsquo%3Bll&#43;update&#43;this&#43;notice&#43;to&#43;link&#43;to&#43;part&#43;2&#43;once&#43;I%26amp%3Brsquo%3Bve&#43;written&#43;it%0AInteroperability&#43;is&#43;the&#43;heart&#43;of&#43;what&#43;makes&#43;the&#43;digital&#43;world&#43;work.%0AIn&#43;my&#43;first&#43;job&#43;I&#43;worked&#43;with&#43;academic&#43;libraries&#43;to&#43;make&#43;research&#43;more&#43;openly&#43;available%2C&#43;sharing&#43;data&#43;about&#43;all&#43;forms&#43;of&#43;research&#43;outputs&#43;across&#43;the&#43;globe&#43;through&#43;the&#43;use&#43;of&#43;open&#43;data&#43;formats.&#43;These&#43;community-owned&#43;standards&#43;ensured&#43;that&#43;thousands&#43;of&#43;different&#43;systems&#43;globally&#43;could&#43;communicate%2C&#43;making&#43;each&#43;other&#43;aware&#43;of&#43;new&#43;findings&#43;in&#43;a&#43;field%2C&#43;and&#43;bringing&#43;the&#43;gobal&#43;academic&#43;community&#43;into&#43;closer&#43;contact.1%0A&amp;u=https%3A%2F%2Ftomrenner.com%2Fposts%2Fjoining-the-indieweb-1%2F"
+        class="ananke-social-link hackernews no-underline"
+        title="Share on Hacker News" aria-label="Share on Hacker News"
+        target="_blank" rel="nofollow noopener noreferrer">
+        <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M0 32v448h448V32H0zm21.2 197.2H21c.1-.1.2-.3.3-.4 0 .1 0 .3-.1.4zm218 53.9V384h-31.4V281.3L128 128h37.3c52.5 98.3 49.2 101.2 59.3 125.6 12.3-27 5.8-24.4 60.6-125.6H320l-80.8 155.1z"/></svg>
+                
+              </span></a><a href="https://www.linkedin.com/shareArticle?&amp;mini=true&amp;source=https%3A%2F%2Ftomrenner.com%2Fposts%2Fjoining-the-indieweb-1%2F&amp;summary=&#43;This&#43;is&#43;part&#43;one&#43;of&#43;a&#43;series&#43;where&#43;I&#43;document&#43;how&#43;I%26amp%3Brsquo%3Bm&#43;making&#43;this&#43;site&#43;more&#43;interoperable&#43;with&#43;IndieWeb&#43;tools&#43;and&#43;standards.&#43;I%26amp%3Brsquo%3Bll&#43;update&#43;this&#43;notice&#43;to&#43;link&#43;to&#43;part&#43;2&#43;once&#43;I%26amp%3Brsquo%3Bve&#43;written&#43;it%0AInteroperability&#43;is&#43;the&#43;heart&#43;of&#43;what&#43;makes&#43;the&#43;digital&#43;world&#43;work.%0AIn&#43;my&#43;first&#43;job&#43;I&#43;worked&#43;with&#43;academic&#43;libraries&#43;to&#43;make&#43;research&#43;more&#43;openly&#43;available%2C&#43;sharing&#43;data&#43;about&#43;all&#43;forms&#43;of&#43;research&#43;outputs&#43;across&#43;the&#43;globe&#43;through&#43;the&#43;use&#43;of&#43;open&#43;data&#43;formats.&#43;These&#43;community-owned&#43;standards&#43;ensured&#43;that&#43;thousands&#43;of&#43;different&#43;systems&#43;globally&#43;could&#43;communicate%2C&#43;making&#43;each&#43;other&#43;aware&#43;of&#43;new&#43;findings&#43;in&#43;a&#43;field%2C&#43;and&#43;bringing&#43;the&#43;gobal&#43;academic&#43;community&#43;into&#43;closer&#43;contact.1%0A&amp;title=Joining&#43;the&#43;IndieWeb&#43;-&#43;%231%3A&#43;Microformats&amp;url=https%3A%2F%2Ftomrenner.com%2Fposts%2Fjoining-the-indieweb-1%2F"
+        class="ananke-social-link linkedin no-underline"
+        title="Share on LinkedIn" aria-label="Share on LinkedIn"
+        target="_blank" rel="nofollow noopener noreferrer">
+        <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+                
+              </span></a><a href="https://reddit.com/submit/?&amp;resubmit=true&amp;title=Joining&#43;the&#43;IndieWeb&#43;-&#43;%231%3A&#43;Microformats&amp;url=https%3A%2F%2Ftomrenner.com%2Fposts%2Fjoining-the-indieweb-1%2F"
+        class="ananke-social-link reddit no-underline"
+        title="Share on Reddit" aria-label="Share on Reddit"
+        target="_blank" rel="nofollow noopener noreferrer">
+        <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M0 256C0 114.6 114.6 0 256 0S512 114.6 512 256s-114.6 256-256 256L37.1 512c-13.7 0-20.5-16.5-10.9-26.2L75 437C28.7 390.7 0 326.7 0 256zM349.6 153.6c23.6 0 42.7-19.1 42.7-42.7s-19.1-42.7-42.7-42.7c-20.6 0-37.8 14.6-41.8 34c-34.5 3.7-61.4 33-61.4 68.4l0 .2c-37.5 1.6-71.8 12.3-99 29.1c-10.1-7.8-22.8-12.5-36.5-12.5c-33 0-59.8 26.8-59.8 59.8c0 24 14.1 44.6 34.4 54.1c2 69.4 77.6 125.2 170.6 125.2s168.7-55.9 170.6-125.3c20.2-9.6 34.1-30.2 34.1-54c0-33-26.8-59.8-59.8-59.8c-13.7 0-26.3 4.6-36.4 12.4c-27.4-17-62.1-27.7-100-29.1l0-.2c0-25.4 18.9-46.5 43.4-49.9l0 0c4.4 18.8 21.3 32.8 41.5 32.8zM177.1 246.9c16.7 0 29.5 17.6 28.5 39.3s-13.5 29.6-30.3 29.6s-31.4-8.8-30.4-30.5s15.4-38.3 32.1-38.3zm190.1 38.3c1 21.7-13.7 30.5-30.4 30.5s-29.3-7.9-30.3-29.6c-1-21.7 11.8-39.3 28.5-39.3s31.2 16.6 32.1 38.3zm-48.1 56.7c-10.3 24.6-34.6 41.9-63 41.9s-52.7-17.3-63-41.9c-1.2-2.9 .8-6.2 3.9-6.5c18.4-1.9 38.3-2.9 59.1-2.9s40.7 1 59.1 2.9c3.1 .3 5.1 3.6 3.9 6.5z"/></svg>
+                
+              </span></a></div>
+<h1 class="p-name f1 athelas mt3 mb1">Joining the IndieWeb - #1: Microformats</h1>
+      <p class="tracked">
+        By <strong>
+            Tom Renner
+        </strong>
+      </p>
+      
+      
+      <time class="dt-published f6 mv4 dib tracked" datetime="2026-05-29T00:00:00Z">May 29, 2026</time>
+      
+
+      
+      
+        <span class="f6 mv4 dib tracked"> - 6 minutes read </span>
+        <span class="f6 mv4 dib tracked"> - 1212 words </span>
+      
+    </header>
+    <div class="e-content nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><blockquote>
+<p><em>This is part one of a series where I document how I&rsquo;m making this site more interoperable with IndieWeb tools and standards. I&rsquo;ll update this notice to link to part 2 once I&rsquo;ve written it</em></p>
+</blockquote>
+<p>Interoperability is the heart of what makes the digital world work.</p>
+<p>In my first job I worked with academic libraries to make research more openly available, sharing data about all forms of research outputs across the globe through the use of open data formats. These community-owned standards ensured that thousands of different systems globally could communicate, making each other aware of new findings in a field, and bringing the gobal academic community into closer contact.<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+<p>It was hugely empowering. By working with open schemas that I could help shape and contribute to, I could build systems that directly benefit researchers, and help to accelerate the advancement of human knowledge.</p>
+<hr>
+<p>This love of open standards has stuck with me, and shaped how I view the world. It&rsquo;s a topic that sometimes pops up in articles, usually when a social media boss does something heinous.</p>
+<p>This is because interoperbility is an anti-goal for any major platform. If you have a large market share, enabling free movement of data in and out of your platform is going to hurt your bottom line. Simply put, if Facebook has <a href="https://www.statista.com/statistics/272014/global-social-networks-ranked-by-number-of-users/">one third of the world&rsquo;s population on its platform</a>, they&rsquo;re going to lose more users than they gain by making it easy to migrate in and out.</p>
+<p>As a human with ethics, I&rsquo;m not a fan of this kind of lock-in. Nor am I a fan of the major social media sites. And so I&rsquo;m always looking for ways to support the decentralisation of our digital world.</p>
+<p>I highly encourage the <a href="https://indieweb.org/POSSE">POSSE</a> (Publish on your Own Site, Syndicate Everywhere) approach, as it ensures you keep ownership of your own content, and I encourage <em>everyone</em> to stop reading this post and check out the fantastic <a href="https://knightcolumbia.org/content/protocols-not-platforms-a-technological-approach-to-free-speech">Protocols not Platforms</a> essay if you haven&rsquo;t already.</p>
+<p>Following these threads, I found my way to <a href="https://indieweb.org/microformats">microformats</a>. These are simple HTML tags you can add to pages, following an open standard (there&rsquo;s that phrase again) to describe your content in a machine-readable way. This makes key metadata available to other websites, so that topics can be linked together, authors can be credited for their work, and information can be displayed nicely to users in feeds.</p>
+<p>The joy of this being an <em>open</em> standard, is that the linked sites do not need to have any relation to each other the interoperate &ndash; they do not need to be produced by the same person or company, built by the same software, or anything else. They just need to agree on how data is described.</p>
+<p>This loosely connected band of internets sites is known as the IndieWeb. Together all of these small, disparate corners of the internet are trying to form a technical platform to make the internet more social and connected again, without tying us into one mega-platform (because we&rsquo;ve all seen how well that works).</p>
+<hr>
+<h2 id="the-technical-bit">The technical bit</h2>
+<p>Ok, so what does that look like for this blog?</p>
+<h3 id="h-card">h-card</h3>
+<p>The <code>h-card</code> is the most basic, and fundamental, section of metadata. It is used to form a digital identity, and share that identity. So we start with the basics - my name.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;h-card&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-name&#34;</span>&gt;Tom Renner&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-given-name&#34;</span>&gt;Tom&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-family-name&#34;</span>&gt;Renner&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span></code></pre></div><p>and then add to that a one-line bio (<code>p-note</code>)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;h-card&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-name&#34;</span>&gt;Tom Renner&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-given-name&#34;</span>&gt;Tom&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-family-name&#34;</span>&gt;Renner&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-note&#34;</span>&gt;Generalist developer and team lead, based in Munich. Cares about ethical tech, teamwork, and badgers.&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span></code></pre></div><p>and then follow that up with two <code>u-url</code> links. The first, linking to this site, also has the <code>u-uid</code> tag, making it the canonical identifier for this digital profile. Having a second <code>u-url</code> tag links those two domains together, confiming that they form two parts of my online identity.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;h-card&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-name&#34;</span>&gt;Tom Renner&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-given-name&#34;</span>&gt;Tom&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-family-name&#34;</span>&gt;Renner&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-note&#34;</span>&gt;Generalist developer and team lead, based in Munich. Cares about ethical tech, teamwork, and badgers.&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;u-url u-uid&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://tomrenner.com&#34;</span>&gt;tomrenner.com&lt;/<span style="color:#f92672">a</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;u-url&#34;</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;me&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://mastodon.social/@trenner&#34;</span>&gt;@trenner@mastodon.social&lt;/<span style="color:#f92672">a</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span></code></pre></div><p>This is still quite a minimal <code>h-card</code>. There are a large number of additional <a href="https://microformats.org/wiki/h-card#Properties">properties</a> that can be included to flesh that profile out, if you so choose.<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup></p>
+<p>The other important piece of microformat markup is the <code>p-category</code> attribute. This is added to the &ldquo;Tags&rdquo; section of each page, and provides that information to consiming websites. These include many RSS readers and other aggregators, ensuring that the categories I pick out for posts will be reflected and available elsewhere.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">ul</span>&gt;
+</span></span><span style="display:flex;"><span>   &lt;<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>     &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tags/ai/&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-category&#34;</span>&gt;AI&lt;/<span style="color:#f92672">a</span>&gt;
+</span></span><span style="display:flex;"><span>   &lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>   &lt;<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>     &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tags/technologies/&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-category&#34;</span>&gt;Technologies&lt;/<span style="color:#f92672">a</span>&gt;
+</span></span><span style="display:flex;"><span>   &lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>   &lt;<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>     &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tags/management/&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;p-category&#34;</span>&gt;Management&lt;/<span style="color:#f92672">a</span>&gt;
+</span></span><span style="display:flex;"><span>   &lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">ul</span>&gt;
+</span></span></code></pre></div><h3 id="indieauth">IndieAuth</h3>
+<p>A really cool system enabled by this HTML metadata approach is <a href="https://indieauth.com">IndieAuth</a>. This protocol uses your website as a form of online identity, allowing you to sign in to participating services just by entering your site’s URL.</p>
+<p>This works by checking for links tagged with <code>rel=me</code>, following them to connected services, and then checking that your profiles on those services link back to your site.</p>
+<p>So for example, I have</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>    &lt;<span style="color:#f92672">link</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;me&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://mastodon.social/@trenner&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">link</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;me&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://github.com/tr325&#34;</span> /&gt;
+</span></span></code></pre></div><p>which identify these as my Github and Mastodon profiles. Then on those sites I list this domain as being my personal page, and it checks for those meta tags. Since I can edit the source code of this site and also the contents of the Github and Mastodon profiles, I’ve proved that they are all managed by the same person.</p>
+<p>This then forms the basis of a digital identity, which can be used as an account for other services - in the same way I previously might have “signed in with Google”, services on the IndieWeb let you sign in using IndieAuth.</p>
+<p>My name is not needed, all can be totally anonymous if necessary, and I haven’t needed to sign up for a this party platform; I simply provide IndieAuth with the URL of my website, and it reads publicly available data to verify my identity.</p>
+<h2 id="what-comes-next">What comes next</h2>
+<p>Despite the length of this post, the changes to the site are pretty minimal. A couple more tags in the <code>&lt;head&gt;</code>, nothing more. It&rsquo;s nothing spectacular, but it does honest, useful work to enrich the online ecosystem I&rsquo;m a part of.</p>
+<p>I&rsquo;m excited to dive deeper into this ecosystem, and start hooking into more IndieWeb systems. Building an open, decentralised network of pages that communicate in mutually agreed and beneficial ways is a vision of the internet I want to support.</p>
+<p>Next up: cross-site notifications!</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Hire librarians. We live in the information age, and librarians have been studying and practicing information management for literal millenia. The institutional and professional knowlege that has been built up in that field is unmatched, and if only programmers were curious enough to ask the right questions our software would be a whole lot better on average. I am of the firm belief that every tech company above ~30 people would benefit hugely from having a librarian on staff.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p>And these <code>p-*</code> and <code>u-*</code> properties can also be applied to many other root entities, forming a rich abd flexible schema for describing content. <code>p-*</code> properties contain plain-text content, <code>u-*</code> properties contain URLs, and root classes are denoted by <code>h-*</code> entries.&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+<ul class="pa0">
+  
+   <li class="list di">
+     <a href="/tags/technologies/" class="p-category link f5 grow no-underline br-pill ba ph3 pv2 mb2 dib black sans-serif">Technologies</a>
+   </li>
+  
+   <li class="list di">
+     <a href="/tags/how-to/" class="p-category link f5 grow no-underline br-pill ba ph3 pv2 mb2 dib black sans-serif">How-To</a>
+   </li>
+  
+</ul>
+
+        <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'X8X61I96H9');kofiwidget2.draw();</script>
+      
+
+
+
+
+
+
+
+
+
+<div id="webmentions">
+  
+</div>
+</div>
+
+    <div class="mt6 instapaper_ignoref">
+    </div>
+
+    <aside class="w-30-l mt6-l">
+
+
+
+
+  <div class="bg-light-gray pa3 nested-list-reset nested-copy-line-height nested-links">
+    <p class="f5 b mb3">Related</p>
+    <ul class="pa0 list">
+	   
+	     <li  class="mb2">
+          <a href="/posts/400-year-confidence-trick/">LLMs are a 400-year-long confidence trick</a>
+        </li>
+	    
+	     <li  class="mb2">
+          <a href="/posts/ttmmt-2/">Things that made me think: Digital gardening, web degradation, and digital ghosts</a>
+        </li>
+	    
+	     <li  class="mb2">
+          <a href="/posts/llm-inevitabilism/">The sound of inevitability</a>
+        </li>
+	    
+	     <li  class="mb2">
+          <a href="/posts/cull-your-dependencies/">Cull your dependencies</a>
+        </li>
+	    
+	     <li  class="mb2">
+          <a href="/posts/should-we-welcome-or-fear-the-metaverse/">Should we welcome or fear the Metaverse?</a>
+        </li>
+	    
+	     <li  class="mb2">
+          <a href="/posts/why-am-i-doing-this-again/">Why am I doing this again?</a>
+        </li>
+	    
+    </ul>
+</div>
+
+</aside>
+
+    
+    <span id="microformat" style="display: none">
+    
+      <a class="u-url" href="https://tomrenner.com/posts/joining-the-indieweb-1/">Joining the IndieWeb - #1: Microformats</a>
+    
+    
+       <a rel="author" href="/">Tom Renner</a>
+    </span>
+  </article>
+
+    </main>
+    <footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href="https://tomrenner.com/" >
+    &copy;  My place to put things 2026 
+  </a>
+    <div><div class="ananke-socials"><a href="https://mastodon.social/@trenner" target="_blank" rel="noopener"
+        class="ananke-social-link link-transition mastodon link dib z-999 pt3 pt0-l mr1"
+        title="follow on Mastodon - Opens in a new window"
+        aria-label="follow on Mastodon - Opens in a new window">
+      <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M433 179.11c0-97.2-63.71-125.7-63.71-125.7-62.52-28.7-228.56-28.4-290.48 0 0 0-63.72 28.5-63.72 125.7 0 115.7-6.6 259.4 105.63 289.1 40.51 10.7 75.32 13 103.33 11.4 50.81-2.8 79.32-18.1 79.32-18.1l-1.7-36.9s-36.31 11.4-77.12 10.1c-40.41-1.4-83-4.4-89.63-54a102.54 102.54 0 0 1-.9-13.9c85.63 20.9 158.65 9.1 178.75 6.7 56.12-6.7 105-41.3 111.23-72.9 9.8-49.8 9-121.5 9-121.5zm-75.12 125.2h-46.63v-114.2c0-49.7-64-51.6-64 6.9v62.5h-46.33V197c0-58.5-64-56.6-64-6.9v114.2H90.19c0-122.1-5.2-147.9 18.41-175 25.9-28.9 79.82-30.8 103.83 6.1l11.6 19.5 11.6-19.5c24.11-37.1 78.12-34.8 103.83-6.1 23.71 27.3 18.4 53 18.4 175z"/></svg>
+            
+          </span></a><a href="https://github.com/tr325" target="_blank" rel="noopener"
+        class="ananke-social-link link-transition github link dib z-999 pt3 pt0-l mr1"
+        title="follow on GitHub - Opens in a new window"
+        aria-label="follow on GitHub - Opens in a new window">
+      <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+            
+          </span></a><a href="http://linkedin.com/in/tom-renner" target="_blank" rel="noopener"
+        class="ananke-social-link link-transition linkedin link dib z-999 pt3 pt0-l mr1"
+        title="follow on LinkedIn - Opens in a new window"
+        aria-label="follow on LinkedIn - Opens in a new window">
+      <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+            
+          </span></a><a href="https://tomrenner.com/index.xml" target="_blank" rel="noopener"
+        class="ananke-social-link link-transition rss link dib z-999 pt3 pt0-l mr1"
+        title="follow on RSS - Opens in a new window"
+        aria-label="follow on RSS - Opens in a new window">
+      <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path d="M0 64C0 46.3 14.3 32 32 32c229.8 0 416 186.2 416 416c0 17.7-14.3 32-32 32s-32-14.3-32-32C384 253.6 226.4 96 32 96C14.3 96 0 81.7 0 64zM0 416a64 64 0 1 1 128 0A64 64 0 1 1 0 416zM32 160c159.1 0 288 128.9 288 288c0 17.7-14.3 32-32 32s-32-14.3-32-32c0-123.7-100.3-224-224-224c-17.7 0-32-14.3-32-32s14.3-32 32-32z"/></svg>
+            
+          </span></a></div>
+</div>
+  </div>
+</footer>
+
+  </body>
+  
+
+<script>var clicky_site_ids = clicky_site_ids || []; clicky_site_ids.push(101182552);</script>
+<script async src="//static.getclicky.com/js"></script>
+
+</html>

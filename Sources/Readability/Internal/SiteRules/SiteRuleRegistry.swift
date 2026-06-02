@@ -293,6 +293,7 @@ enum SiteRuleRegistry {
                 JohnDCookRelatedPostsRule.self,
                 MercurialExampleSectionRule.self,
                 SimonWillisonRecentArticlesRule.self,
+                TomRennerTagListRule.self,
                 WikipediaHermitianListPruneRule.self,
                 EbbPreviousLinkRule.self,
                 XkcdComicChromeCleanupRule.self
