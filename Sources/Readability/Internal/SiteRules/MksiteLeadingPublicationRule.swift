@@ -7,9 +7,9 @@ import SwiftSoup
 /// 1. Publication badge + taxonomy tag cluster (`maurycyz-1`):
 ///    `<b title="Publication"><time>...</time></b> (<a href="/tags/...">...</a>)`
 ///    → entire cluster removed.
-/// 2. Standalone publication date (`maurycyz-2`):
+/// 2. Standalone publication date plus bracketed label (`maurycyz-2`):
 ///    `<b title="Publication"><time>...</time></b> <em>[Photo]</em>`
-///    → date and trailing whitespace removed; `[Photo]` label stays.
+///    → entire metadata line (date + label) removed, content follows directly.
 ///
 /// SiteRule Metadata:
 /// - Scope: `mksite`-generated pages with a leading publication badge
@@ -60,6 +60,15 @@ enum MksiteLeadingPublicationRule: ArticleCleanerSiteRule {
                 continue
             }
 
+            // Bracketed <em> labels like [Photo], [Article] are taxonomy
+            // tags rendered by mksite templates. Collect them regardless of
+            // whether /tags/ links were found.
+            if !sawTagLink, try isLeadingBracketedLabel(element) {
+                removalNodes.append(element)
+                cursor += 1
+                continue
+            }
+
             if sawTagLink, try isIgnorableEmptyParagraph(element) {
                 removalNodes.append(element)
                 cursor += 1
@@ -74,8 +83,9 @@ enum MksiteLeadingPublicationRule: ArticleCleanerSiteRule {
               try matchesMksiteContextIfAvailable(articleContent, childNodes: childNodes),
               try isLeadMediaElement(nextElement) else {
             // No tag-link cluster found. If the date stands alone (no /tags/
-            // links after it), remove just the date element and its trailing
-            // whitespace. This handles the maurycyz-2 shape:
+            // links after it), remove the date, trailing whitespace, and any
+            // bracketed <em> label such as [Photo]. This handles the
+            // maurycyz-2 shape:
             //   <b title="Publication"><time>...</time></b> <em>[Photo]</em>
             if !sawTagLink,
                try matchesMksiteContextIfAvailable(articleContent, childNodes: childNodes) {
@@ -201,6 +211,13 @@ enum MksiteLeadingPublicationRule: ArticleCleanerSiteRule {
         guard element.tagName().lowercased() == "a" else { return false }
         let href = ((try? element.attr("href")) ?? "").lowercased()
         return href.contains("/tags/")
+    }
+
+    private static func isLeadingBracketedLabel(_ element: Element) throws -> Bool {
+        guard element.tagName().lowercased() == "em" else { return false }
+        let text = (try? element.text())?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return text.hasPrefix("[") && text.hasSuffix("]")
     }
 
     private static func isIgnorableEmptyParagraph(_ element: Element) throws -> Bool {
