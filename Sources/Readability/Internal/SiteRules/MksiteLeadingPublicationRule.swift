@@ -1,14 +1,22 @@
 import Foundation
 import SwiftSoup
 
-/// Removes `mksite` lead publication/tag clusters that leak into article content.
+/// Removes `mksite` lead publication metadata that leaks into article content.
+///
+/// Handles two shapes:
+/// 1. Publication badge + taxonomy tag cluster (`maurycyz-1`):
+///    `<b title="Publication"><time>...</time></b> (<a href="/tags/...">...</a>)`
+///    → entire cluster removed.
+/// 2. Standalone publication date (`maurycyz-2`):
+///    `<b title="Publication"><time>...</time></b> <em>[Photo]</em>`
+///    → date and trailing whitespace removed; `[Photo]` label stays.
 ///
 /// SiteRule Metadata:
-/// - Scope: `mksite`-generated pages with a leading publication badge + taxonomy link cluster
+/// - Scope: `mksite`-generated pages with a leading publication badge
 /// - Phase: `unwanted` cleanup
 /// - Trigger: `meta[name=generator*='mksite']` plus leading direct children shaped like
-///   `b[title=Publication] > time`, `/tags/...` links, optional separator text, and lead media
-/// - Evidence: `CLI/.staging/maurycyz`
+///   `b[title=Publication] > time`, optionally followed by `/tags/...` links
+/// - Evidence: `CLI/.staging/maurycyz`, `CLI/.staging/maurycyz-2`
 /// - Risk if misplaced: legitimate lead metadata could be removed on unrelated generators
 enum MksiteLeadingPublicationRule: ArticleCleanerSiteRule {
     static let id = "mksite-leading-publication"
@@ -65,6 +73,16 @@ enum MksiteLeadingPublicationRule: ArticleCleanerSiteRule {
               let nextElement = nextSignificantElement(in: childNodes, from: cursor),
               try matchesMksiteContextIfAvailable(articleContent, childNodes: childNodes),
               try isLeadMediaElement(nextElement) else {
+            // No tag-link cluster found. If the date stands alone (no /tags/
+            // links after it), remove just the date element and its trailing
+            // whitespace. This handles the maurycyz-2 shape:
+            //   <b title="Publication"><time>...</time></b> <em>[Photo]</em>
+            if !sawTagLink,
+               try matchesMksiteContextIfAvailable(articleContent, childNodes: childNodes) {
+                for node in removalNodes.reversed() where node.parent() != nil {
+                    try node.remove()
+                }
+            }
             return
         }
 

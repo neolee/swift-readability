@@ -502,42 +502,85 @@ struct ExPagesCompatibilityTests {
         #expect(result.content.contains("<span>        assert(<span>@typeInfo</span>(Int).int.signedness <span>==</span> .unsigned);</span>"))
     }
 
-    // MARK: maurycyz · 5x5 Pixel font for tiny screens (maurycyz.com)
+    // MARK: maurycyz-1 · 5x5 Pixel font for tiny screens (maurycyz.com)
 
-    @Test("maurycyz - Title matches expected")
-    func testMaurycyzTitle() async throws {
-        guard let testCase = TestLoader.loadTestCase(named: "maurycyz", in: "ex-pages") else {
-            Issue.record("Failed to load test case 'maurycyz'")
+    @Test("maurycyz-1 - Title matches expected")
+    func testMaurycyz1Title() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "maurycyz-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'maurycyz-1'")
             return
         }
         let result = try parse(testCase)
         #expect(result.title == testCase.expectedMetadata.title)
     }
 
-    @Test("maurycyz - Byline matches expected")
-    func testMaurycyzByline() async throws {
-        guard let testCase = TestLoader.loadTestCase(named: "maurycyz", in: "ex-pages") else {
-            Issue.record("Failed to load test case 'maurycyz'")
+    @Test("maurycyz-1 - Byline matches expected")
+    func testMaurycyz1Byline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "maurycyz-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'maurycyz-1'")
             return
         }
         let result = try parse(testCase)
         #expect(result.byline == testCase.expectedMetadata.byline)
     }
 
-    @Test("maurycyz - Excerpt matches expected")
-    func testMaurycyzExcerpt() async throws {
-        guard let testCase = TestLoader.loadTestCase(named: "maurycyz", in: "ex-pages") else {
-            Issue.record("Failed to load test case 'maurycyz'")
+    @Test("maurycyz-1 - Excerpt matches expected")
+    func testMaurycyz1Excerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "maurycyz-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'maurycyz-1'")
             return
         }
         let result = try parse(testCase)
         #expect(result.excerpt == testCase.expectedMetadata.excerpt)
     }
 
-    @Test("maurycyz - Content matches expected HTML")
-    func testMaurycyzContent() async throws {
-        guard let testCase = TestLoader.loadTestCase(named: "maurycyz", in: "ex-pages") else {
-            Issue.record("Failed to load test case 'maurycyz'")
+    @Test("maurycyz-1 - Content matches expected HTML")
+    func testMaurycyz1Content() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "maurycyz-1", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'maurycyz-1'")
+            return
+        }
+        let result = try parse(testCase)
+        let (isEqual, diff) = DOMComparator.compare(result.content, testCase.expectedHTML)
+        #expect(isEqual, "DOM mismatch:\n\(diff)")
+    }
+
+    // MARK: maurycyz-2 · Arp 29: The fireworks galaxy (maurycyz.com)
+
+    @Test("maurycyz-2 - Title matches expected")
+    func testMaurycyz2Title() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "maurycyz-2", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'maurycyz-2'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.title == testCase.expectedMetadata.title)
+    }
+
+    @Test("maurycyz-2 - Byline matches expected")
+    func testMaurycyz2Byline() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "maurycyz-2", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'maurycyz-2'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.byline == testCase.expectedMetadata.byline)
+    }
+
+    @Test("maurycyz-2 - Excerpt matches expected")
+    func testMaurycyz2Excerpt() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "maurycyz-2", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'maurycyz-2'")
+            return
+        }
+        let result = try parse(testCase)
+        #expect(result.excerpt == testCase.expectedMetadata.excerpt)
+    }
+
+    @Test("maurycyz-2 - Content matches expected HTML")
+    func testMaurycyz2Content() async throws {
+        guard let testCase = TestLoader.loadTestCase(named: "maurycyz-2", in: "ex-pages") else {
+            Issue.record("Failed to load test case 'maurycyz-2'")
             return
         }
         let result = try parse(testCase)
