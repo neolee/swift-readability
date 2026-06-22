@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang=en-us>
+	<head>
+		<meta charset=utf-8 />
+		<meta name=viewport content='width=device-width, initial-scale=1' />
+		<link rel='icon' type='image/x-icon' href='/favicon.ico'>
+		<meta name=robots content='noarchive'>
+		<meta name=generator content='mksite.c and my keyboard'>
+		<style>
+			<!--
+			/* Theme colors */
+			:root {
+				--font: sans-serif;
+				--fg-color: #fff;
+				--bg-color: #111;
+				--em-color: #ffbb00;
+				--link-color1: #4ee;
+				--link-color2: #4eafaf;
+				--box-color: #21ff00;
+				--table-color1: #000;
+				--table-color2: #222;
+				color-scheme: dark;
+				&:has(#lightmode:checked) {
+					--fg-color: #000;
+					--bg-color: #fff;
+					--em-color: #f00;
+					--link-color1: #0000EE;
+					--link-color2: #551A8B;
+					--box-color: #000;
+					--table-color1: #FFF;
+					--table-color2: #CCC;
+					color-scheme: light;
+				}
+				&:has(#ttymode:checked) {
+					--fg-color: #ff9300;
+					--font: monospace, monospace;
+					--bg-color: #000000;
+					--em-color: #ff9300;
+					--link-color1: none;
+					--link-color2: none;
+					--box-color: #ff9300;
+					--table-color1: none;
+					--table-color2: none;
+				}
+			}
+			/* Monochrome CRT styling */
+			@keyframes interlace {0% {top: 1px;}50% {top: 1px;}51% {top: 0px;}100% {top: 0px;}}
+			:has(#ttymode:checked) {
+				h1, h2, h3, h4, h5 {font-size: 100%;}
+				nav {
+					position: static !important;
+					display: block !important;
+					max-width: 40em;
+					margin: auto;
+				}
+				fieldset {display: block;}
+				legend {border-style: none !important;}
+				theme-picker {border-radius: 5px !important;}
+				img, video, center, pre, code, #oneko {filter: url(#mono)}
+				theme-picker {border-radius: 0 !important;}
+				screen-overlay {position: fixed; top: 0; left: 0;
+					height: 100lvh; width: 100lvw;
+					opacity: 0.15; z-index: 20;
+					pointer-events: none;
+					animation: interlace 0.05s infinite;
+					background-image: repeating-linear-gradient(to bottom,
+						var(--bg-color),
+						var(--bg-color) 1px,
+						var(--fg-color) 1px,
+						var(--fg-color) 2px
+					);
+				}
+			}
+			/* Column */
+			html {background-color: var(--bg-color); color: var(--fg-color); font-family: var(--font)}
+			main, footer {max-width: 40em; margin: auto;}
+			img {width: 100%;}
+			/* Navigation box */
+			fieldset {
+				border: var(--box-color) 1px solid;
+				color: var(--fg-color);;
+				padding: 1em;
+				margin: 1em;
+				background-color: var(--bg-color);;
+			}
+			legend {
+				border: var(--box-color) 1px solid;
+				padding: .3em;
+				background-color: var(--bg-color);
+			}
+			nav {
+				position: static;
+				width: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				@media (min-width: 67em) {
+					position: fixed;
+					display: block;					width: auto;
+				}			}
+			/* Kitten */
+			#oneko {
+				@media (max-width: 66em) {
+					display: none;
+				}
+			}
+			/* Link colors */
+			a {
+				&:visited {color: var(--link-color2);}
+				&:link    {color: var(--link-color1);}
+			}
+			/* Code blocks. Inline and block. */
+			/* Do not follow theme */
+			pre {
+				background-color: #222;
+				color: #eee;
+				display: block;
+				width: calc(100% - 1em);
+				padding: 0.5em;
+				overflow: auto;
+				border: 1px #666 solid;
+				font-family: monospace;
+			}
+			code {display: inline; background-color: #111; color: #eee; padding: 1px;}
+			/* Inline notes: Warnings, etc */
+			note-box {
+				display: block;
+				padding: 0.5em;
+				border: 2px var(--em-color) solid;
+			}
+			/* I also use details elements for notes */
+			details {
+				border-left: 2px var(--em-color) solid;
+				padding-left: 1em;
+				& img {margin-top: 1em;}
+			}
+			summary {
+				text-decoration: underline;
+				user-select: none;
+			}
+			/* Use accent color for lines */
+			hr {border-color: var(--em-color);}
+			/* Image captions */
+			center {color: #888;}
+			/* Zebra striping */
+			th {padding-right: 1em; background-color: var(--bg-color);}
+			tr:nth-child(odd) {background-color: var(--table-color1);}
+			tr:nth-child(even) {background-color: var(--table-color2);}
+			/* Scrolled tables */
+			.math {text-wrap: nowrap; display: block; overflow: auto;}
+			/* Missing adblocker warning */
+			#ad-note-hidden, #ad-note {display: none;}
+			@media (min-height: 30em) { @media (min-width: 75em) {
+				#ad-note {
+					display: block; position: fixed;
+					bottom: 1em; right: 1em; width: 14em;
+					border: var(--em-color) 1px solid;
+					background-color: var(--bg-color);
+					padding: 1em;
+				}
+				#ad-note-content-wrapper {margin-top: 0em; margin-bottom: 0em}
+			}}
+			/* Large initial letters */
+			p.dropcap:first-letter {
+				color: var(--em-color);
+			}
+			/* Text rubrication */
+			em {color: var(--em-color); font-style: normal;}
+			/* CSS Only theme picker */
+			theme-picker {
+				border: 1px solid var(--fg-color);
+				border-radius: 5px;
+				display: flex;
+				margin-top: 5px;
+				overflow: clip;
+				input {opacity: 0; position: absolute; pointer-events: none;}
+				label {
+					cursor: pointer;
+					width: 50%;
+					text-align: center;
+					padding: 5px;
+					/* Make the checked button look like it's pushed in. */
+					&:has(input:checked) {box-shadow: inset 0px 0px 7px 0px var(--fg-color);}
+					/* Hover indication so the user knows that it is clickable */
+					&:hover {color: var(--em-color);}
+					user-select: none;
+				}
+			}
+			link-box {border-left: 2px var(--em-color) solid; display: block; word-wrap: break-word}
+
+			/* Syntax highlighting. */
+			h-n {color: #F27;}h-v {color: #B8F;}h-s {color: #AEE;}h-c {color: #777;}h-e {color: #F6F;}
+			-->
+		</style>
+		<title>NGC 4236 (Maurycy's blog) </title>
+	</head>
+	<body>
+		<screen-overlay></screen-overlay>
+		<nav><fieldset>
+			<legend>Navigation:</legend>
+			<a href='/'>Homepage</a><br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href='/topics.html'>Index</a><br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href='/archive'>Yearly archives</a><br/>
+			<a href='/fun/'>Fun</a><br>
+			<a href='/tags/astro'>Astrophotography</a><br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href='/astro/catalog.html'>(catalog)</a><br/>
+			<a href='/about.html'>About this site</a><br/>
+			<a href='/real_pages'>Real pages</a><br>
+			<theme-picker>
+				<label>Dark<input type=radio id=darkmode   name=theme checked></label>
+				<label>Light<input type=radio id=lightmode name=theme></label>
+				<label>TTY<input type=radio id=ttymode     name=theme></label>
+			</theme-picker>
+		</fieldset></nav>
+		<script>
+			<!--
+			/* Inlined for speed because this is needed to correctly render the page */
+			var checkbox1 = document.getElementById('lightmode')
+			var checkbox2 = document.getElementById('ttymode')
+			function save_mode() {
+				var state1 = checkbox1.checked;
+				window.localStorage.setItem('light_mode', state1);
+				var state2 = checkbox2.checked;
+				window.localStorage.setItem('tty_mode', state2);
+			}
+			if (window.localStorage.getItem('light_mode') == 'true') {
+				checkbox1.checked = true;
+			}
+			if (window.localStorage.getItem('tty_mode') == 'true') {
+				checkbox2.checked = true;
+			}
+			document.getElementsByTagName('label')[0].onclick = save_mode;
+			document.getElementsByTagName('label')[1].onclick = save_mode;
+			document.getElementsByTagName('label')[2].onclick = save_mode;
+			-->
+		</script>
+		<main>
+			<h1><em>NGC 4236</em></h1>
+<b title='Publication'><time>2026-05-12</time></b> &mdash; <b title='Last edit'><time>2026-05-21</time></b> <em>[Photo]</em>
+<!-- mksite: start of content -->
+<p>
+
+<a href=/astro/ngc4236/full.png><img src=/astro/ngc4236/small.jpg></a>
+<center>North is left, mirrored. 0.33 arcsec/pixel (16' by 11')</center>
+<!-- snip -->
+</p>
+<p>
+<style>
+dt {color: var(--em-color)}
+</style>
+<dl>
+<dt>Total exposure time:</dt><dd>457 * 30 seconds = 3.8 hours.</dd>
+<dt>Exposure used in stack:</dt><dd> 187 * 30 seconds = 1.5 hours.</dd>
+<dt>Telescope:</dt><dd> C9.25 (230mm aperture, f/10, fl=2300mm)</dd>
+<dt>Camera:</dt><dd> IMX533 (16 mm diagonal, square, OSC)</dd>
+<dt>Processing:</dt><dd> (no software sharpening used)
+<ol>
+<li>Callibration (dark + flats)</li>
+<li>Stacking (average w/ rejection)</li>
+<li>White balance and blackground subtraction</li>
+<li>Asinh stretch</li>
+<li>Light denoising</li>
+<li>Tone curve</li>
+<li>Crop</li>
+</ol>
+</dd>
+</dl> 
+</p><p>
+There's not too much to say about this:
+it's barred spriral galaxy with uneven arms.
+</p><p>
+Because of it's fairly low surface brightness (as galaxies go), the image uses data collected across nights.
+However, it's still not very much because of the vanish&shy;ingly small amount of darkness this time of year, and because
+I forgot the dew shield on during the second night. 
+
+<em>However, there is a nearby galaxy cluster</em> at 12h15m37s +69&deg;32'30":
+</p><p>
+<img src=/astro/ngc4236/bonus_cluster.jpg>
+</p><p>
+I don't think it has a name or catalog designations.
+Hubble hasn't imaged it, so the best references avalable are ground-based sky surveys
+which aren't not much better than my images.
+</p><p>
+Raw stacks: <a href=/astro/ngc4236/stack.fits.fz>32-bits compressed.</a>
+
+
+
+</p>
+<!-- mksite: end of content -->
+		</main>
+		<footer>
+			<hr>
+			Site wide <a href=https://maurycyz.com/index.xml>RSS feed</a>.
+			<br><br>
+			Proudly supporting IPv6!
+			<a href=http://v6.maurycyz.com/whoami title='If this loads, you have IPv6 support.'>Check your network</a>
+			<br><br>
+			You may use this content under the <a rel=license href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en>CC BY-NC-SA 4.0 License</a>.
+			This website is <b>not</b> licensed for ML/LLM training or content creation.
+			<br><br>
+			Questions, comments, and technical issues can be sent in <a href='mailto:blog@%6daurycyz%2ecom'>by email</a>.
+		</footer>
+		<script defer src='/nativeads.js'></script>
+		<div
+			id='ad-note-hidden'
+			class='ftf-dma-note ad native-ad native-ad-1 ytd-j yxd-j yxd-jd aff-content-col aff-inner-col aff-item-list ark-ad-message inplayer-ad inplayer_banners in_stream_banner trafficjunky-float-right dbanner preroll-blocker happy-inside-player blocker-notice blocker-overlay exo-horizontal ave-pl bottom-hor-block brs-block advboxemb wgAdBlockMessage glx-watermark-container overlay-advertising-new header-menu-bottom-ads rkads mdp-deblocker-wrapper amp-ad-inner imggif bloc-pub bloc-pub2 hor_banner aan_fake aan_fake__video-units rps_player_ads fints-block__row full-ave-pl full-bns-block vertbars video-brs player-bns-block wps-player__happy-inside gallery-bns-bl stream-item-widget adsbyrunactive happy-under-player adde_modal_detector adde_modal-overlay ninja-recommend-block aoa_overlay message'
+		>
+			<p id='ad-note-content-wrapper'>
+			</p>
+		</div>
+		<!-- svg filter for images --><svg width=0 height=0><defs><filter id=mono><feColorMatrix type=matrix values=".33 .33 .33  0  0 .15 .15 .15 0  0 0   0   0  0  0 0   0   0  1  0" in=SourceGraphic/></feColorMatrix></filter></defs></svg>
+	</body>
+</html>

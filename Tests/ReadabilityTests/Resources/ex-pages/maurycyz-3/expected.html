@@ -1,0 +1,134 @@
+<div id="readability-page-1" class="page"><p>
+
+When was disassembling an old calculator (as you do) I found these cool VFD tubes:
+</p><p><img src="https://maurycyz.com/projects/tubeclock/tubes.jpg" alt="A board with a two vacuum tubes and spots for four more." /></p><p>
+Normally, a whole display is built into a single flat package, which doesn't look particularly interesting.
+These ones have the individual digits inside a standard vacuum-tube housing, which gives them a cool nixie-esque look.
+</p>
+<p><em>Because vacuum tubes are rather archaic components</em>, they deserve some introduction.
+The simplest tube has two electrodes: A filament and anode plate.
+</p><p>
+Similar to an old-school lightbulb, the filament is a tungsten wire that heats up when a current passes through it.
+On a microscopic scale, heat is vibration of atoms —
+which knocks some (negatively charged) electrons out of the wire and into the surrounding space.
+</p><p>
+If the plate has a positive voltage, it attracts some free electrons which allows a current to flow.
+If the plate is negative, the electrons are repelled and the tube doesn't conduct.
+</p><p>
+This diode configuration is useful for power supplies,
+but most tubes added a wire mesh or "grid" between the other electrodes.
+</p><p>
+The grid shields the electric field of the plate, so the electrons near the filament only feel the grid's voltage.
+However, because the grid has a very small area, most of the electrons it attracts fly through one of the holes to arrive at the plate.
+</p><p>
+As a result, a triode tube conducts plate to filament when both the grid and plate have a positive voltage:
+similar to an n-channel MOSFET. 
+</p><p><em>A Vacuum Fluorescent Display is just a triode</em> but with the
+anode plate coated in rare-earth oxide (similar to what's found in CRTs) which glows when stuck by electrons in the tube.
+</p><p>
+In my displays, each tube contains a single grid, but the anode is broken up into seven isolated segments which can be used to form digits.
+</p><p>
+The grid allows a clever trick:
+segment lines can be shared between digits as long as only a one tube is on at a time.
+A single tube is supplied with a positive grid voltage, allowing it to light up,
+while all the other tubes have a negative grid voltage forcing them to stay dark regardless of the segment voltage.
+</p><p>
+By quickly cycling between the digits,
+the control electronics can create the illusion that the whole display is on...
+but saving a lot of wires:
+a six digit display with a total of 42 segments only needs 13 signal lines.
+</p><p><em>I couldn't find a datasheet for my displays</em>, so I had to determine the pinout experimentally:
+</p><ol>
+<li>Find the heater. It should be a pair of pins with a few ohms of resistance</li>
+<li>Run 25 - 50 mA through it. The filament should start glowing <b>very dimly</b>. If it's bright, there's to much current.</li>
+<li>Apply +12 volts (relative to the heater) to pairs of the remaining pins until a segment lights up: One of those pins is the grid</li>
+<li>Moving the one of the +12 wires to a different pin, while keeping the other one connected as is. 
+<ul>
+  <li>If the display goes out, the pin you disconnected was the grid.</li>
+  <li>If a different segment is on: The pin that stayed connected is the grid.</li>
+</ul>
+</li>
+<li>Now, connect twelve volts to the grid and use apply +12 to the remaining pins to map out the segments.</li>
+</ol>
+<p><note-box>
+If you try this, be very careful to not connect 12 volts across the filament.
+Doing this will likely destroy the tube!
+<p>
+Also, on step #4, only the second outcome is guaranteed accurate if some pins are
+not connected internally. It may be a good idea to try again but moving the other wire
+to be sure.
+</p></note-box></p><p><em>With that done, I moved on to finding good operating conditions for the display</em>:
+Increasing the filament current or/and the plate voltage will make the tube brighter...
+but don't get the current to where the filament is visibly glowing:
+That will make it hard to read and reduce the tube's life.
+</p><p>
+Borrowing some math from light bulbs, the expected filament lifespan is (roughly) inversely proportional
+to current to the 6th power, so it's not a good idea to push it.
+</p><p>
+You'll often hear stories about that light bulb that's been running for 100 years, but it's no secret how they did it:
+the bulb is running at 6% of it's rated power!
+</p><p>
+(Ok, a lot of that loss is from aging, but the original filament resistance was a lot higher than a modern bulb.
+That made it run less current, at the cost of being even more inefficient and having a very red cast)
+</p><p>
+The plate voltage can be adjusted more freely, and is mostly a matter of personal preference.
+However, too much will fade the phosphors faster, and again, there's a non-linear relation:
+a higher voltage will cause more electrons to flow, but those electrons will also have a higher energy and do more damage.
+</p><p><em>Mine were happy</em> at 25 mA of heater and a voltage between 10 - 24 volts.
+I settled on 12 volts, which worked well for a desk clock while not being annoying at night.
+(keeping in mind that multiplexed tubes appear a lot dimmer than when driven individually)
+</p><p><em>While 12 volts is much lower than what's used for nixie tubes</em>, it's still to high for a microcontroller.
+Since they don't draw much current, I stepped up the signals using a MOSFET and pull up resistor:
+</p><p><a href="https://maurycyz.com/projects/tubeclock/sch.png"><img src="https://maurycyz.com/projects/tubeclock/sch.png" /></a></p><center><a href="https://maurycyz.com/projects/tubeclock/sch.pdf">Vector version</a></center>
+<p>
+When the MOSFET is on, these drivers dissipate a good 0.14 W as heat, which comes out to ~1.5 W (peak) for the whole device...
+but it's still less then a typical smoke detector burns in it's power supply, so it's acceptable for a mains-powered device.
+</p><p>
+The heater drive resistors also dissipate a half a watt, so they do get quite warm.
+Historically, tube filaments were run from a dedicated 1 to 3 turn transformer winding, but such multi-voltage transformers are hard to find nowadays.
+</p><p><em>On the microcontroller's end</em>, it's all very standard clock stuff:
+the same as driving any other multiplexed seven-segment display.
+</p><p>
+I wrote a 480 Hz timer interrupt to cycle the active digit and assert the correct segments.
+The results in an effective refresh rate of 120 Hz, so it's a <b>gaming clock</b>.
+</p><p>
+While a microcontroller's internal oscillator is fine for most applications,
+it's not good enough for a clock:
+A 1% error would cause it to drift by 7 hours each month...
+</p><p>
+To avoid this, timekeeping is done by a second timer interrupt which is run from a 32.768 kHz quartz crystal,
+keeping the drift to within a few minutes per year.
+</p><p><em>Because my house has frequent power outages</em>, I added a CR2032 coin cell as a backup.
+There's no way it's running the tubes, but it does provide enough power to keep track of time.
+</p><p>
+One of the microcontroller's pins used to monitor the main 5 V rail, which allows it to enter sleep mode during an outage.
+In this state, it only draws 2 uA and can run down to 1.4 volts, so the battery should last for decades.
+</p><p>
+The exact lifespan is hard to calculate because batteries are full of messy chemistry;
+they self discharge, have a variable internal resistance, can leak or loose solvent to evaporation...
+</p><p>
+In any case, it only really has to run it for a few hours a few times a year,
+and the battery can be replaced without too much effort: 4 screws and a soldering iron
+(hey, I've seen people pot them in epoxy. Yes, it was in a commercial product)
+</p><p><em>As usual, I assembled the circuit on a perfboard</em>, using scrap leads and solder bridges for power and
+solid-core 24 AWG insulated wire for data.
+This takes some work, but it's a lot faster than ordering boards from China:
+</p><p><img src="https://maurycyz.com/projects/tubeclock/clock.jpg" alt="Four vacuum tubes containing glowing digits mounted onto a green perfboard." /></p><p>
+The neon lamp is a visually consistent separator, but isn't currently wired up to anything.
+These indicator need around 100 volts, so it's not as easy as wiring it up to a spare pin.
+</p><p><em>... and the same clock after making it a wooden box</em>:
+</p><p><img src="https://maurycyz.com/projects/tubeclock/wood.jpg" alt="Those four tubes poking through a square cutout in the front of a wooden box." /></p><p>
+Because I'm not very good at woodworking, I made it by gluing together a bunch of scrap wood into a block
+and using a CNC mill to cut a clock-shaped pocket and round the edges.
+</p><p>
+I kept the back open <del>out of laziness</del> to provide easy access to the buttons and to help with cooling.
+</p><p>
+There was a bit of workholding drama half way through, but it's nothing that couldn't be fixed with some wood filler and sanding.
+</p><h2><em>Related</em>:</h2>
+<link-box>
+<ul>
+<li><a href="https://maurycyz.com/projects/tubeclock/clock.c">clock.c</a>: Microcontroller firmware.</li>
+<li><a href="https://maurycyz.com/projects/tubeclock/clock.elf">clock.elf</a>: Binaries.</li>
+<li><a href="https://en.wikipedia.org/wiki/Centennial_Light">https://en.wikipedia.org/wiki/Centennial_Light</a>: That light bulb</li>
+</ul>
+</link-box></div>

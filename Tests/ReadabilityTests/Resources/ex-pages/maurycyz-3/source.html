@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang=en-us>
+	<head>
+		<meta charset=utf-8 />
+		<meta name=viewport content='width=device-width, initial-scale=1' />
+		<link rel='icon' type='image/x-icon' href='/favicon.ico'>
+		<meta name=robots content='noarchive'>
+		<meta name=generator content='mksite.c and my keyboard'>
+		<style>
+			<!--
+			/* Theme colors */
+			:root {
+				--font: sans-serif;
+				--fg-color: #fff;
+				--bg-color: #111;
+				--em-color: #ffbb00;
+				--link-color1: #4ee;
+				--link-color2: #4eafaf;
+				--box-color: #21ff00;
+				--table-color1: #000;
+				--table-color2: #222;
+				color-scheme: dark;
+				&:has(#lightmode:checked) {
+					--fg-color: #000;
+					--bg-color: #fff;
+					--em-color: #f00;
+					--link-color1: #0000EE;
+					--link-color2: #551A8B;
+					--box-color: #000;
+					--table-color1: #FFF;
+					--table-color2: #CCC;
+					color-scheme: light;
+				}
+				&:has(#ttymode:checked) {
+					--fg-color: #ff9300;
+					--font: monospace, monospace;
+					--bg-color: #000000;
+					--em-color: #ff9300;
+					--link-color1: none;
+					--link-color2: none;
+					--box-color: #ff9300;
+					--table-color1: none;
+					--table-color2: none;
+				}
+			}
+			/* Monochrome CRT styling */
+			@keyframes interlace {0% {top: 1px;}50% {top: 1px;}51% {top: 0px;}100% {top: 0px;}}
+			:has(#ttymode:checked) {
+				h1, h2, h3, h4, h5 {font-size: 100%;}
+				nav {
+					position: static !important;
+					display: block !important;
+					max-width: 40em;
+					margin: auto;
+				}
+				fieldset {display: block;}
+				legend {border-style: none !important;}
+				theme-picker {border-radius: 5px !important;}
+				img, video, center, pre, code, #oneko {filter: url(#mono)}
+				theme-picker {border-radius: 0 !important;}
+				screen-overlay {position: fixed; top: 0; left: 0;
+					height: 100lvh; width: 100lvw;
+					opacity: 0.15; z-index: 20;
+					pointer-events: none;
+					animation: interlace 0.05s infinite;
+					background-image: repeating-linear-gradient(to bottom,
+						var(--bg-color),
+						var(--bg-color) 1px,
+						var(--fg-color) 1px,
+						var(--fg-color) 2px
+					);
+				}
+			}
+			/* Column */
+			html {background-color: var(--bg-color); color: var(--fg-color); font-family: var(--font)}
+			main, footer {max-width: 40em; margin: auto;}
+			img {width: 100%;}
+			/* Navigation box */
+			fieldset {
+				border: var(--box-color) 1px solid;
+				color: var(--fg-color);;
+				padding: 1em;
+				margin: 1em;
+				background-color: var(--bg-color);;
+			}
+			legend {
+				border: var(--box-color) 1px solid;
+				padding: .3em;
+				background-color: var(--bg-color);
+			}
+			nav {
+				position: static;
+				width: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				@media (min-width: 67em) {
+					position: fixed;
+					display: block;					width: auto;
+				}			}
+			/* Kitten */
+			#oneko {
+				@media (max-width: 66em) {
+					display: none;
+				}
+			}
+			/* Link colors */
+			a {
+				&:visited {color: var(--link-color2);}
+				&:link    {color: var(--link-color1);}
+			}
+			/* Code blocks. Inline and block. */
+			/* Do not follow theme */
+			pre {
+				background-color: #222;
+				color: #eee;
+				display: block;
+				width: calc(100% - 1em);
+				padding: 0.5em;
+				overflow: auto;
+				border: 1px #666 solid;
+				font-family: monospace;
+			}
+			code {display: inline; background-color: #111; color: #eee; padding: 1px;}
+			/* Inline notes: Warnings, etc */
+			note-box {
+				display: block;
+				padding: 0.5em;
+				border: 2px var(--em-color) solid;
+			}
+			/* I also use details elements for notes */
+			details {
+				border-left: 2px var(--em-color) solid;
+				padding-left: 1em;
+				& img {margin-top: 1em;}
+			}
+			summary {
+				text-decoration: underline;
+				user-select: none;
+			}
+			/* Use accent color for lines */
+			hr {border-color: var(--em-color);}
+			/* Image captions */
+			center {color: #888;}
+			/* Zebra striping */
+			th {padding-right: 1em; background-color: var(--bg-color);}
+			tr:nth-child(odd) {background-color: var(--table-color1);}
+			tr:nth-child(even) {background-color: var(--table-color2);}
+			/* Scrolled tables */
+			.math {text-wrap: nowrap; display: block; overflow: auto;}
+			/* Missing adblocker warning */
+			#ad-note-hidden, #ad-note {display: none;}
+			@media (min-height: 30em) { @media (min-width: 75em) {
+				#ad-note {
+					display: block; position: fixed;
+					bottom: 1em; right: 1em; width: 14em;
+					border: var(--em-color) 1px solid;
+					background-color: var(--bg-color);
+					padding: 1em;
+				}
+				#ad-note-content-wrapper {margin-top: 0em; margin-bottom: 0em}
+			}}
+			/* Large initial letters */
+			p.dropcap:first-letter {
+				color: var(--em-color);
+			}
+			/* Text rubrication */
+			em {color: var(--em-color); font-style: normal;}
+			/* CSS Only theme picker */
+			theme-picker {
+				border: 1px solid var(--fg-color);
+				border-radius: 5px;
+				display: flex;
+				margin-top: 5px;
+				overflow: clip;
+				input {opacity: 0; position: absolute; pointer-events: none;}
+				label {
+					cursor: pointer;
+					width: 50%;
+					text-align: center;
+					padding: 5px;
+					/* Make the checked button look like it's pushed in. */
+					&:has(input:checked) {box-shadow: inset 0px 0px 7px 0px var(--fg-color);}
+					/* Hover indication so the user knows that it is clickable */
+					&:hover {color: var(--em-color);}
+					user-select: none;
+				}
+			}
+			link-box {border-left: 2px var(--em-color) solid; display: block; word-wrap: break-word}
+
+			/* Syntax highlighting. */
+			h-n {color: #F27;}h-v {color: #B8F;}h-s {color: #AEE;}h-c {color: #777;}h-e {color: #F6F;}
+			-->
+		</style>
+		<title>Building a clock from salvaged Vacuum Fluorescent Displays (Maurycy's blog) </title>
+	</head>
+	<body>
+		<screen-overlay></screen-overlay>
+		<nav><fieldset>
+			<legend>Navigation:</legend>
+			<a href='/'>Homepage</a><br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href='/topics.html'>Index</a><br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href='/archive'>Yearly archives</a><br/>
+			<a href='/fun/'>Fun</a><br>
+			<a href='/tags/astro'>Astrophotography</a><br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href='/astro/catalog.html'>(catalog)</a><br/>
+			<a href='/about.html'>About this site</a><br/>
+			<a href='/real_pages'>Real pages</a><br>
+			<theme-picker>
+				<label>Dark<input type=radio id=darkmode   name=theme checked></label>
+				<label>Light<input type=radio id=lightmode name=theme></label>
+				<label>TTY<input type=radio id=ttymode     name=theme></label>
+			</theme-picker>
+		</fieldset></nav>
+		<script>
+			<!--
+			/* Inlined for speed because this is needed to correctly render the page */
+			var checkbox1 = document.getElementById('lightmode')
+			var checkbox2 = document.getElementById('ttymode')
+			function save_mode() {
+				var state1 = checkbox1.checked;
+				window.localStorage.setItem('light_mode', state1);
+				var state2 = checkbox2.checked;
+				window.localStorage.setItem('tty_mode', state2);
+			}
+			if (window.localStorage.getItem('light_mode') == 'true') {
+				checkbox1.checked = true;
+			}
+			if (window.localStorage.getItem('tty_mode') == 'true') {
+				checkbox2.checked = true;
+			}
+			document.getElementsByTagName('label')[0].onclick = save_mode;
+			document.getElementsByTagName('label')[1].onclick = save_mode;
+			document.getElementsByTagName('label')[2].onclick = save_mode;
+			-->
+		</script>
+		<main>
+			<h1><em>Building a clock from salvaged Vacuum Fluorescent Displays</em></h1>
+<b title='Publication'><time>2026-05-14</time></b> &mdash; <b title='Last edit'><time>2026-06-17</time></b> 
+<!-- mksite: start of content -->
+<p>
+
+When was disassembling an old calculator (as you do) I found these cool VFD tubes:
+</p><p>
+<img src=/projects/tubeclock/tubes.jpg alt="A board with a two vacuum tubes and spots for four more.">
+</p><p>
+Normally, a whole display is built into a single flat package, which doesn't look particularly interesting.
+These ones have the individual digits inside a standard vacuum-tube housing, which gives them a cool nixie-esque look.
+<!-- snip -->
+</p>
+<p>
+<em>Because vacuum tubes are rather archaic components</em>, they deserve some introduction.
+The simplest tube has two electrodes: A filament and anode plate.
+</p><p>
+Similar to an old-school lightbulb, the filament is a tungsten wire that heats up when a current passes through it.
+On a microscopic scale, heat is vibration of atoms &mdash;
+which knocks some (negatively charged) electrons out of the wire and into the surrounding space.
+</p><p>
+If the plate has a positive voltage, it attracts some free electrons which allows a current to flow.
+If the plate is negative, the electrons are repelled and the tube doesn't conduct.
+</p><p>
+This diode configuration is useful for power supplies,
+but most tubes added a wire mesh or "grid" between the other electrodes.
+</p><p>
+The grid shields the electric field of the plate, so the electrons near the filament only feel the grid's voltage.
+However, because the grid has a very small area, most of the electrons it attracts fly through one of the holes to arrive at the plate.
+</p><p>
+As a result, a triode tube conducts plate to filament when both the grid and plate have a positive voltage:
+similar to an n-channel MOSFET. 
+</p><p>
+<em>A Vacuum Fluorescent Display is just a triode</em> but with the
+anode plate coated in rare-earth oxide (similar to what's found in CRTs) which glows when stuck by electrons in the tube.
+</p><p>
+In my displays, each tube contains a single grid, but the anode is broken up into seven isolated segments which can be used to form digits.
+</p><p>
+The grid allows a clever trick:
+segment lines can be shared between digits as long as only a one tube is on at a time.
+A single tube is supplied with a positive grid voltage, allowing it to light up,
+while all the other tubes have a negative grid voltage forcing them to stay dark regardless of the segment voltage.
+</p><p>
+By quickly cycling between the digits,
+the control electronics can create the illusion that the whole display is on...
+but saving a lot of wires:
+a six digit display with a total of 42 segments only needs 13 signal lines.
+</p><p>
+<em>I couldn't find a datasheet for my displays</em>, so I had to determine the pinout experimentally:
+</p><p>
+<style>
+li::marker {color: var(--em-color);}
+ol>li {margin-top: 1em;}
+</style>
+<ol>
+<li>Find the heater. It should be a pair of pins with a few ohms of resistance</li>
+<li>Run 25 - 50 mA through it. The filament should start glowing <b>very dimly</b>. If it's bright, there's to much current.</li>
+<li>Apply +12 volts (relative to the heater) to pairs of the remaining pins until a segment lights up: One of those pins is the grid</li>
+<li>Moving the one of the +12 wires to a different pin, while keeping the other one connected as is. 
+<ul>
+  <li>If the display goes out, the pin you disconnected was the grid.</li>
+  <li>If a different segment is on: The pin that stayed connected is the grid.</li>
+</ul>
+</li>
+<li>Now, connect twelve volts to the grid and use apply +12 to the remaining pins to map out the segments.</li>
+</ol>
+</p><p>
+<note-box>
+If you try this, be very careful to not connect 12 volts across the filament.
+Doing this will likely destroy the tube!
+<br>
+<br>
+Also, on step #4, only the second outcome is guaranteed accurate if some pins are
+not connected internally. It may be a good idea to try again but moving the other wire
+to be sure.
+</note-box>
+</p><p>
+<!--
+If you have the same calculator, here's the pinout: (back/board view)
+</p><p>
+<pre>
+ AAA
+B   F
+B   F
+ GGG  (Four)
+C   E
+C   E
+ DDD  (Dot)
+</pre>
+<table>
+<tr><td>Seg. A</td><td>Seg. G</td></tr>
+<tr><td>Seg. F</td><td>Seg. B</td></tr>
+<tr><td>Seg. Four</td><td>Seg. C</td></tr>
+<tr><td>Heater</td><td>Seg. D</td></tr>
+<tr><td>Grid</td><td>Seg. E</td></tr>
+<tr><td>Seg. Dot</td><td>Heater</td></tr>
+</table>
+</p><p>
+-->
+<em>With that done, I moved on to finding good operating conditions for the display</em>:
+Increasing the filament current or/and the plate voltage will make the tube brighter...
+but don't get the current to where the filament is visibly glowing:
+That will make it hard to read and reduce the tube's life.
+</p><p>
+Borrowing some math from light bulbs, the expected filament lifespan is (roughly) inversely proportional
+to current to the 6th power, so it's not a good idea to push it.
+</p><p>
+You'll often hear stories about that light bulb that's been running for 100 years, but it's no secret how they did it:
+the bulb is running at 6% of it's rated power!
+</p><p>
+(Ok, a lot of that loss is from aging, but the original filament resistance was a lot higher than a modern bulb.
+That made it run less current, at the cost of being even more inefficient and having a very red cast)
+</p><p>
+The plate voltage can be adjusted more freely, and is mostly a matter of personal preference.
+However, too much will fade the phosphors faster, and again, there's a non-linear relation:
+a higher voltage will cause more electrons to flow, but those electrons will also have a higher energy and do more damage.
+</p><p>
+<em>Mine were happy</em> at 25 mA of heater and a voltage between 10 - 24 volts.
+I settled on 12 volts, which worked well for a desk clock while not being annoying at night.
+(keeping in mind that multiplexed tubes appear a lot dimmer than when driven individually)
+</p><p>
+<em>While 12 volts is much lower than what's used for nixie tubes</em>, it's still to high for a microcontroller.
+Since they don't draw much current, I stepped up the signals using a MOSFET and pull up resistor:
+</p><p>
+<a href=/projects/tubeclock/sch.png><img src=/projects/tubeclock/sch.png></a>
+<center><a href=/projects/tubeclock/sch.pdf>Vector version</a></center>
+</p><p>
+When the MOSFET is on, these drivers dissipate a good 0.14 W as heat, which comes out to ~1.5 W (peak) for the whole device...
+but it's still less then a typical smoke detector burns in it's power supply, so it's acceptable for a mains-powered device.
+</p><p>
+The heater drive resistors also dissipate a half a watt, so they do get quite warm.
+Historically, tube filaments were run from a dedicated 1 to 3 turn transformer winding, but such multi-voltage transformers are hard to find nowadays.
+</p><p>
+<em>On the microcontroller's end</em>, it's all very standard clock stuff:
+the same as driving any other multiplexed seven-segment display.
+</p><p>
+I wrote a 480 Hz timer interrupt to cycle the active digit and assert the correct segments.
+The results in an effective refresh rate of 120 Hz, so it's a <b>gaming clock</b>.
+</p><p>
+While a microcontroller's internal oscillator is fine for most applications,
+it's not good enough for a clock:
+A 1% error would cause it to drift by 7 hours each month...
+</p><p>
+To avoid this, timekeeping is done by a second timer interrupt which is run from a 32.768 kHz quartz crystal,
+keeping the drift to within a few minutes per year.
+</p><p>
+<em>Because my house has frequent power outages</em>, I added a CR2032 coin cell as a backup.
+There's no way it's running the tubes, but it does provide enough power to keep track of time.
+</p><p>
+One of the microcontroller's pins used to monitor the main 5 V rail, which allows it to enter sleep mode during an outage.
+In this state, it only draws 2 uA and can run down to 1.4 volts, so the battery should last for decades.
+</p><p>
+The exact lifespan is hard to calculate because batteries are full of messy chemistry;
+they self discharge, have a variable internal resistance, can leak or loose solvent to evaporation...
+</p><p>
+In any case, it only really has to run it for a few hours a few times a year,
+and the battery can be replaced without too much effort: 4 screws and a soldering iron
+(hey, I've seen people pot them in epoxy. Yes, it was in a commercial product)
+</p><p>
+<em>As usual, I assembled the circuit on a perfboard</em>, using scrap leads and solder bridges for power and
+solid-core 24 AWG insulated wire for data.
+This takes some work, but it's a lot faster than ordering boards from China:
+</p><p>
+<img src=/projects/tubeclock/clock.jpg alt="Four vacuum tubes containing glowing digits mounted onto a green perfboard.">
+</p><p>
+The neon lamp is a visually consistent separator, but isn't currently wired up to anything.
+These indicator need around 100 volts, so it's not as easy as wiring it up to a spare pin.
+</p><p>
+<em>... and the same clock after making it a wooden box</em>:
+</p><p>
+<img src=/projects/tubeclock/wood.jpg alt="Those four tubes poking through a square cutout in the front of a wooden box.">
+</p><p>
+Because I'm not very good at woodworking, I made it by gluing together a bunch of scrap wood into a block
+and using a CNC mill to cut a clock-shaped pocket and round the edges.
+</p><p>
+I kept the back open <del>out of laziness</del> to provide easy access to the buttons and to help with cooling.
+</p><p>
+There was a bit of workholding drama half way through, but it's nothing that couldn't be fixed with some wood filler and sanding.
+</p><p>
+<h1><em>Related</em>:</h1>
+<link-box>
+<ul>
+<li><a href=/projects/tubeclock/clock.c>clock.c</a>: Microcontroller firmware.</li>
+<li><a href=/projects/tubeclock/clock.elf>clock.elf</a>: Binaries.</li>
+<li><a href=https://en.wikipedia.org/wiki/Centennial_Light>https://en.wikipedia.org/wiki/Centennial_Light</a>: That light bulb</li>
+</ul>
+</link-box>
+</p>
+<!-- mksite: end of content -->
+		</main>
+		<footer>
+			<hr>
+			Site wide <a href=https://maurycyz.com/index.xml>RSS feed</a>.
+			<br><br>
+			Proudly supporting IPv6!
+			<a href=http://v6.maurycyz.com/whoami title='If this loads, you have IPv6 support.'>Check your network</a>
+			<br><br>
+			You may use this content under the <a rel=license href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en>CC BY-NC-SA 4.0 License</a>.
+			This website is <b>not</b> licensed for ML/LLM training or content creation.
+			<br><br>
+			Questions, comments, and technical issues can be sent in <a href='mailto:blog@%6daurycyz%2ecom'>by email</a>.
+		</footer>
+		<script defer src='/nativeads.js'></script>
+		<div
+			id='ad-note-hidden'
+			class='ftf-dma-note ad native-ad native-ad-1 ytd-j yxd-j yxd-jd aff-content-col aff-inner-col aff-item-list ark-ad-message inplayer-ad inplayer_banners in_stream_banner trafficjunky-float-right dbanner preroll-blocker happy-inside-player blocker-notice blocker-overlay exo-horizontal ave-pl bottom-hor-block brs-block advboxemb wgAdBlockMessage glx-watermark-container overlay-advertising-new header-menu-bottom-ads rkads mdp-deblocker-wrapper amp-ad-inner imggif bloc-pub bloc-pub2 hor_banner aan_fake aan_fake__video-units rps_player_ads fints-block__row full-ave-pl full-bns-block vertbars video-brs player-bns-block wps-player__happy-inside gallery-bns-bl stream-item-widget adsbyrunactive happy-under-player adde_modal_detector adde_modal-overlay ninja-recommend-block aoa_overlay message'
+		>
+			<p id='ad-note-content-wrapper'>
+			</p>
+		</div>
+		<!-- svg filter for images --><svg width=0 height=0><defs><filter id=mono><feColorMatrix type=matrix values=".33 .33 .33  0  0 .15 .15 .15 0  0 0   0   0  0  0 0   0   0  1  0" in=SourceGraphic/></feColorMatrix></filter></defs></svg>
+	</body>
+</html>

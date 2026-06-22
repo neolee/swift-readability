@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang=en-us>
+	<head>
+		<meta charset=utf-8 />
+		<meta name=viewport content='width=device-width, initial-scale=1' />
+		<link rel='icon' type='image/x-icon' href='/favicon.ico'>
+		<meta name=robots content='noarchive'>
+		<meta name=generator content='mksite.c and my keyboard'>
+		<style>
+			<!--
+			/* Theme colors */
+			:root {
+				--font: sans-serif;
+				--fg-color: #fff;
+				--bg-color: #111;
+				--em-color: #ffbb00;
+				--link-color1: #4ee;
+				--link-color2: #4eafaf;
+				--box-color: #21ff00;
+				--table-color1: #000;
+				--table-color2: #222;
+				color-scheme: dark;
+				&:has(#lightmode:checked) {
+					--fg-color: #000;
+					--bg-color: #fff;
+					--em-color: #f00;
+					--link-color1: #0000EE;
+					--link-color2: #551A8B;
+					--box-color: #000;
+					--table-color1: #FFF;
+					--table-color2: #CCC;
+					color-scheme: light;
+				}
+				&:has(#ttymode:checked) {
+					--fg-color: #ff9300;
+					--font: monospace, monospace;
+					--bg-color: #000000;
+					--em-color: #ff9300;
+					--link-color1: none;
+					--link-color2: none;
+					--box-color: #ff9300;
+					--table-color1: none;
+					--table-color2: none;
+				}
+			}
+			/* Monochrome CRT styling */
+			@keyframes interlace {0% {top: 1px;}50% {top: 1px;}51% {top: 0px;}100% {top: 0px;}}
+			:has(#ttymode:checked) {
+				h1, h2, h3, h4, h5 {font-size: 100%;}
+				nav {
+					position: static !important;
+					display: block !important;
+					max-width: 40em;
+					margin: auto;
+				}
+				fieldset {display: block;}
+				legend {border-style: none !important;}
+				theme-picker {border-radius: 5px !important;}
+				img, video, center, pre, code, #oneko {filter: url(#mono)}
+				theme-picker {border-radius: 0 !important;}
+				screen-overlay {position: fixed; top: 0; left: 0;
+					height: 100lvh; width: 100lvw;
+					opacity: 0.15; z-index: 20;
+					pointer-events: none;
+					animation: interlace 0.05s infinite;
+					background-image: repeating-linear-gradient(to bottom,
+						var(--bg-color),
+						var(--bg-color) 1px,
+						var(--fg-color) 1px,
+						var(--fg-color) 2px
+					);
+				}
+			}
+			/* Column */
+			html {background-color: var(--bg-color); color: var(--fg-color); font-family: var(--font)}
+			main, footer {max-width: 40em; margin: auto;}
+			img {width: 100%;}
+			/* Navigation box */
+			fieldset {
+				border: var(--box-color) 1px solid;
+				color: var(--fg-color);;
+				padding: 1em;
+				margin: 1em;
+				background-color: var(--bg-color);;
+			}
+			legend {
+				border: var(--box-color) 1px solid;
+				padding: .3em;
+				background-color: var(--bg-color);
+			}
+			nav {
+				position: static;
+				width: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				@media (min-width: 67em) {
+					position: fixed;
+					display: block;					width: auto;
+				}			}
+			/* Kitten */
+			#oneko {
+				@media (max-width: 66em) {
+					display: none;
+				}
+			}
+			/* Link colors */
+			a {
+				&:visited {color: var(--link-color2);}
+				&:link    {color: var(--link-color1);}
+			}
+			/* Code blocks. Inline and block. */
+			/* Do not follow theme */
+			pre {
+				background-color: #222;
+				color: #eee;
+				display: block;
+				width: calc(100% - 1em);
+				padding: 0.5em;
+				overflow: auto;
+				border: 1px #666 solid;
+				font-family: monospace;
+			}
+			code {display: inline; background-color: #111; color: #eee; padding: 1px;}
+			/* Inline notes: Warnings, etc */
+			note-box {
+				display: block;
+				padding: 0.5em;
+				border: 2px var(--em-color) solid;
+			}
+			/* I also use details elements for notes */
+			details {
+				border-left: 2px var(--em-color) solid;
+				padding-left: 1em;
+				& img {margin-top: 1em;}
+			}
+			summary {
+				text-decoration: underline;
+				user-select: none;
+			}
+			/* Use accent color for lines */
+			hr {border-color: var(--em-color);}
+			/* Image captions */
+			center {color: #888;}
+			/* Zebra striping */
+			th {padding-right: 1em; background-color: var(--bg-color);}
+			tr:nth-child(odd) {background-color: var(--table-color1);}
+			tr:nth-child(even) {background-color: var(--table-color2);}
+			/* Scrolled tables */
+			.math {text-wrap: nowrap; display: block; overflow: auto;}
+			/* Missing adblocker warning */
+			#ad-note-hidden, #ad-note {display: none;}
+			@media (min-height: 30em) { @media (min-width: 75em) {
+				#ad-note {
+					display: block; position: fixed;
+					bottom: 1em; right: 1em; width: 14em;
+					border: var(--em-color) 1px solid;
+					background-color: var(--bg-color);
+					padding: 1em;
+				}
+				#ad-note-content-wrapper {margin-top: 0em; margin-bottom: 0em}
+			}}
+			/* Large initial letters */
+			p.dropcap:first-letter {
+				color: var(--em-color);
+			}
+			/* Text rubrication */
+			em {color: var(--em-color); font-style: normal;}
+			/* CSS Only theme picker */
+			theme-picker {
+				border: 1px solid var(--fg-color);
+				border-radius: 5px;
+				display: flex;
+				margin-top: 5px;
+				overflow: clip;
+				input {opacity: 0; position: absolute; pointer-events: none;}
+				label {
+					cursor: pointer;
+					width: 50%;
+					text-align: center;
+					padding: 5px;
+					/* Make the checked button look like it's pushed in. */
+					&:has(input:checked) {box-shadow: inset 0px 0px 7px 0px var(--fg-color);}
+					/* Hover indication so the user knows that it is clickable */
+					&:hover {color: var(--em-color);}
+					user-select: none;
+				}
+			}
+			link-box {border-left: 2px var(--em-color) solid; display: block; word-wrap: break-word}
+
+			/* Syntax highlighting. */
+			h-n {color: #F27;}h-v {color: #B8F;}h-s {color: #AEE;}h-c {color: #777;}h-e {color: #F6F;}
+			-->
+		</style>
+		<title>Taking down my site on purpose: (Maurycy's blog) </title>
+	</head>
+	<body>
+		<screen-overlay></screen-overlay>
+		<nav><fieldset>
+			<legend>Navigation:</legend>
+			<a href='/'>Homepage</a><br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href='/topics.html'>Index</a><br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href='/archive'>Yearly archives</a><br/>
+			<a href='/fun/'>Fun</a><br>
+			<a href='/tags/astro'>Astrophotography</a><br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href='/astro/catalog.html'>(catalog)</a><br/>
+			<a href='/about.html'>About this site</a><br/>
+			<a href='/real_pages'>Real pages</a><br>
+			<theme-picker>
+				<label>Dark<input type=radio id=darkmode   name=theme checked></label>
+				<label>Light<input type=radio id=lightmode name=theme></label>
+				<label>TTY<input type=radio id=ttymode     name=theme></label>
+			</theme-picker>
+		</fieldset></nav>
+		<script>
+			<!--
+			/* Inlined for speed because this is needed to correctly render the page */
+			var checkbox1 = document.getElementById('lightmode')
+			var checkbox2 = document.getElementById('ttymode')
+			function save_mode() {
+				var state1 = checkbox1.checked;
+				window.localStorage.setItem('light_mode', state1);
+				var state2 = checkbox2.checked;
+				window.localStorage.setItem('tty_mode', state2);
+			}
+			if (window.localStorage.getItem('light_mode') == 'true') {
+				checkbox1.checked = true;
+			}
+			if (window.localStorage.getItem('tty_mode') == 'true') {
+				checkbox2.checked = true;
+			}
+			document.getElementsByTagName('label')[0].onclick = save_mode;
+			document.getElementsByTagName('label')[1].onclick = save_mode;
+			document.getElementsByTagName('label')[2].onclick = save_mode;
+			-->
+		</script>
+		<main>
+			<h1><em>Taking down my site on purpose:</em></h1>
+<b title='Publication'><time>2026-04-17</time></b> &mdash; <b title='Last edit'><time>2026-04-18</time></b> 
+<!-- mksite: start of content -->
+<p>
+
+</p>
+<note-box>
+<a href=#skip>Skip the history</a>
+</note-box>
+<p>
+If you have multiple computers, you'll quickly run into the problem of having data on one but needing it on the other.
+Because of this, people have been connecting them together since the beginning.
+</p><p>
+However, this created a classic problem:
+Each network used it's own addressing scheme, wire protocol, headers, etc, etc...
+If you wanted to get a file between two networks, you had to find a machine that was connected to both and manually forward it.
+<!-- snip -->
+</p>
+<p>
+<em>To automatically route data between networks</em>, we had to agree on a universal numbering scheme for computers.
+During the 1980, people settled on the 32-bit "IPv4" address.
+</p><p>
+Here's my server's address (split into bytes):
+</p>
+<pre>
+65.109.172.162
+</pre>
+<p>
+<em>Back then, computers were massive and extremely expensive</em>, so 32-bits was plenty:
+After all, there's no way there would ever be billions of computers in the world...
+</p><p>
+There was enough headroom to assign addresses roughly geographically and in power-of-2 sized blocks.
+This made the internet scalable because each router doesn't have to know the exact details of every computer:
+</p><p>
+When your ISPs network sees my address, it doesn't have to know that exactly what computer <code>65.109.172.162</code> is,
+just that everything starting with <code>65.109</code> should be sent to Finland.
+</p><p>
+... but it does mean that the maximum computers is a lot smaller than the full 32-bit address space.
+</p><p>
+<!-- - Adress exastion -->
+<em>We ran out around 2011</em>.
+</p><p>
+To keep the internet working, people started hiding multiple computers behind a single address.
+Odds are, every single machine on your home network has to share a single IPv4 address through a rather complex "NAT" setup.
+</p><p>
+<em>... but this was not enough</em>.
+</p><p>
+Recently, ISPs have started putting multiple customers behind a single address.
+This obviously creates problems if you want to host services from home
+(a website, multiplayer games, etc), but is also a problem for normie activities:
+It's common to get punished by a website for something you didn't do.
+</p><p>
+If you've ever seen a "You've been blocked" message, gotten a Captcha every time, or simply had it mysteriously refuse to load...
+there's a good chance this is what happened:
+</p><p>
+Someone who had the address before you was either doing something bad or
+&mdash; more likely &mdash;
+got hacked and was used as an unwitting proxy for a criminal's traffic.
+</p><p>
+Remember that the IP address is the one signal websites have to know who's sending something.
+Unless they want to require everyone to make an account, IP blocking is the only option.
+</p><p>
+<!-- Simple solution -->
+<em>The solution is quite simple</em>:
+Since we've run out of addresses that fit in 32-bits... just use longer ones.
+</p><p>
+This was first standardized all the way back in 1995 with 128-bit IPv6 addresses:
+four times as long as IPv4.
+Here's how many unique addresses that allows:
+</p>
+<pre>
+340,282,366,920,938,463,463,374,607,431,768,211,456
+</pre>
+<p>
+Needless to say, that's quite a few. Here's mine:
+</p><p>
+<pre>
+2a01:04f9:c011:841a:0000:0000:0000:0001
+</pre>
+</p><p>
+These larger addresses also have a lot of other benefits:
+There's less need for virtual hosting,
+the address hierarchy can be cleaner,
+and it's possible put MAC addresses in a /64 block for stateless (and predictable) IP assignment.
+<!-- Why it took 30+ years -->
+</p><p>
+<em id=skip>Problem solved, right?</em>
+</p><p>
+No.
+</p><p>
+Despite being around for 30 years (almost as old as gopher!), most people still do not have access to an IPv6 capable network:
+
+<style>
+/* HTML tags, keywords, commands */
+h-n {color: #F27;}
+/* Values */
+h-v {color: #B8F;}
+/* CSS selectors, attribute/varable names, file names */
+h-s {color: #AEE;}
+/* Comments */
+h-c {color: #777;}
+h-e {color: #F6F;}
+</style>
+<pre>
+<h-c>10</h-c> Users don't have IPv6 support
+<h-c>20</h-c> ... so websites are forced to support IPv4.
+<h-c>30</h-c> ... so users don't notice they are missing anything.
+<h-c>40</h-c> ... and don't complain to their ISP
+<h-c>50</h-c> <h-n>GOTO</h-n> 10
+</pre>
+</p><p>
+Because of this, even though the solution has existed ~forever,
+bad decisions from 1980 continue to make your internet connection worse and more expensive.
+</p><p>
+<!-- IPv6 day -->
+<em>To help break out of this cycle</em>, I've decided to remove IPv4 support on my site.
+Cutting off most of my readers is a bit hash, so it'll only be disabled for one day each month:
+</p><p>
+The 6th will now be IPv6 day.
+</p><p>
+Any attempts to access my site over IPv4 will yield a message telling you that your network still doesn't support a 30 year old standard.
+</p><p>
+If you really want to access my site during the sixth, use your phone:
+All major cell carriers have long since caught up with the times
+because giving each device it's own address improves performance and simplifies administration.
+(Quite a few actually run IPv6 only networks, and use a NAT64 proxy for accessing IPv4 only servers.)
+</p><p>
+<em>Obviously, one website going down is just a site going down</em>.
+For this to work, a lot of people have to do it.
+If you have a website where 97% uptime is tolerable, consider doing something like this.
+</p><p>
+If downtime is too much, how about a banner that warns about IPv4?
+</p><p>
+<h1><em>Related</em>:</h1>
+<link-box>
+<ul>
+<li><a href=/outdated.html>/outdated.html</a>: The message in question.</li>
+<li><a href=http://v6.maurycyz.com/misc/v6day/>/misc/v6day/</a>: IPv6 only link. Avoid any surprises on May 6th.</li>
+<li><a href=https://xkcd.com/865/>https://xkcd.com/865/</a>: The one scenario where 128 bits is not enough.</li>
+</ul>
+</link-box>
+</p>
+<!-- mksite: end of content -->
+		</main>
+		<footer>
+			<hr>
+			Site wide <a href=https://maurycyz.com/index.xml>RSS feed</a>.
+			<br><br>
+			Proudly supporting IPv6!
+			<a href=http://v6.maurycyz.com/whoami title='If this loads, you have IPv6 support.'>Check your network</a>
+			<br><br>
+			You may use this content under the <a rel=license href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en>CC BY-NC-SA 4.0 License</a>.
+			This website is <b>not</b> licensed for ML/LLM training or content creation.
+			<br><br>
+			Questions, comments, and technical issues can be sent in <a href='mailto:blog@%6daurycyz%2ecom'>by email</a>.
+		</footer>
+		<script defer src='/nativeads.js'></script>
+		<div
+			id='ad-note-hidden'
+			class='ftf-dma-note ad native-ad native-ad-1 ytd-j yxd-j yxd-jd aff-content-col aff-inner-col aff-item-list ark-ad-message inplayer-ad inplayer_banners in_stream_banner trafficjunky-float-right dbanner preroll-blocker happy-inside-player blocker-notice blocker-overlay exo-horizontal ave-pl bottom-hor-block brs-block advboxemb wgAdBlockMessage glx-watermark-container overlay-advertising-new header-menu-bottom-ads rkads mdp-deblocker-wrapper amp-ad-inner imggif bloc-pub bloc-pub2 hor_banner aan_fake aan_fake__video-units rps_player_ads fints-block__row full-ave-pl full-bns-block vertbars video-brs player-bns-block wps-player__happy-inside gallery-bns-bl stream-item-widget adsbyrunactive happy-under-player adde_modal_detector adde_modal-overlay ninja-recommend-block aoa_overlay message'
+		>
+			<p id='ad-note-content-wrapper'>
+			</p>
+		</div>
+		<!-- svg filter for images --><svg width=0 height=0><defs><filter id=mono><feColorMatrix type=matrix values=".33 .33 .33  0  0 .15 .15 .15 0  0 0   0   0  0  0 0   0   0  1  0" in=SourceGraphic/></feColorMatrix></filter></defs></svg>
+	</body>
+</html>
